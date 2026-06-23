@@ -1,0 +1,35 @@
+name: tech_void
+description: "TECH_VOID — Vietnamese tech e-commerce mobile app (TechStore). Dark neon-cyberpunk UI built on a Clean Architecture layered structure."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management (lightweight, course-friendly).
+  provider: ^6.0.0
+
+  # Webfonts matching the design system:
+  #   Display = Chakra Petch · Body = Be Vietnam Pro · Mono = JetBrains Mono
+  google_fonts: ^6.0.0
+
+  # HTTP client used by the (swappable) API layer once the backend is ready.
+  http: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/products/

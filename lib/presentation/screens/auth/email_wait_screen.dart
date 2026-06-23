@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../routing/app_routes.dart';
+import '../../widgets/widgets.dart';
+
+/// "Kiểm tra email" waiting state (BE flow screen 3). Mirrors `EmailWaitScreen.jsx`.
+class EmailWaitScreen extends StatelessWidget {
+  const EmailWaitScreen({super.key, required this.email});
+
+  final String email;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.bgBase,
+      body: Column(
+        children: [
+          TvAppBar(mode: TvAppBarMode.page, onBack: () => Navigator.pop(context)),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 96,
+                            height: 96,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.accentSoft,
+                              border:
+                                  Border.all(color: AppColors.accentSoftLine),
+                              boxShadow: AppEffects.glowCyanMd,
+                            ),
+                            child: const TvIcon('mail-open',
+                                size: 42, color: AppColors.textAccent),
+                          ),
+                          const SizedBox(height: 24),
+                          Text('Kiểm tra email của bạn',
+                              style: AppText.h1(), textAlign: TextAlign.center),
+                          const SizedBox(height: 10),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 300),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Chúng tôi đã gửi link đăng nhập tới',
+                                  textAlign: TextAlign.center,
+                                  style: AppText.body(AppColors.textSecondary)
+                                      .copyWith(fontSize: 14, height: 1.55),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  email,
+                                  textAlign: TextAlign.center,
+                                  style: AppText.mono(
+                                      size: 13, color: AppColors.textAccent),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Vui lòng bấm vào link đó để đăng nhập.',
+                                  textAlign: TextAlign.center,
+                                  style: AppText.body(AppColors.textSecondary)
+                                      .copyWith(fontSize: 14, height: 1.55),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  TvButton(
+                    label: 'Mở ứng dụng Email',
+                    size: TvButtonSize.lg,
+                    fullWidth: true,
+                    leadingIcon: const TvIcon('mail', size: 18),
+                    onPressed: () => AppRoutes.enterApp(context),
+                  ),
+                  const SizedBox(height: 12),
+                  TvButton(
+                    label: 'Tôi đã xác nhận link',
+                    variant: TvButtonVariant.ghost,
+                    size: TvButtonSize.lg,
+                    fullWidth: true,
+                    leadingIcon: const TvIcon('check', size: 18),
+                    onPressed: () => AppRoutes.enterApp(context),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
