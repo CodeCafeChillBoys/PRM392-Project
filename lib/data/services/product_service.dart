@@ -33,7 +33,10 @@ class ProductService {
       if (category != null && category != 'Tất cả') 'category': category,
       if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
     });
-    return (json as List)
+    final List<dynamic> list = (json is Map<String, dynamic> && json['data'] is List)
+        ? (json['data'] as List)
+        : (json is List ? json : []);
+    return list
         .map((e) => Product.fromJson(e as Map<String, dynamic>))
         .toList();
   }
@@ -44,7 +47,10 @@ class ProductService {
       return MockData.products.firstWhere((p) => p.id == id);
     }
     final json = await _client.get(ApiConfig.productById(id));
-    return Product.fromJson(json as Map<String, dynamic>);
+    final Map<String, dynamic> data = (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
+        ? (json['data'] as Map<String, dynamic>)
+        : (json is Map<String, dynamic> ? json : {});
+    return Product.fromJson(data);
   }
 
   List<Product> _filter(List<Product> source,

@@ -5,7 +5,7 @@ class AppConfig {
   /// While the backend is not ready, services return data from
   /// `data/services/mock_data.dart`. Set to `false` once [ApiConfig.baseUrl]
   /// points at a live TechStoreAPI to switch every service to real HTTP calls.
-  static const bool useMockData = true;
+  static const bool useMockData = false;
 
   /// Artificial latency applied to mock service calls so loading states,
   /// spinners and skeletons are exercised exactly as they will be against the
