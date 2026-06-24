@@ -107,7 +107,7 @@ class AuthService {
       body: {
         'fullName': name,
         'email': email,
-        'phone': phone,
+        'phoneNumber': phone,
         'password': password,
       },
     );
