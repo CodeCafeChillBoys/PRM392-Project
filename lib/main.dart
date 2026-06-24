@@ -9,9 +9,18 @@ import 'presentation/state/app_nav.dart';
 import 'presentation/state/cart_controller.dart';
 import 'presentation/state/catalog_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'data/services/local_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize local notifications
+  try {
+    await LocalNotificationService.initialize();
+  } catch (e) {
+    debugPrint('Local Notification initialization failed: $e');
+  }
+
   // Light status-bar icons on the near-black canvas.
   try {
     await Firebase.initializeApp();

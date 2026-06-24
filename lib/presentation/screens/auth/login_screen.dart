@@ -3,6 +3,7 @@ import 'package:tech_void/data/helpers/auth_helper.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/services/local_notification_service.dart';
 import '../../routing/app_routes.dart';
 import '../../widgets/widgets.dart';
 import 'method_screen.dart';
@@ -27,6 +28,14 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _googleLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      LocalNotificationService.requestPermission();
+    });
+  }
+
+  @override
   void dispose() {
     _email.dispose();
     _password.dispose();
@@ -38,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
     try {
       final device = await AuthHelper.getDeviceContext();
-      await _auth.login(
+      final verifyToken = await _auth.login(
         email: _email.text,
         password: _password.text,
         deviceId: device.deviceId,
@@ -47,9 +56,19 @@ class _LoginScreenState extends State<LoginScreen> {
         fcmToken: device.fcmToken,
       );
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const MethodScreen()));
+      if (verifyToken == null || verifyToken.isEmpty) {
+        TvToast.show(
+          context,
+          'Đăng nhập thất bại: Không nhận được token xác thực.',
+        );
+        return;
+      }
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) =>
+              MethodScreen(email: _email.text, verifyToken: verifyToken),
+        ),
+      );
     } catch (e) {
       if (mounted) {
         TvToast.show(context, 'Đăng nhập thất bại');

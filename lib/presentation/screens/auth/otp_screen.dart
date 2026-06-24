@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_typography.dart';
@@ -14,9 +13,10 @@ import '../../widgets/widgets.dart';
 /// 6-box OTP input + 02:00 countdown + resend (BE flow screen 4).
 /// Mirrors `OtpScreen.jsx`.
 class OtpScreen extends StatefulWidget {
-  const OtpScreen({super.key, required this.email});
+  const OtpScreen({super.key, required this.email, required this.verifyToken});
 
   final String email;
+  final String verifyToken;
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -82,8 +82,9 @@ class _OtpScreenState extends State<OtpScreen> {
     if (!_filled || _verifying) return;
     setState(() => _verifying = true);
     try {
-      await _auth.verifyOtp(email: widget.email, code: _code);
+      await _auth.verifyOtp(verifyToken: widget.verifyToken, code: _code);
       if (!mounted) return;
+
       AppRoutes.enterApp(context);
     } catch (_) {
       if (mounted) TvToast.show(context, 'Mã OTP không đúng. Thử lại nhé.');
@@ -229,7 +230,7 @@ class _OtpScreenState extends State<OtpScreen> {
     return GestureDetector(
       onTap: () {
         _startTimer();
-        _auth.requestVerification(VerifyMethod.otp, widget.email);
+        _auth.requestVerification(VerifyMethod.otp, widget.verifyToken);
       },
       child: Text(
         'Gửi lại mã OTP',

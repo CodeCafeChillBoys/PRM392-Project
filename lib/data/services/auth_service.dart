@@ -21,7 +21,7 @@ class AuthService {
         '642269070314-u0sust2rp5gcqgqtdsdhrvs0dmc1uees.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
   );
-  Future<void> login({
+  Future<String?> login({
     required String email,
     required String password,
     required String deviceId,
@@ -29,7 +29,7 @@ class AuthService {
     required String deviceType,
     required String fcmToken,
   }) async {
-    await _client.post(
+    final response = await _client.post(
       ApiConfig.login,
       body: {
         'email': email,
@@ -40,6 +40,10 @@ class AuthService {
         'fcmToken': fcmToken,
       },
     );
+    if (response != null && response['success'] == true) {
+      return response['data']?['verifyToken'] as String?;
+    }
+    return null;
   }
 
   /// Triggers the Google Sign-in flow, extracts the ID token, and sends it to the BE.
@@ -109,19 +113,19 @@ class AuthService {
     );
   }
 
-  /// Send the chosen verification challenge to [email].
-  Future<void> requestVerification(VerifyMethod method, String email) async {
+  /// Send the chosen verification challenge using [verifyToken].
+  Future<void> requestVerification(VerifyMethod method, String verifyToken) async {
     final endpoint = method == VerifyMethod.emailLink
         ? ApiConfig.sendEmailLink
         : ApiConfig.sendOtp;
-    await _client.get(endpoint, query: {'email': email});
+    await _client.get(endpoint, query: {'token': verifyToken});
   }
 
   /// Check current status of the magic link sign-in session.
-  Future<bool> checkSessionStatus(String email) async {
+  Future<bool> checkSessionStatus(String verifyToken) async {
     final response = await _client.get(
       ApiConfig.sessionStatus,
-      query: {'email': email},
+      query: {'token': verifyToken},
     );
     if (response != null && response['success'] == true) {
       final data = response['data'];
@@ -133,10 +137,10 @@ class AuthService {
     return false;
   }
 
-  Future<void> verifyOtp({required String email, required String code}) async {
+  Future<void> verifyOtp({required String verifyToken, required String code}) async {
     final response = await _client.post(
       ApiConfig.verifyOtp,
-      body: {'email': email, 'otp': code},
+      body: {'verifyToken': verifyToken, 'otpCode': code},
     );
     if (response != null && response['success'] == true) {
       final data = response['data'];

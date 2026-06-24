@@ -27,7 +27,10 @@ dependencies:
 
   # Google Sign-In for authentication
   google_sign_in: ^6.2.1
-
+  url_launcher: ^6.3.2
+  open_mail_launcher: ^0.2.0
+  android_intent_plus: ^6.0.0
+  flutter_local_notifications: ^22.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

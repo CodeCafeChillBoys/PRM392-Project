@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 /// Central, swappable configuration for the TechStoreAPI backend.
 ///
 /// The backend is not ready yet, so [AppConfig.useMockData] is `true` and the
@@ -16,9 +19,19 @@ class ApiConfig {
   /// app (local emulator, staging, production).
   ///
   /// Handy values while developing against a local backend:
-  ///   * Android emulator → `http://10.0.2.2:5000`
-  ///   * iOS simulator / web / desktop → `http://localhost:5000`
-  static const String baseUrl = 'http://10.0.2.2:5173';
+  ///   * Android emulator → `http://10.0.2.2:5173`
+  ///   * iOS simulator / web / desktop → `http://localhost:5173`
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:5173';
+    }
+    try {
+      if (Platform.isAndroid) {
+        return 'http://10.0.2.2:5173';
+      }
+    } catch (_) {}
+    return 'http://localhost:5173';
+  }
 
   /// Default network timeout for requests.
   static const Duration timeout = Duration(seconds: 20);

@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:open_mail_launcher/open_mail_launcher.dart';
+import 'package:android_intent_plus/android_intent.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
@@ -10,9 +13,10 @@ import '../../widgets/widgets.dart';
 
 /// "Kiểm tra email" waiting state (BE flow screen 3). Mirrors `EmailWaitScreen.jsx`.
 class EmailWaitScreen extends StatefulWidget {
-  const EmailWaitScreen({super.key, required this.email});
+  const EmailWaitScreen({super.key, required this.email, required this.verifyToken});
 
   final String email;
+  final String verifyToken;
 
   @override
   State<EmailWaitScreen> createState() => _EmailWaitScreenState();
@@ -42,7 +46,7 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
     if (_checking) return;
     _checking = true;
     try {
-      final approved = await _auth.checkSessionStatus(widget.email);
+      final approved = await _auth.checkSessionStatus(widget.verifyToken);
       if (approved && mounted) {
         _timer?.cancel();
         AppRoutes.enterApp(context);
@@ -129,7 +133,44 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                     size: TvButtonSize.lg,
                     fullWidth: true,
                     leadingIcon: const TvIcon('mail', size: 18),
-                    onPressed: () => AppRoutes.enterApp(context),
+                    onPressed: () async {
+                      if (Platform.isAndroid) {
+                        try {
+                          const AndroidIntent intent = AndroidIntent(
+                            action: 'android.intent.action.MAIN',
+                            category: 'android.intent.category.APP_EMAIL',
+                          );
+                          await intent.launch();
+                        } catch (e) {
+                          if (context.mounted) {
+                            TvToast.show(context, 'Lỗi khi mở ứng dụng Email: ${e.toString()}');
+                          }
+                        }
+                      } else {
+                        try {
+                          final result = await OpenMailLauncher.openMailApp();
+                          if (!context.mounted) return;
+
+                          if (!result.didOpen && !result.canOpen) {
+                            TvToast.show(context, 'Không tìm thấy ứng dụng Email nào trên thiết bị.');
+                          } else if (!result.didOpen && result.canOpen) {
+                            final selectedApp = await OpenMailLauncher.showMailAppPicker(
+                              context: context,
+                              mailApps: result.options,
+                              title: 'Chọn ứng dụng Email',
+                              cancelText: 'Hủy',
+                            );
+                            if (selectedApp != null && context.mounted) {
+                              await OpenMailLauncher.openSpecificMailApp(mailApp: selectedApp);
+                            }
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            TvToast.show(context, 'Lỗi khi mở ứng dụng Email: ${e.toString()}');
+                          }
+                        }
+                      }
+                    },
                   ),
                   const SizedBox(height: 12),
                   TvButton(

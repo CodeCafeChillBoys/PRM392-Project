@@ -8,21 +8,21 @@ import '../../widgets/widgets.dart';
 import 'email_wait_screen.dart';
 import 'otp_screen.dart';
 
-/// Demo account email shown on the verification screens.
-const String kVerifyEmail = 'alex.nguyen@techstore.vn';
-
 /// Choose verification method — Email Link vs OTP (BE flow screen 2).
 /// Mirrors `MethodScreen.jsx`.
 class MethodScreen extends StatelessWidget {
-  const MethodScreen({super.key});
+  const MethodScreen({super.key, required this.email, required this.verifyToken});
+
+  final String email;
+  final String verifyToken;
 
   @override
   Widget build(BuildContext context) {
     final auth = AuthService();
 
     void choose(VerifyMethod method, Widget next) {
-      // Fire the request (mock); navigate straight to the waiting/OTP screen.
-      auth.requestVerification(method, kVerifyEmail);
+      // Fire the request; navigate straight to the waiting/OTP screen.
+      auth.requestVerification(method, verifyToken);
       Navigator.of(context).push(MaterialPageRoute(builder: (_) => next));
     }
 
@@ -58,7 +58,7 @@ class MethodScreen extends StatelessWidget {
                         'Gửi một đường link an toàn tới email — bấm để đăng nhập tức thì.',
                     onTap: () => choose(
                       VerifyMethod.emailLink,
-                      const EmailWaitScreen(email: kVerifyEmail),
+                      EmailWaitScreen(email: email, verifyToken: verifyToken),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -69,7 +69,7 @@ class MethodScreen extends StatelessWidget {
                     description: 'Nhập mã 6 số được gửi tới email của bạn.',
                     onTap: () => choose(
                       VerifyMethod.otp,
-                      const OtpScreen(email: kVerifyEmail),
+                      OtpScreen(email: email, verifyToken: verifyToken),
                     ),
                   ),
                 ],

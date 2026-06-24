@@ -66,5 +66,25 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>techstore</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>googlegmail</string>
+		<string>ms-outlook</string>
+		<string>readdle-spark</string>
+		<string>ymail</string>
+		<string>fastmail</string>
+		<string>protonmail</string>
+	</array>
 </dict>
 </plist>
