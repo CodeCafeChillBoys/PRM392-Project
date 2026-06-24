@@ -18,7 +18,7 @@ class ApiConfig {
   /// Handy values while developing against a local backend:
   ///   * Android emulator → `http://10.0.2.2:5000`
   ///   * iOS simulator / web / desktop → `http://localhost:5000`
-  static const String baseUrl = 'https://api.techstore.vn';
+  static const String baseUrl = 'http://10.0.2.2:5173';
 
   /// Default network timeout for requests.
   static const Duration timeout = Duration(seconds: 20);
@@ -28,15 +28,19 @@ class ApiConfig {
   // ----------------------------------------------------------------------
   static const String register = '/api/auth/register';
   static const String login = '/api/auth/login';
+  static const String googleLogin = '/api/auth/google-login';
 
   /// Request an email magic-link to verify/sign in.
-  static const String sendEmailLink = '/api/auth/email-link/send';
+  static const String sendEmailLink = '/api/auth/send-verify-link';
 
   /// Request a 6-digit OTP to the user's email.
-  static const String sendOtp = '/api/auth/otp/send';
+  static const String sendOtp = '/api/auth/send-otp';
 
   /// Verify the 6-digit OTP.
-  static const String verifyOtp = '/api/auth/otp/verify';
+  static const String verifyOtp = '/api/auth/verify-otp';
+
+  /// Check current status of the magic link sign-in session.
+  static const String sessionStatus = '/api/auth/session-status';
 
   // ----------------------------------------------------------------------
   // Products — mirrors "API Design (TechStoreAPI) / Product".

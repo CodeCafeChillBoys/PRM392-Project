@@ -1,5 +1,6 @@
+import 'package:google_sign_in/google_sign_in.dart';
+
 import '../../core/config/api_config.dart';
-import '../../core/config/app_config.dart';
 import 'api_client.dart';
 
 /// The verification method chosen after sign-in (per "Luồng BE / Register").
@@ -15,15 +16,80 @@ class AuthService {
 
   final ApiClient _client;
 
-  Future<void> login({required String email, required String password}) async {
-    if (AppConfig.useMockData) {
-      await Future.delayed(const Duration(milliseconds: 1100));
-      if (email.trim().isEmpty || password.isEmpty) {
-        throw Exception('Email và mật khẩu không được để trống.');
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId:
+        '642269070314-u0sust2rp5gcqgqtdsdhrvs0dmc1uees.apps.googleusercontent.com',
+    scopes: ['email', 'profile'],
+  );
+  Future<void> login({
+    required String email,
+    required String password,
+    required String deviceId,
+    required String deviceName,
+    required String deviceType,
+    required String fcmToken,
+  }) async {
+    await _client.post(
+      ApiConfig.login,
+      body: {
+        'email': email,
+        'passWord': password,
+        'deviceId': deviceId,
+        'deviceName': deviceName,
+        'deviceType': deviceType,
+        'fcmToken': fcmToken,
+      },
+    );
+  }
+
+  /// Triggers the Google Sign-in flow, extracts the ID token, and sends it to the BE.
+  Future<void> googleLogin({
+    required String deviceId,
+    required String deviceName,
+    required String deviceType,
+    required String fcmToken,
+  }) async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        throw Exception('Đăng nhập Google bị hủy bởi người dùng.');
       }
-      return;
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final String? idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        throw Exception('Không lấy được Google ID Token.');
+      }
+
+      final response = await _client.post(
+        ApiConfig.googleLogin,
+        body: {
+          'idToken': idToken,
+          'deviceId': deviceId,
+          'deviceName': deviceName,
+          'deviceType': deviceType,
+          'fcmToken': fcmToken,
+        },
+      );
+
+      if (response?['success'] == true) {
+        final data = response['data'];
+
+        if (data?['accessToken'] != null) {
+          _client.authToken = data['accessToken'];
+          return;
+        }
+      }
+
+      throw Exception(response?['message'] ?? 'Đăng nhập Google thất bại.');
+    } catch (e) {
+      await _googleSignIn.signOut();
+      rethrow;
     }
-    await _client.post(ApiConfig.login, body: {'email': email, 'password': password});
   }
 
   Future<void> register({
@@ -32,34 +98,51 @@ class AuthService {
     required String phone,
     required String password,
   }) async {
-    if (AppConfig.useMockData) {
-      await Future.delayed(const Duration(milliseconds: 1100));
-      return;
-    }
-    await _client.post(ApiConfig.register, body: {
-      'fullName': name,
-      'email': email,
-      'phone': phone,
-      'password': password,
-    });
+    await _client.post(
+      ApiConfig.register,
+      body: {
+        'fullName': name,
+        'email': email,
+        'phone': phone,
+        'password': password,
+      },
+    );
   }
 
   /// Send the chosen verification challenge to [email].
   Future<void> requestVerification(VerifyMethod method, String email) async {
-    final endpoint =
-        method == VerifyMethod.emailLink ? ApiConfig.sendEmailLink : ApiConfig.sendOtp;
-    if (AppConfig.useMockData) {
-      await Future.delayed(AppConfig.mockLatency);
-      return;
+    final endpoint = method == VerifyMethod.emailLink
+        ? ApiConfig.sendEmailLink
+        : ApiConfig.sendOtp;
+    await _client.get(endpoint, query: {'email': email});
+  }
+
+  /// Check current status of the magic link sign-in session.
+  Future<bool> checkSessionStatus(String email) async {
+    final response = await _client.get(
+      ApiConfig.sessionStatus,
+      query: {'email': email},
+    );
+    if (response != null && response['success'] == true) {
+      final data = response['data'];
+      if (data != null && data['accessToken'] != null) {
+        _client.authToken = data['accessToken'];
+        return true;
+      }
     }
-    await _client.post(endpoint, body: {'email': email});
+    return false;
   }
 
   Future<void> verifyOtp({required String email, required String code}) async {
-    if (AppConfig.useMockData) {
-      await Future.delayed(const Duration(milliseconds: 900));
-      return;
+    final response = await _client.post(
+      ApiConfig.verifyOtp,
+      body: {'email': email, 'otp': code},
+    );
+    if (response != null && response['success'] == true) {
+      final data = response['data'];
+      if (data != null && data['accessToken'] != null) {
+        _client.authToken = data['accessToken'];
+      }
     }
-    await _client.post(ApiConfig.verifyOtp, body: {'email': email, 'otp': code});
   }
 }

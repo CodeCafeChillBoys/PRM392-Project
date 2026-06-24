@@ -27,8 +27,10 @@ class _OtpScreenState extends State<OtpScreen> {
   static const int _initialSeconds = 120;
 
   final _auth = AuthService();
-  final _controllers =
-      List.generate(_otpLength, (_) => TextEditingController());
+  final _controllers = List.generate(
+    _otpLength,
+    (_) => TextEditingController(),
+  );
   final _focusNodes = List.generate(_otpLength, (_) => FocusNode());
 
   Timer? _timer;
@@ -108,7 +110,10 @@ class _OtpScreenState extends State<OtpScreen> {
       backgroundColor: AppColors.bgBase,
       body: Column(
         children: [
-          TvAppBar(mode: TvAppBarMode.page, onBack: () => Navigator.pop(context)),
+          TvAppBar(
+            mode: TvAppBarMode.page,
+            onBack: () => Navigator.pop(context),
+          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -120,14 +125,19 @@ class _OtpScreenState extends State<OtpScreen> {
                   const SizedBox(height: 8),
                   Text.rich(
                     TextSpan(
-                      style: AppText.body(AppColors.textSecondary)
-                          .copyWith(fontSize: 14, height: 1.5),
+                      style: AppText.body(
+                        AppColors.textSecondary,
+                      ).copyWith(fontSize: 14, height: 1.5),
                       children: [
-                        const TextSpan(text: 'Mã xác thực 6 số đã được gửi tới\n'),
+                        const TextSpan(
+                          text: 'Mã xác thực 6 số đã được gửi tới\n',
+                        ),
                         TextSpan(
                           text: widget.email,
                           style: AppText.mono(
-                              size: 13, color: AppColors.textAccent),
+                            size: 13,
+                            color: AppColors.textAccent,
+                          ),
                         ),
                       ],
                     ),
@@ -135,9 +145,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   const SizedBox(height: 28),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      for (var i = 0; i < _otpLength; i++) _otpBox(i),
-                    ],
+                    children: [for (var i = 0; i < _otpLength; i++) _otpBox(i)],
                   ),
                   const SizedBox(height: 22),
                   Center(child: _resend()),
@@ -209,7 +217,10 @@ class _OtpScreenState extends State<OtpScreen> {
             TextSpan(
               text: formatCountdown(_seconds),
               style: AppText.mono(
-                  size: 14, weight: FontWeight.w700, color: AppColors.textAccent),
+                size: 14,
+                weight: FontWeight.w700,
+                color: AppColors.textAccent,
+              ),
             ),
           ],
         ),
@@ -220,9 +231,12 @@ class _OtpScreenState extends State<OtpScreen> {
         _startTimer();
         _auth.requestVerification(VerifyMethod.otp, widget.email);
       },
-      child: Text('Gửi lại mã OTP',
-          style: AppText.body(AppColors.textAccent)
-              .copyWith(fontSize: 14, fontWeight: FontWeight.w600)),
+      child: Text(
+        'Gửi lại mã OTP',
+        style: AppText.body(
+          AppColors.textAccent,
+        ).copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

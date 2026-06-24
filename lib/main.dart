@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-
 import 'core/config/app_config.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
@@ -9,15 +8,24 @@ import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/state/app_nav.dart';
 import 'presentation/state/cart_controller.dart';
 import 'presentation/state/catalog_controller.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Light status-bar icons on the near-black canvas.
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    statusBarBrightness: Brightness.dark,
-  ));
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization failed: $e');
+    debugPrint('Please configure Firebase or add google-services.json if you want to use Firebase features.');
+  }
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+    ),
+  );
   runApp(const TechVoidApp());
 }
 
@@ -50,7 +58,9 @@ class TechVoidApp extends StatelessWidget {
           color: const Color(0xFF060608),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: AppConfig.appMaxWidth),
+              constraints: const BoxConstraints(
+                maxWidth: AppConfig.appMaxWidth,
+              ),
               child: ColoredBox(
                 color: AppColors.bgBase,
                 child: child ?? const SizedBox.shrink(),

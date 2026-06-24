@@ -4,7 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/services/auth_service.dart';
 import '../../widgets/widgets.dart';
-import 'method_screen.dart';
 
 /// Register — "Tạo tài khoản TECH_VOID": họ tên, email, SĐT, mật khẩu ×2.
 /// Mirrors `RegisterScreen.jsx`.
@@ -45,10 +44,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _password.text,
       );
       if (!mounted) return;
-      // Replace register with the verify-method step → back returns to login.
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const MethodScreen()),
-      );
+      TvToast.show(context, 'Đăng ký thành công! Vui lòng đăng nhập.');
+      Navigator.pop(context);
     } catch (_) {
       if (mounted) TvToast.show(context, 'Đăng ký thất bại. Thử lại nhé.');
     } finally {
@@ -62,7 +59,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: AppColors.bgBase,
       body: Column(
         children: [
-          TvAppBar(mode: TvAppBarMode.page, onBack: () => Navigator.pop(context)),
+          TvAppBar(
+            mode: TvAppBarMode.page,
+            onBack: () => Navigator.pop(context),
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
@@ -71,39 +71,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Text('Tạo tài khoản TECH_VOID', style: AppText.h1()),
                   const SizedBox(height: 6),
-                  Text('Gia nhập cộng đồng công nghệ ngay hôm nay.',
-                      style: AppText.body(AppColors.textSecondary)
-                          .copyWith(fontSize: 14)),
+                  Text(
+                    'Gia nhập cộng đồng công nghệ ngay hôm nay.',
+                    style: AppText.body(
+                      AppColors.textSecondary,
+                    ).copyWith(fontSize: 14),
+                  ),
                   const SizedBox(height: 24),
                   _Field(
-                      label: 'Họ và tên',
-                      controller: _name,
-                      iconName: 'user',
-                      hint: 'Nguyễn Văn A'),
+                    label: 'Họ và tên',
+                    controller: _name,
+                    iconName: 'user',
+                    hint: 'Nguyễn Văn A',
+                  ),
                   _Field(
-                      label: 'Email',
-                      controller: _email,
-                      iconName: 'mail',
-                      hint: 'email@techstore.vn',
-                      keyboardType: TextInputType.emailAddress),
+                    label: 'Email',
+                    controller: _email,
+                    iconName: 'mail',
+                    hint: 'email@techstore.vn',
+                    keyboardType: TextInputType.emailAddress,
+                  ),
                   _Field(
-                      label: 'Số điện thoại',
-                      controller: _phone,
-                      iconName: 'phone',
-                      hint: '090 123 4567',
-                      keyboardType: TextInputType.phone),
+                    label: 'Số điện thoại',
+                    controller: _phone,
+                    iconName: 'phone',
+                    hint: '090 123 4567',
+                    keyboardType: TextInputType.phone,
+                  ),
                   _Field(
-                      label: 'Mật khẩu',
-                      controller: _password,
-                      iconName: 'lock',
-                      hint: '••••••••',
-                      obscure: true),
+                    label: 'Mật khẩu',
+                    controller: _password,
+                    iconName: 'lock',
+                    hint: '••••••••',
+                    obscure: true,
+                  ),
                   _Field(
-                      label: 'Nhập lại mật khẩu',
-                      controller: _confirm,
-                      iconName: 'lock',
-                      hint: '••••••••',
-                      obscure: true),
+                    label: 'Nhập lại mật khẩu',
+                    controller: _confirm,
+                    iconName: 'lock',
+                    hint: '••••••••',
+                    obscure: true,
+                  ),
                   const SizedBox(height: 24),
                   TvButton(
                     label: 'Đăng ký',
@@ -119,13 +127,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('Đã có tài khoản? ',
-                              style: AppText.sm().copyWith(fontSize: 13)),
+                          Text(
+                            'Đã có tài khoản? ',
+                            style: AppText.sm().copyWith(fontSize: 13),
+                          ),
                           GestureDetector(
                             onTap: () => Navigator.pop(context),
-                            child: Text('Đăng nhập',
-                                style: AppText.sm(AppColors.textAccent).copyWith(
-                                    fontSize: 13, fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Đăng nhập',
+                              style: AppText.sm(AppColors.textAccent).copyWith(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ],
                       ),

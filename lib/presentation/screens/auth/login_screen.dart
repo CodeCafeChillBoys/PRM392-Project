@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-
+import 'package:tech_void/data/helpers/auth_helper.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/services/auth_service.dart';
+import '../../routing/app_routes.dart';
 import '../../widgets/widgets.dart';
 import 'method_screen.dart';
 import 'register_screen.dart';
@@ -18,10 +19,12 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _auth = AuthService();
-  final _email = TextEditingController(text: 'alex.nguyen@techstore.vn');
-  final _password = TextEditingController(text: 'techstore123');
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+
   bool _showPassword = false;
   bool _loading = false;
+  bool _googleLoading = false;
 
   @override
   void dispose() {
@@ -31,18 +34,62 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    if (_loading) return;
+    if (_loading || _googleLoading) return;
     setState(() => _loading = true);
     try {
-      await _auth.login(email: _email.text, password: _password.text);
-      if (!mounted) return;
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const MethodScreen()),
+      final device = await AuthHelper.getDeviceContext();
+      await _auth.login(
+        email: _email.text,
+        password: _password.text,
+        deviceId: device.deviceId,
+        deviceName: device.deviceName,
+        deviceType: device.deviceType,
+        fcmToken: device.fcmToken,
       );
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const MethodScreen()));
     } catch (e) {
-      if (mounted) TvToast.show(context, 'Đăng nhập thất bại. Thử lại nhé.');
+      if (mounted) {
+        TvToast.show(context, 'Đăng nhập thất bại');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _googleSubmit() async {
+    if (_googleLoading || _loading) return;
+
+    setState(() => _googleLoading = true);
+
+    try {
+      final device = await AuthHelper.getDeviceContext();
+
+      await _auth.googleLogin(
+        deviceId: device.deviceId,
+        deviceName: device.deviceName,
+        deviceType: device.deviceType,
+        fcmToken: device.fcmToken,
+      );
+
+      if (!mounted) return;
+
+      AppRoutes.enterApp(context);
+    } catch (e) {
+      if (!mounted) return;
+
+      final message = e.toString().replaceAll('Exception:', '').trim();
+
+      TvToast.show(
+        context,
+        message.isNotEmpty ? message : 'Đăng nhập Google thất bại.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _googleLoading = false);
+      }
     }
   }
 
@@ -78,8 +125,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           'Cửa hàng công nghệ tương lai.\nĐăng nhập để khám phá ưu đãi độc quyền.',
                           textAlign: TextAlign.center,
-                          style: AppText.body(AppColors.textSecondary)
-                              .copyWith(fontSize: 14),
+                          style: AppText.body(
+                            AppColors.textSecondary,
+                          ).copyWith(fontSize: 14),
                         ),
                         const SizedBox(height: 40),
                         const _FieldLabel('Email'),
@@ -109,10 +157,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: GestureDetector(
-                            onTap: () => TvToast.show(context,
-                                'Tính năng đặt lại mật khẩu đang được phát triển'),
-                            child: Text('Quên mật khẩu?',
-                                style: AppText.sm(AppColors.textAccent)),
+                            onTap: () => TvToast.show(
+                              context,
+                              'Tính năng đặt lại mật khẩu đang được phát triển',
+                            ),
+                            child: Text(
+                              'Quên mật khẩu?',
+                              style: AppText.sm(AppColors.textAccent),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -124,13 +176,63 @@ class _LoginScreenState extends State<LoginScreen> {
                           trailingIcon: const TvIcon('arrow-right', size: 18),
                           onPressed: _submit,
                         ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: Divider(color: AppColors.borderSubtle),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Text(
+                                'HOẶC',
+                                style: AppText.label().copyWith(
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                            ),
+                            const Expanded(
+                              child: Divider(color: AppColors.borderSubtle),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        TvButton(
+                          label: 'Đăng nhập bằng Google',
+                          variant: TvButtonVariant.ghost,
+                          size: TvButtonSize.lg,
+                          fullWidth: true,
+                          loading: _googleLoading,
+                          leadingIcon: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: const Text(
+                              'G',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                fontFamily: 'sans-serif',
+                              ),
+                            ),
+                          ),
+                          onPressed: _googleSubmit,
+                        ),
                         const Spacer(),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 24),
                           child: _RegisterPrompt(
                             onRegister: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                  builder: (_) => const RegisterScreen()),
+                                builder: (_) => const RegisterScreen(),
+                              ),
                             ),
                           ),
                         ),
@@ -175,14 +277,17 @@ class _RegisterPrompt extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Chưa có tài khoản? ',
-              style: AppText.sm().copyWith(fontSize: 13)),
+          Text(
+            'Chưa có tài khoản? ',
+            style: AppText.sm().copyWith(fontSize: 13),
+          ),
           GestureDetector(
             onTap: onRegister,
             child: Text(
               'Đăng ký ngay',
-              style: AppText.sm(AppColors.textAccent)
-                  .copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+              style: AppText.sm(
+                AppColors.textAccent,
+              ).copyWith(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),
         ],

@@ -15,8 +15,11 @@ class NotificationService {
       await Future.delayed(AppConfig.mockLatency);
       return MockData.notifications;
     }
-    final json = await _client.get(ApiConfig.notifications) as Map<String, dynamic>;
-    List<AppNotification> parse(String key) => (json[key] as List? ?? [])
+    final json = await _client.get(ApiConfig.notifications);
+    final Map<String, dynamic> data = (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
+        ? (json['data'] as Map<String, dynamic>)
+        : (json is Map<String, dynamic> ? json : {});
+    List<AppNotification> parse(String key) => (data[key] as List? ?? [])
         .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
         .toList();
     return NotificationFeeds(promo: parse('promo'), orders: parse('orders'));

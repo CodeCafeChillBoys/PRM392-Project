@@ -20,7 +20,10 @@ class CartService {
       return MockData.cart;
     }
     final json = await _client.get(ApiConfig.cart);
-    return (json as List)
+    final List<dynamic> list = (json is Map<String, dynamic> && json['data'] is List)
+        ? (json['data'] as List)
+        : (json is List ? json : []);
+    return list
         .map((e) => CartItem.fromJson(e as Map<String, dynamic>))
         .toList();
   }

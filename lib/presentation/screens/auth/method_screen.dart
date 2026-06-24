@@ -23,15 +23,17 @@ class MethodScreen extends StatelessWidget {
     void choose(VerifyMethod method, Widget next) {
       // Fire the request (mock); navigate straight to the waiting/OTP screen.
       auth.requestVerification(method, kVerifyEmail);
-      Navigator.of(context)
-          .push(MaterialPageRoute(builder: (_) => next));
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => next));
     }
 
     return Scaffold(
       backgroundColor: AppColors.bgBase,
       body: Column(
         children: [
-          TvAppBar(mode: TvAppBarMode.page, onBack: () => Navigator.pop(context)),
+          TvAppBar(
+            mode: TvAppBarMode.page,
+            onBack: () => Navigator.pop(context),
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -43,8 +45,9 @@ class MethodScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     'Chọn một phương thức để hoàn tất bảo mật cho tài khoản của bạn.',
-                    style: AppText.body(AppColors.textSecondary)
-                        .copyWith(fontSize: 14),
+                    style: AppText.body(
+                      AppColors.textSecondary,
+                    ).copyWith(fontSize: 14),
                   ),
                   const SizedBox(height: 28),
                   _MethodCard(
@@ -124,8 +127,7 @@ class _MethodCard extends StatelessWidget {
               child: TvIcon(
                 iconName,
                 size: 26,
-                color:
-                    primary ? AppColors.textOnAccent : AppColors.textAccent,
+                color: primary ? AppColors.textOnAccent : AppColors.textAccent,
               ),
             ),
             const SizedBox(width: 16),
@@ -134,18 +136,27 @@ class _MethodCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(title,
-                      style: AppText.h2()
-                          .copyWith(fontSize: 16, fontWeight: FontWeight.w700)),
+                  Text(
+                    title,
+                    style: AppText.h2().copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 3),
-                  Text(description,
-                      style: AppText.sm().copyWith(fontSize: 13, height: 1.4)),
+                  Text(
+                    description,
+                    style: AppText.sm().copyWith(fontSize: 13, height: 1.4),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            const TvIcon('chevron-right',
-                size: 20, color: AppColors.textTertiary),
+            const TvIcon(
+              'chevron-right',
+              size: 20,
+              color: AppColors.textTertiary,
+            ),
           ],
         ),
       ),

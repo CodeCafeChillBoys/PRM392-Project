@@ -1,6 +1,6 @@
 name: tech_void
 description: "TECH_VOID — Vietnamese tech e-commerce mobile app (TechStore). Dark neon-cyberpunk UI built on a Clean Architecture layered structure."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -11,6 +11,9 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  device_info_plus: ^13.1.0
+  firebase_core: ^4.0.0
+  firebase_messaging: ^16.0.0
 
   # State management (lightweight, course-friendly).
   provider: ^6.0.0
@@ -21,6 +24,9 @@ dependencies:
 
   # HTTP client used by the (swappable) API layer once the backend is ready.
   http: ^1.0.0
+
+  # Google Sign-In for authentication
+  google_sign_in: ^6.2.1
 
 dev_dependencies:
   flutter_test:
