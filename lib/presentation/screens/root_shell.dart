@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../state/app_nav.dart';
+import '../state/cart_controller.dart';
 import '../widgets/widgets.dart';
 import 'profile/profile_screen.dart';
 import 'shop/cart_screen.dart';
@@ -35,12 +36,13 @@ class _RootShellState extends State<RootShell> {
   @override
   void initState() {
     super.initState();
-    final message = widget.welcomeMessage;
-    if (message != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) TvToast.show(context, message);
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Tải giỏ từ BE sau khi đăng nhập.
+      context.read<CartController>().refresh();
+      final message = widget.welcomeMessage;
+      if (message != null) TvToast.show(context, message);
+    });
   }
 
   @override

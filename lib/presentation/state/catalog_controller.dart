@@ -15,20 +15,19 @@ class CatalogController extends ChangeNotifier {
 
   final ProductService _service;
   List<Product> _products = const [];
+  List<String> _categories = const ['Tất cả'];
   bool _loading = true;
 
   bool get isLoading => _loading;
   List<Product> get products => _products;
-
-  /// 'Tất cả' (all) sentinel + the distinct categories present, first-seen order.
-  List<String> get categories =>
-      ['Tất cả', ...{for (final p in _products) p.categoryName}];
+  List<String> get categories => _categories;
 
   Future<void> load() async {
     _loading = true;
     notifyListeners();
     try {
       _products = await _service.fetchProducts();
+      _categories = await _service.fetchCategories();
     } catch (_) {
       _products = const [];
     } finally {

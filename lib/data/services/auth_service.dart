@@ -1,5 +1,5 @@
 import 'package:google_sign_in/google_sign_in.dart';
-
+import 'package:jwt_decoder/jwt_decoder.dart';
 import '../../core/config/api_config.dart';
 import 'api_client.dart';
 
@@ -21,6 +21,15 @@ class AuthService {
         '642269070314-u0sust2rp5gcqgqtdsdhrvs0dmc1uees.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
   );
+
+  String? _extractUserIdFromToken(String token) {
+  final claims = JwtDecoder.decode(token);
+  final id = claims['nameid'] ??
+             claims['sub'] ??
+             claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+  return id?.toString();   // áp cho dù lấy từ claim nào
+}
+
   Future<String?> login({
     required String email,
     required String password,
@@ -85,6 +94,7 @@ class AuthService {
 
         if (data?['accessToken'] != null) {
           _client.authToken = data['accessToken'];
+          _client.userId = _extractUserIdFromToken(data['accessToken']);
           return;
         }
       }
@@ -131,6 +141,7 @@ class AuthService {
       final data = response['data'];
       if (data != null && data['accessToken'] != null) {
         _client.authToken = data['accessToken'];
+        _client.userId = _extractUserIdFromToken(data['accessToken']);
         return true;
       }
     }
@@ -146,6 +157,7 @@ class AuthService {
       final data = response['data'];
       if (data != null && data['accessToken'] != null) {
         _client.authToken = data['accessToken'];
+        _client.userId = _extractUserIdFromToken(data['accessToken']);
       }
     }
   }

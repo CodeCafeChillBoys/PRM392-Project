@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -56,21 +57,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         total: _grand,
       );
       if (!mounted) return;
-      if (result.needsGateway) {
-        TvToast.show(context, 'Đang chuyển tới cổng VNPay…');
-        await Future.delayed(const Duration(milliseconds: 1400));
-        if (!mounted) return;
-        cart.clear();
+
+      // BE đã xoá giỏ → đồng bộ lại.
+      cart.refresh();
+
+      if (result.needsGateway && result.gatewayUrl != null) {
         appNav.goExplore();
         navigator.pop();
-        TvToast.show(
-            navigator.context, 'Thanh toán VNPay thành công! Đơn đã xác nhận');
+        TvToast.show(navigator.context,
+            'Đã tạo đơn & chuyển sang VNPay. Đơn đang chờ thanh toán.');
+        // Mở cổng VNPay (sau cùng để không dùng context sau await).
+        try {
+          await launchUrl(Uri.parse(result.gatewayUrl!),
+              mode: LaunchMode.externalApplication);
+        } catch (_) {
+          // đơn đã tạo, bỏ qua lỗi mở cổng
+        }
       } else {
-        cart.clear();
         appNav.goExplore();
         navigator.pop();
         TvToast.show(
-            navigator.context, 'Đặt hàng thành công! Đơn đang chờ xử lý');
+            navigator.context, 'Đặt hàng thành công! Đơn đang chờ xử lý.');
       }
     } catch (_) {
       if (mounted) {

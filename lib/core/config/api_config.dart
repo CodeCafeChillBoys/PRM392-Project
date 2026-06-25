@@ -60,12 +60,14 @@ class ApiConfig {
   // ----------------------------------------------------------------------
   static const String products = '/api/Products';
   static String productById(String id) => '/api/Products/$id';
-
+  static const String categories = '/api/Category';
   // ----------------------------------------------------------------------
   // Cart — mirrors "TechStoreAPI / Cart" (add / update-qty / remove).
   // ----------------------------------------------------------------------
-  static const String cart = '/api/Cart';
-  static String cartItemById(String id) => '/api/Cart/$id';
+  static String cartByUserId(String userId) => '/api/Carts/user/$userId';
+  static const String cartAdd = '/api/Carts/add';
+  static String cartItemById(String id) => '/api/Carts/$id';
+  static String cartClear(String userId) => '/api/Carts/clear/$userId';
 
   // ----------------------------------------------------------------------
   // Order / Checkout — mirrors "Checkout & Billing".

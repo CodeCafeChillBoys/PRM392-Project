@@ -77,7 +77,8 @@ class _TabButton extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Column(
+      child: IntrinsicWidth(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -104,7 +105,7 @@ class _TabButton extends StatelessWidget {
             ),
           ),
         ],
-      ),
+      )),
     );
   }
 }

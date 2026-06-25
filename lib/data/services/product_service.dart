@@ -17,10 +17,14 @@ class ProductService {
       await Future.delayed(AppConfig.mockLatency);
       return MockData.categories;
     }
-    // Backend has no dedicated categories endpoint yet; derive client-side.
-    final products = await fetchProducts();
-    return ['Tất cả', ...{for (final p in products) p.categoryName}];
+    final json = await _client.get(ApiConfig.categories);
+    final List<dynamic> list = (json is Map<String, dynamic> && json['data'] is List)
+        ? (json['data'] as List)
+        : (json is List ? json : []);
+    final names = list.map((e) => e['name'] as String).toList();
+    return ['Tất cả', ...names];
   }
+
 
   /// All products, optionally filtered by [category] and a free-text [query]
   /// (name + brand). The same filtering the backend `?category=&q=` would do.
