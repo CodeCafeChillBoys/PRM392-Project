@@ -58,7 +58,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
       if (!mounted) return;
 
-      // BE đã tạo đơn và XOÁ giỏ phía server → đồng bộ lại giỏ (giờ rỗng).
+      // BE đã xoá giỏ → đồng bộ lại.
       cart.refresh();
 
       if (result.needsGateway && result.gatewayUrl != null) {
@@ -66,12 +66,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         navigator.pop();
         TvToast.show(navigator.context,
             'Đã tạo đơn & chuyển sang VNPay. Đơn đang chờ thanh toán.');
-        // Mở cổng VNPay THẬT (làm sau cùng — không dùng context nữa sau await).
+        // Mở cổng VNPay (sau cùng để không dùng context sau await).
         try {
           await launchUrl(Uri.parse(result.gatewayUrl!),
               mode: LaunchMode.externalApplication);
         } catch (_) {
-          // Mở cổng lỗi cũng không sao — đơn đã được tạo (chờ thanh toán).
+          // đơn đã tạo, bỏ qua lỗi mở cổng
         }
       } else {
         appNav.goExplore();

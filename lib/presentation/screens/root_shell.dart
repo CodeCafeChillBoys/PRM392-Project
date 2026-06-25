@@ -38,7 +38,7 @@ class _RootShellState extends State<RootShell> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      // Vào app sau khi đăng nhập → tải giỏ hàng thật từ BE (userId đã có).
+      // Tải giỏ từ BE sau khi đăng nhập.
       context.read<CartController>().refresh();
       final message = widget.welcomeMessage;
       if (message != null) TvToast.show(context, message);

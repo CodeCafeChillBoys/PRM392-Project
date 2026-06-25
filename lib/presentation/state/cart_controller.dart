@@ -4,12 +4,7 @@ import '../../data/models/cart_item.dart';
 import '../../data/models/product.dart';
 import '../../data/services/cart_service.dart';
 
-/// Giỏ hàng — BE là nguồn dữ liệu chính (source of truth).
-///
-/// Mỗi thao tác (thêm/sửa/xoá) gọi API tới [CartService] rồi [refresh] lại từ
-/// backend, để giỏ luôn đồng bộ và mỗi dòng giỏ mang ĐÚNG `id` thật của BE
-/// (cần cho sửa số lượng / xoá). Khác với bản cũ: không còn cập nhật local kiểu
-/// "fire-and-forget" và không nuốt lỗi.
+/// Giỏ hàng: mỗi thao tác gọi API qua [CartService] rồi refresh lại từ BE.
 class CartController extends ChangeNotifier {
   CartController({CartService? service}) : _service = service ?? CartService();
 
@@ -25,7 +20,7 @@ class CartController extends ChangeNotifier {
   int get count => _items.fold(0, (sum, i) => sum + i.quantity);
   double get subtotal => _items.fold(0.0, (sum, i) => sum + i.totalPrice);
 
-  /// Tải/đồng bộ giỏ hàng từ BE. Gọi sau khi đăng nhập và sau mỗi thay đổi.
+  /// Tải/đồng bộ giỏ từ BE.
   Future<void> refresh() async {
     _loading = true;
     _error = null;
@@ -41,10 +36,8 @@ class CartController extends ChangeNotifier {
     }
   }
 
-  /// Giữ tên cũ cho nơi nào còn gọi.
   Future<void> reload() => refresh();
 
-  /// Thêm [product] vào giỏ (BE tự cộng dồn nếu đã có) rồi đồng bộ lại.
   Future<void> add(Product product, {int quantity = 1}) async {
     try {
       await _service.addItem(product.id, quantity);
@@ -55,7 +48,6 @@ class CartController extends ChangeNotifier {
     }
   }
 
-  /// Đặt lại số lượng cho 1 dòng giỏ ([cartItemId] = id thật do BE trả về).
   Future<void> setQuantity(String cartItemId, int quantity) async {
     if (quantity <= 0) return remove(cartItemId);
     try {
@@ -67,7 +59,6 @@ class CartController extends ChangeNotifier {
     }
   }
 
-  /// Xoá 1 dòng giỏ.
   Future<void> remove(String cartItemId) async {
     try {
       await _service.removeItem(cartItemId);
@@ -78,7 +69,6 @@ class CartController extends ChangeNotifier {
     }
   }
 
-  /// Xoá sạch giỏ của user.
   Future<void> clear() async {
     try {
       await _service.clearCart();

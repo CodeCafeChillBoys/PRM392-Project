@@ -42,11 +42,9 @@ class OrderService {
     final json = await _client.post(ApiConfig.checkout, body: {
       'shippingAddress': shippingAddress,
       'paymentMethod': paymentMethod,
-      'userId': userId, // BE bắt buộc: CheckoutRequest.UserId
+      'userId': userId, // BE bắt buộc userId
     }) as Map<String, dynamic>;
-    // BE trả khác nhau theo phương thức:
-    //  - VNPay   → { paymentUrl, orderId, ... }            (orderId ở top-level)
-    //  - COD/... → { message, requiresPayment:false, data:{ id, ... } }
+    // orderId: VNPay trả ở top-level, COD nằm trong data.id
     final data = json['data'];
     final orderId = json['orderId'] ??
         json['id'] ??
