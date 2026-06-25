@@ -27,6 +27,7 @@ class ApiClient {
 
   /// Optional bearer token, set after login once auth is wired end-to-end.
   String? authToken;
+  String? userId;
 
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',

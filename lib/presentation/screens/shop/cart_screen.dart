@@ -27,7 +27,12 @@ class CartScreen extends StatelessWidget {
       children: [
         const TvAppBar(mode: TvAppBarMode.page, title: 'Giỏ hàng'),
         Expanded(
-          child: cart.isEmpty ? _EmptyCart() : _CartBody(cart: cart),
+          child: cart.isLoading && cart.isEmpty
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppColors.textAccent))
+              : cart.isEmpty
+                  ? _EmptyCart()
+                  : _CartBody(cart: cart),
         ),
       ],
     );

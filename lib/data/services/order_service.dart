@@ -35,12 +35,25 @@ class OrderService {
             : null,
       );
     }
+    final userId = _client.userId;
+    if (userId == null) {
+      throw Exception('Chưa đăng nhập — không thể đặt hàng.');
+    }
     final json = await _client.post(ApiConfig.checkout, body: {
       'shippingAddress': shippingAddress,
       'paymentMethod': paymentMethod,
+      'userId': userId, // BE bắt buộc: CheckoutRequest.UserId
     }) as Map<String, dynamic>;
+    // BE trả khác nhau theo phương thức:
+    //  - VNPay   → { paymentUrl, orderId, ... }            (orderId ở top-level)
+    //  - COD/... → { message, requiresPayment:false, data:{ id, ... } }
+    final data = json['data'];
+    final orderId = json['orderId'] ??
+        json['id'] ??
+        (data is Map<String, dynamic> ? data['id'] : null) ??
+        '';
     return OrderResult(
-      orderId: '${json['orderId'] ?? json['id'] ?? ''}',
+      orderId: '$orderId',
       gatewayUrl: json['paymentUrl'] as String? ?? json['gatewayUrl'] as String?,
     );
   }

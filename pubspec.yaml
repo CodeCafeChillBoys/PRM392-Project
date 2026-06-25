@@ -3,13 +3,14 @@ description: "TECH_VOID — Vietnamese tech e-commerce mobile app (TechStore). D
 publish_to: "none"
 version: 1.0.0+1
 
+
 environment:
   sdk: ^3.12.1
 
 dependencies:
   flutter:
     sdk: flutter
-
+  jwt_decoder: ^2.0.1
   cupertino_icons: ^1.0.8
   device_info_plus: ^13.1.0
   firebase_core: ^4.0.0
