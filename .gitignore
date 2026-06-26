@@ -43,7 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-
+/docs
 # Khoá ký release & secrets (KHÔNG commit)
 android/key.properties
 *.jks

@@ -3,6 +3,7 @@
 library;
 
 export 'dot_grid_background.dart';
+export 'order_status_badge.dart';
 export 'pressable.dart';
 export 'product_card.dart';
 export 'product_image.dart';
@@ -12,6 +13,7 @@ export 'tv_bottom_nav.dart';
 export 'tv_button.dart';
 export 'tv_card.dart';
 export 'tv_chat_bubble.dart';
+export 'tv_confirm_dialog.dart';
 export 'tv_icon.dart';
 export 'tv_icon_button.dart';
 export 'tv_input.dart';
