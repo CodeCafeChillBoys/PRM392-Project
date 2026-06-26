@@ -162,65 +162,7 @@ class MockData {
   ];
 
   static const NotificationFeeds notifications = NotificationFeeds(
-    promo: [
-      AppNotification(
-        iconName: 'tag',
-        tone: NotificationTone.accent,
-        unread: true,
-        title: 'Deal hời: iPhone 15 Pro Max giảm 2 triệu',
-        body: 'Ưu đãi có hạn dành riêng cho thành viên VIP. Kiểm tra ngay để không bỏ lỡ!',
-        time: '10 phút trước',
-      ),
-      AppNotification(
-        iconName: 'percent',
-        tone: NotificationTone.violet,
-        unread: false,
-        title: 'Flash Sale: Đồ công nghệ giảm tới 50%',
-        body: 'Hàng trăm sản phẩm tai nghe, chuột gaming đang chờ đón bạn.',
-        time: '2 giờ trước',
-      ),
-      AppNotification(
-        iconName: 'truck',
-        tone: NotificationTone.accent,
-        unread: true,
-        title: 'Voucher vận chuyển 0đ đã sẵn sàng',
-        body: 'Áp dụng cho mọi đơn hàng từ 500k trong hôm nay.',
-        time: '5 giờ trước',
-      ),
-      AppNotification(
-        iconName: 'gift',
-        tone: NotificationTone.violet,
-        unread: false,
-        title: 'Chúc mừng sinh nhật TECH_VOID',
-        body: 'Cùng nhìn lại hành trình 2 năm phát triển của cộng đồng công nghệ.',
-        time: '1 ngày trước',
-      ),
-    ],
-    orders: [
-      AppNotification(
-        iconName: 'check-circle',
-        tone: NotificationTone.accent,
-        unread: true,
-        title: 'Đơn #TV24902 đã được xác nhận',
-        body: 'Thanh toán VNPay thành công. Đơn hàng đang được chuẩn bị.',
-        time: '20 phút trước',
-      ),
-      AppNotification(
-        iconName: 'truck',
-        tone: NotificationTone.violet,
-        unread: true,
-        title: 'Đơn #TV24871 đang vận chuyển',
-        body: 'Dự kiến giao trong hôm nay, 14:00 - 18:00.',
-        time: '6 giờ trước',
-      ),
-      AppNotification(
-        iconName: 'package-check',
-        tone: NotificationTone.accent,
-        unread: false,
-        title: 'Đơn #TV24817 đã giao thành công',
-        body: 'Cảm ơn bạn đã mua sắm tại TECH_VOID!',
-        time: '2 ngày trước',
-      ),
-    ],
+    promo: [],
+    orders: [],
   );
 }
