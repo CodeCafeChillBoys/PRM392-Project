@@ -7,9 +7,9 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/services/mock_data.dart';
 import '../../../data/services/order_service.dart';
-import '../../state/app_nav.dart';
 import '../../state/cart_controller.dart';
 import '../../widgets/widgets.dart';
+import 'payment_result_screen.dart';
 
 /// Checkout — address, shipping, payment (VNPay / CreditCard / BankTransfer /
 /// COD), invoice summary (`POST /api/order/checkout`).
@@ -27,15 +27,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   static const double _voucher = 120000;
 
   final _orderService = OrderService();
-  final _address =
-      TextEditingController(text: '221B Baker Street, Quận 1, TP. Hồ Chí Minh');
+  final _address = TextEditingController(
+    text: '221B Baker Street, Quận 1, TP. Hồ Chí Minh',
+  );
   String _shipping = 'fast';
   String _payment = 'VNPay';
   bool _confirming = false;
 
-  double get _shipFee => MockData.shippingOptions
-      .firstWhere((o) => o.value == _shipping)
-      .fee;
+  double get _shipFee =>
+      MockData.shippingOptions.firstWhere((o) => o.value == _shipping).fee;
   double get _grand => widget.total + _shipFee - _voucher;
 
   @override
@@ -48,7 +48,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (_confirming) return;
     setState(() => _confirming = true);
     final cart = context.read<CartController>();
-    final appNav = context.read<AppNav>();
     final navigator = Navigator.of(context);
     try {
       final result = await _orderService.checkout(
@@ -62,22 +61,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       cart.refresh();
 
       if (result.needsGateway && result.gatewayUrl != null) {
-        appNav.goExplore();
-        navigator.pop();
-        TvToast.show(navigator.context,
-            'Đã tạo đơn & chuyển sang VNPay. Đơn đang chờ thanh toán.');
-        // Mở cổng VNPay (sau cùng để không dùng context sau await).
+        // Mở cổng VNPay
         try {
-          await launchUrl(Uri.parse(result.gatewayUrl!),
-              mode: LaunchMode.externalApplication);
+          await launchUrl(
+            Uri.parse(result.gatewayUrl!),
+            mode: LaunchMode.externalApplication,
+          );
         } catch (_) {
           // đơn đã tạo, bỏ qua lỗi mở cổng
         }
+        if (mounted) {
+          setState(() => _confirming = false);
+        }
       } else {
-        appNav.goExplore();
-        navigator.pop();
-        TvToast.show(
-            navigator.context, 'Đặt hàng thành công! Đơn đang chờ xử lý.');
+        // Thay thế màn hình Checkout bằng màn hình Kết quả thanh toán
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => PaymentResultScreen(
+              success: true,
+              orderId: result.orderId,
+              totalAmount: _grand,
+              paymentMethod: _payment,
+            ),
+          ),
+        );
       }
     } catch (_) {
       if (mounted) {
@@ -116,19 +123,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   size: TvButtonSize.lg,
                   fullWidth: true,
                   loading: _confirming,
-                  leadingIcon:
-                      isVNPay ? const TvIcon('external-link', size: 18) : null,
+                  leadingIcon: isVNPay
+                      ? const TvIcon('external-link', size: 18)
+                      : null,
                   onPressed: _confirm,
                 ),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const TvIcon('shield-check',
-                        size: 13, color: AppColors.textTertiary),
+                    const TvIcon(
+                      'shield-check',
+                      size: 13,
+                      color: AppColors.textTertiary,
+                    ),
                     const SizedBox(width: 6),
-                    Text('Thanh toán an toàn với mã hóa AES-256',
-                        style: AppText.xs(AppColors.textTertiary)),
+                    Text(
+                      'Thanh toán an toàn với mã hóa AES-256',
+                      style: AppText.xs(AppColors.textTertiary),
+                    ),
                   ],
                 ),
               ],
@@ -144,17 +157,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const TvSectionHeader(
-            icon: TvIcon('map-pin'), title: 'Địa chỉ nhận hàng'),
+          icon: TvIcon('map-pin'),
+          title: 'Địa chỉ nhận hàng',
+        ),
         const SizedBox(height: 12),
         Text.rich(
           TextSpan(
             children: [
               TextSpan(
-                  text: 'Alex Nguyen',
-                  style: AppText.body().copyWith(fontWeight: FontWeight.w700)),
+                text: 'Alex Nguyen',
+                style: AppText.body().copyWith(fontWeight: FontWeight.w700),
+              ),
               TextSpan(
-                  text: ' · 090 123 4567',
-                  style: AppText.body(AppColors.textSecondary)),
+                text: ' · 090 123 4567',
+                style: AppText.body(AppColors.textSecondary),
+              ),
             ],
           ),
         ),
@@ -173,7 +190,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const TvSectionHeader(
-            icon: TvIcon('truck'), title: 'Phương thức vận chuyển'),
+          icon: TvIcon('truck'),
+          title: 'Phương thức vận chuyển',
+        ),
         const SizedBox(height: 12),
         for (final option in MockData.shippingOptions) ...[
           TvOptionRow(
@@ -197,7 +216,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const TvSectionHeader(
-            icon: TvIcon('credit-card'), title: 'Phương thức thanh toán'),
+          icon: TvIcon('credit-card'),
+          title: 'Phương thức thanh toán',
+        ),
         const SizedBox(height: 12),
         for (final method in MockData.paymentMethods) ...[
           TvOptionRow(
