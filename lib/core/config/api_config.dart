@@ -81,6 +81,8 @@ class ApiConfig {
   // Notifications.
   // ----------------------------------------------------------------------
   static const String notifications = '/api/notifications';
+  static String markNotificationRead(String id) => '/api/notifications/$id/read';
+  static const String markAllNotificationsRead = '/api/notifications/read-all';
 
   /// Build an absolute URL from one of the endpoint constants above.
   static Uri uri(String endpoint, [Map<String, dynamic>? query]) {
