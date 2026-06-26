@@ -1,5 +1,6 @@
 import '../../core/config/api_config.dart';
 import '../../core/config/app_config.dart';
+import '../models/order_model.dart';
 import 'api_client.dart';
 
 /// Result of a checkout — the created order id and, for gateway methods
@@ -54,5 +55,37 @@ class OrderService {
       orderId: '$orderId',
       gatewayUrl: json['paymentUrl'] as String? ?? json['gatewayUrl'] as String?,
     );
+  }
+
+  /// Tra trạng thái thanh toán của đơn (cho màn chờ VNPay): 'Pending' | 'Paid' | 'Failed'.
+  Future<String> fetchPaymentStatus(String orderId) async {
+    final json = await _client.get(ApiConfig.orderById(orderId));
+    final map = (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
+        ? json['data'] as Map<String, dynamic>
+        : (json is Map<String, dynamic> ? json : <String, dynamic>{});
+    return map['paymentStatus'] as String? ?? '';
+  }
+
+  /// Lấy tất cả đơn (cho trang Staff).
+  Future<List<OrderModel>> fetchAllOrders() async {
+    final json = await _client.get(ApiConfig.orders);
+    final list = json is List ? json : const [];
+    return list
+        .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Lấy đơn của 1 user (cho màn "Đơn của tôi").
+  Future<List<OrderModel>> fetchUserOrders(String userId) async {
+    final json = await _client.get(ApiConfig.ordersByUser(userId));
+    final list = json is List ? json : const [];
+    return list
+        .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Đổi trạng thái đơn (Staff): PUT /api/Orders/{id}/status (body = chuỗi trạng thái).
+  Future<void> updateOrderStatus(String orderId, String status) async {
+    await _client.put(ApiConfig.orderStatusById(orderId), body: status);
   }
 }

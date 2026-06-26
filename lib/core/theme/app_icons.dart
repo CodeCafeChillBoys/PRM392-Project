@@ -62,6 +62,9 @@ class AppIcons {
     'percent': Icons.percent_rounded,
     'gift': Icons.card_giftcard_rounded,
     'package-check': Icons.inventory_2_outlined,
+    'package': Icons.inventory_2_outlined,
+    'inbox': Icons.inbox_outlined,
+    'log-out': Icons.logout_rounded,
 
     // device status bar
     'signal': Icons.signal_cellular_alt_rounded,

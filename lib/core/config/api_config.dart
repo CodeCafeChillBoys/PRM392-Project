@@ -73,9 +73,22 @@ class ApiConfig {
   // Order / Checkout — mirrors "Checkout & Billing".
   // ----------------------------------------------------------------------
   static const String checkout = '/api/order/checkout';
+  static const String orders = '/api/Orders';
+  static String orderById(String id) => '/api/Orders/$id';
+  static String ordersByUser(String userId) => '/api/Orders/user/$userId';
+  static String orderStatusById(String id) => '/api/Orders/$id/status';
 
   /// VNPay payment-gateway hand-off path (used by both the mock and real flows).
   static String vnpayGateway(String orderId) => '/payment/vnpay?order=$orderId';
+
+  // ----------------------------------------------------------------------
+  // Shipping (GHN qua BE) — địa chỉ (tỉnh/huyện/xã) + tính phí + tracking.
+  // ----------------------------------------------------------------------
+  static const String shippingProvinces = '/api/Shipping/provinces';
+  static String shippingDistricts(int provinceId) => '/api/Shipping/districts/$provinceId';
+  static String shippingWards(int districtId) => '/api/Shipping/wards/$districtId';
+  static const String shippingFee = '/api/Shipping/fee';
+  static String shippingTrack(String code) => '/api/Shipping/track/$code';
 
   // ----------------------------------------------------------------------
   // Notifications.

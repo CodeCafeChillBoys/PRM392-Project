@@ -22,13 +22,31 @@ class AuthService {
     scopes: ['email', 'profile'],
   );
 
-  String? _extractUserIdFromToken(String token) {
-  final claims = JwtDecoder.decode(token);
-  final id = claims['nameid'] ??
-             claims['sub'] ??
-             claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
-  return id?.toString();   // áp cho dù lấy từ claim nào
-}
+  /// Giải mã JWT, lưu userId / userName / userEmail vào client dùng chung.
+  void _applySession(String token) {
+    final claims = JwtDecoder.decode(token);
+    _client.userId = (claims['nameid'] ??
+            claims['sub'] ??
+            claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'])
+        ?.toString();
+    _client.userName = (claims['unique_name'] ?? claims['name'])?.toString();
+    _client.userEmail = claims['email']?.toString();
+  }
+
+  /// Đăng xuất: xoá toàn bộ session trong client dùng chung và thoát Google.
+  /// Dùng chung cho cả Staff lẫn khách. (Session vốn chỉ ở bộ nhớ, không persist.)
+  Future<void> logout() async {
+    _client.authToken = null;
+    _client.userId = null;
+    _client.userName = null;
+    _client.userEmail = null;
+    _client.userRole = null;
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {
+      
+    }
+  }
 
   Future<String?> login({
     required String email,
@@ -94,7 +112,7 @@ class AuthService {
 
         if (data?['accessToken'] != null) {
           _client.authToken = data['accessToken'];
-          _client.userId = _extractUserIdFromToken(data['accessToken']);
+          _applySession(data['accessToken']);
           return;
         }
       }
@@ -141,7 +159,7 @@ class AuthService {
       final data = response['data'];
       if (data != null && data['accessToken'] != null) {
         _client.authToken = data['accessToken'];
-        _client.userId = _extractUserIdFromToken(data['accessToken']);
+        _applySession(data['accessToken']);
         return true;
       }
     }
@@ -157,7 +175,7 @@ class AuthService {
       final data = response['data'];
       if (data != null && data['accessToken'] != null) {
         _client.authToken = data['accessToken'];
-        _client.userId = _extractUserIdFromToken(data['accessToken']);
+        _applySession(data['accessToken']);
       }
     }
   }
