@@ -2,7 +2,6 @@ import '../models/app_notification.dart';
 import '../models/cart_item.dart';
 import '../models/payment_method.dart';
 import '../models/product.dart';
-import '../models/shipping_option.dart';
 
 /// In-memory sample data — a faithful port of `ui_kits/techvoid-app/data.js`,
 /// with shapes aligned to TechStoreAPI DTOs. Used by the service layer while
@@ -141,23 +140,6 @@ class MockData {
       iconName: 'banknote',
       title: 'Thanh toán khi nhận hàng (COD)',
       subtitle: 'Tiền mặt khi giao tới',
-    ),
-  ];
-
-  static const List<ShippingOption> shippingOptions = [
-    ShippingOption(
-      value: 'fast',
-      iconName: 'zap',
-      title: 'Hỏa tốc',
-      subtitle: 'Nhận hàng trong 2h',
-      fee: 35000,
-    ),
-    ShippingOption(
-      value: 'std',
-      iconName: 'clock',
-      title: 'Tiêu chuẩn',
-      subtitle: 'Dự kiến 2-3 ngày',
-      fee: 15000,
     ),
   ];
 

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="techstore-demo" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk><name>HCM demo route</name><trkseg>
+    <trkpt lat="10.823" lon="106.629"></trkpt>
+    <trkpt lat="10.82365" lon="106.6299"></trkpt>
+    <trkpt lat="10.8243" lon="106.6308"></trkpt>
+    <trkpt lat="10.82495" lon="106.6317"></trkpt>
+    <trkpt lat="10.8256" lon="106.6326"></trkpt>
+    <trkpt lat="10.82625" lon="106.6335"></trkpt>
+    <trkpt lat="10.8269" lon="106.6344"></trkpt>
+    <trkpt lat="10.82755" lon="106.6353"></trkpt>
+    <trkpt lat="10.8282" lon="106.6362"></trkpt>
+    <trkpt lat="10.82885" lon="106.6371"></trkpt>
+    <trkpt lat="10.8295" lon="106.638"></trkpt>
+    <trkpt lat="10.83015" lon="106.6389"></trkpt>
+    <trkpt lat="10.8308" lon="106.6398"></trkpt>
+    <trkpt lat="10.83145" lon="106.6407"></trkpt>
+    <trkpt lat="10.8321" lon="106.6416"></trkpt>
+    <trkpt lat="10.83275" lon="106.6425"></trkpt>
+    <trkpt lat="10.8334" lon="106.6434"></trkpt>
+    <trkpt lat="10.83405" lon="106.6443"></trkpt>
+    <trkpt lat="10.8347" lon="106.6452"></trkpt>
+    <trkpt lat="10.83535" lon="106.6461"></trkpt>
+    <trkpt lat="10.836" lon="106.647"></trkpt>
+    <trkpt lat="10.83665" lon="106.6479"></trkpt>
+    <trkpt lat="10.8373" lon="106.6488"></trkpt>
+    <trkpt lat="10.83795" lon="106.6497"></trkpt>
+    <trkpt lat="10.8386" lon="106.6506"></trkpt>
+    <trkpt lat="10.83925" lon="106.6515"></trkpt>
+  </trkseg></trk>
+</gpx>

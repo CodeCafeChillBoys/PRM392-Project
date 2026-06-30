@@ -22,7 +22,7 @@ class AuthService {
     scopes: ['email', 'profile'],
   );
 
-  /// Giải mã JWT, lưu userId / userName / userEmail vào client dùng chung.
+  /// Giải mã JWT, lưu userId / userName / userEmail / userRole vào client dùng chung.
   void _applySession(String token) {
     final claims = JwtDecoder.decode(token);
     _client.userId = (claims['nameid'] ??
@@ -31,6 +31,9 @@ class AuthService {
         ?.toString();
     _client.userName = (claims['unique_name'] ?? claims['name'])?.toString();
     _client.userEmail = claims['email']?.toString();
+    _client.userRole = (claims['role'] ??
+            claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'])
+        ?.toString();
   }
 
   /// Đăng xuất: xoá toàn bộ session trong client dùng chung và thoát Google.

@@ -8,9 +8,10 @@ import '../../../data/models/order_status.dart';
 import '../../../data/services/api_client.dart';
 import '../../../data/services/order_service.dart';
 import '../../widgets/widgets.dart';
+import 'order_tracking_screen.dart';
 
-/// "Đơn hàng của tôi" — khách theo dõi đơn và bấm "Đã nhận hàng"
-/// (chuyển đơn `Shipped` → `Delivered`). Vào từ tab Hồ sơ.
+/// "Đơn hàng của tôi" — khách xem đơn; đơn đang giao (`Shipped`) có nút
+/// "Theo dõi đơn" mở bản đồ theo dõi shipper realtime. Vào từ tab Hồ sơ.
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
 
@@ -22,7 +23,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   final _service = OrderService();
   List<OrderModel> _orders = [];
   bool _loading = true;
-  String? _busyId;
 
   @override
   void initState() {
@@ -48,25 +48,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     }
   }
 
-  Future<void> _confirmReceipt(OrderModel o) async {
-    final ok = await showTvConfirm(
-      context,
-      title: 'Xác nhận đã nhận hàng?',
-      message: 'Bạn xác nhận đã nhận đơn #${_shortId(o.id)}. '
-          'Đơn sẽ chuyển sang "Đã giao".',
-      confirmLabel: 'Đã nhận hàng',
+  void _track(OrderModel o) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => OrderTrackingScreen(order: o)),
     );
-    if (ok != true) return;
-    setState(() => _busyId = o.id);
-    try {
-      await _service.updateOrderStatus(o.id, OrderStatus.delivered);
-      await _load();
-      if (mounted) TvToast.show(context, 'Cảm ơn bạn! Đơn đã hoàn tất.');
-    } catch (_) {
-      if (mounted) TvToast.show(context, 'Xác nhận thất bại. Thử lại nhé.');
-    } finally {
-      if (mounted) setState(() => _busyId = null);
-    }
   }
 
   String _shortId(String id) => id.length >= 8 ? id.substring(0, 8) : id;
@@ -134,8 +119,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       );
 
   Widget _orderCard(OrderModel o) {
-    final canConfirm = OrderFlow.customerCanConfirmReceipt(o.status);
-    final busy = _busyId == o.id;
     final time = formatRelativeFromIso(o.orderDate);
     return TvCard(
       padding: 14,
@@ -171,15 +154,14 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                   style: AppText.price().copyWith(fontSize: 15)),
             ],
           ),
-          if (canConfirm) ...[
+          if (OrderFlow.isDelivering(o.status)) ...[
             const SizedBox(height: 12),
             TvButton(
-              label: 'Đã nhận hàng',
+              label: 'Theo dõi đơn',
               size: TvButtonSize.md,
               fullWidth: true,
-              loading: busy,
-              leadingIcon: const TvIcon('check', size: 18),
-              onPressed: () => _confirmReceipt(o),
+              leadingIcon: const TvIcon('map-pin', size: 18),
+              onPressed: () => _track(o),
             ),
           ],
         ],
