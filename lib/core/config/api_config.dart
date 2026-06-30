@@ -82,13 +82,27 @@ class ApiConfig {
   static String vnpayGateway(String orderId) => '/payment/vnpay?order=$orderId';
 
   // ----------------------------------------------------------------------
-  // Shipping (GHN qua BE) — địa chỉ (tỉnh/huyện/xã) + tính phí + tracking.
+  // Shipping (Goong qua BE) — tính phí theo khoảng cách thực tế.
   // ----------------------------------------------------------------------
-  static const String shippingProvinces = '/api/Shipping/provinces';
-  static String shippingDistricts(int provinceId) => '/api/Shipping/districts/$provinceId';
-  static String shippingWards(int districtId) => '/api/Shipping/wards/$districtId';
-  static const String shippingFee = '/api/Shipping/fee';
-  static String shippingTrack(String code) => '/api/Shipping/track/$code';
+  static const String shippingCalculate = '/api/shipping/calculate';
+
+  // ----------------------------------------------------------------------
+  // Tracking giao hàng realtime (SignalR + REST) — dùng ở giai đoạn sau.
+  // ----------------------------------------------------------------------
+  /// SignalR hub theo dõi vị trí shipper realtime.
+  static const String trackingHub = '/trackingHub';
+
+  /// Lấy vị trí shipper hiện tại của 1 đơn (gọi lần đầu khi mở map).
+  static String trackingByOrder(String orderId) => '/api/tracking/order/$orderId';
+
+  /// Shipper cập nhật vị trí của mình.
+  static const String trackingLocation = '/api/tracking/location';
+
+  /// Gán shipper cho đơn (Staff) — kèm `?staffId=<guid>`.
+  static String assignShipper(String orderId) => '/api/orders/$orderId/assign-shipper';
+
+  /// Xác nhận giao hàng + ảnh (Staff, multipart).
+  static String confirmDelivery(String orderId) => '/api/orders/$orderId/confirm-delivery';
 
   // ----------------------------------------------------------------------
   // Notifications.

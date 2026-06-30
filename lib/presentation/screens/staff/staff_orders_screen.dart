@@ -1,18 +1,26 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
+
+import '../../../core/config/goong_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/order_model.dart';
 import '../../../data/models/order_status.dart';
+import '../../../data/services/api_client.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/order_service.dart';
 import '../../widgets/widgets.dart';
 import '../auth/login_screen.dart';
 
-/// Trang Staff: quản lý đơn theo 4 tab (Tất cả / Chờ XN / Đang giao / Xong).
-/// Staff KHÔNG tự đánh dấu "Đã giao" — đơn `Shipped` phải đợi khách bấm
-/// "Đã nhận hàng" (xem [OrderFlow]).
+/// Trang Staff — quản lý giao hàng:
+/// - "Bắt đầu giao" = gán shipper (`assign-shipper` → Shipped).
+/// - "Xem & Chạy" = đọc GPS thiết bị, gửi `tracking/location` mỗi 5s để khách
+///   theo dõi realtime. (Bước "Xác nhận giao + ảnh" sẽ thêm sau.)
 class StaffOrdersScreen extends StatefulWidget {
   const StaffOrdersScreen({super.key});
 
@@ -23,15 +31,37 @@ class StaffOrdersScreen extends StatefulWidget {
 class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
   final _service = OrderService();
   final _auth = AuthService();
+  final _mapController = MapController();
+
   List<OrderModel> _orders = [];
   bool _loading = true;
   String? _busyId;
-  StaffTab _tab = StaffTab.all;
+  StaffTab _tab = StaffTab.toDeliver;
+
+  // ── Trạng thái gửi GPS ────────────────────────────────────────────────────
+  String? _trackingOrderId; // đơn đang "chạy" (gửi vị trí)
+  Timer? _gpsTimer;
+  LatLng? _lastPos;
+  DateTime? _lastSentAt;
+
+  /// Tâm bản đồ mặc định khi chưa có vị trí (kho FPT).
+  static const LatLng _fallbackCenter = LatLng(10.841122, 106.809935);
+
+  /// Tần suất gửi GPS lên BE — ĐỔI 1 CHỖ DUY NHẤT TẠI ĐÂY.
+  /// DEMO: để 2s cho dễ thấy marker di chuyển khi trình diễn.
+  /// THỰC TẾ: nên đổi lên 5–10s để tiết kiệm pin & băng thông.
+  static const Duration _gpsInterval = Duration(seconds: 2);
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _gpsTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -46,13 +76,21 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     }
   }
 
-  Future<void> _advance(OrderModel o, String status) async {
+  Future<void> _startDelivery(OrderModel o) async {
+    final staffId = apiClient.userId;
+    if (staffId == null) {
+      TvToast.show(context, 'Không xác định được nhân viên. Hãy đăng nhập lại.');
+      return;
+    }
     setState(() => _busyId = o.id);
     try {
-      await _service.updateOrderStatus(o.id, status);
+      await _service.assignShipper(o.id, staffId);
       await _load();
+      if (mounted) {
+        TvToast.show(context, 'Đã bắt đầu giao đơn #${_shortId(o.id)}.');
+      }
     } catch (_) {
-      if (mounted) TvToast.show(context, 'Đổi trạng thái thất bại.');
+      if (mounted) TvToast.show(context, 'Bắt đầu giao thất bại.');
     } finally {
       if (mounted) setState(() => _busyId = null);
     }
@@ -66,10 +104,99 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
           'Hành động này không thể hoàn tác.',
       confirmLabel: 'Huỷ đơn',
     );
-    if (ok == true) await _advance(o, OrderStatus.cancelled);
+    if (ok != true) return;
+    setState(() => _busyId = o.id);
+    try {
+      await _service.updateOrderStatus(o.id, OrderStatus.cancelled);
+      await _load();
+    } catch (_) {
+      if (mounted) TvToast.show(context, 'Huỷ đơn thất bại.');
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
+  // ── GPS: bắt đầu / gửi 1 nhịp / dừng ──────────────────────────────────────
+  Future<bool> _ensureLocationPermission() async {
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      if (mounted) TvToast.show(context, 'Hãy bật Vị trí (GPS) trên thiết bị.');
+      return false;
+    }
+    var perm = await Geolocator.checkPermission();
+    if (perm == LocationPermission.denied) {
+      perm = await Geolocator.requestPermission();
+    }
+    if (perm == LocationPermission.denied ||
+        perm == LocationPermission.deniedForever) {
+      if (mounted) TvToast.show(context, 'Ứng dụng cần quyền vị trí để gửi GPS.');
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _startTracking(OrderModel o) async {
+    if (_busyId == o.id) return;
+    final staffId = apiClient.userId;
+    if (staffId == null) {
+      TvToast.show(context, 'Đăng nhập lại để lấy mã nhân viên.');
+      return;
+    }
+    setState(() => _busyId = o.id);
+    final ok = await _ensureLocationPermission();
+    if (!ok) {
+      if (mounted) setState(() => _busyId = null);
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _trackingOrderId = o.id;
+      _lastPos = null;
+      _lastSentAt = null;
+      _busyId = null;
+    });
+    await _sendOnce(o.id, staffId);
+    _gpsTimer?.cancel();
+    _gpsTimer = Timer.periodic(
+        _gpsInterval, (_) => _sendOnce(o.id, staffId));
+    if (mounted) {
+      TvToast.show(context, 'Đang gửi vị trí cho đơn #${_shortId(o.id)}.');
+    }
+  }
+
+  Future<void> _sendOnce(String orderId, String staffId) async {
+    try {
+      final pos = await Geolocator.getCurrentPosition();
+      await _service.sendLocation(
+        shipperId: staffId,
+        lat: pos.latitude,
+        lng: pos.longitude,
+        orderId: orderId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _lastPos = LatLng(pos.latitude, pos.longitude);
+        _lastSentAt = DateTime.now();
+      });
+      try {
+        _mapController.move(_lastPos!, 15);
+      } catch (_) {/* map chưa sẵn sàng */}
+    } catch (_) {
+      // bỏ qua 1 nhịp lỗi, vòng sau thử lại
+    }
+  }
+
+  void _stopTracking() {
+    _gpsTimer?.cancel();
+    _gpsTimer = null;
+    setState(() {
+      _trackingOrderId = null;
+      _lastPos = null;
+      _lastSentAt = null;
+    });
   }
 
   Future<void> _logout() async {
+    _gpsTimer?.cancel();
     await _auth.logout();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
@@ -79,6 +206,9 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
   }
 
   String _shortId(String id) => id.length >= 8 ? id.substring(0, 8) : id;
+
+  String _hms(DateTime t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:${t.second.toString().padLeft(2, '0')}';
 
   List<OrderModel> get _visible =>
       _orders.where((o) => _tab.accepts(o.status)).toList();
@@ -91,7 +221,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
         children: [
           TvAppBar(
             mode: TvAppBarMode.page,
-            title: 'Quản lý đơn hàng',
+            title: 'Quản lý giao hàng',
             actions: [
               TvIconButton(
                 icon: const TvIcon('log-out', color: AppColors.textAccent),
@@ -145,7 +275,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
             child: TvIcon('inbox', size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(
-          child: Text('Không có đơn ở trạng thái này',
+          child: Text('Không có đơn ở mục này',
               style: AppText.body(AppColors.textSecondary)),
         ),
       ],
@@ -153,12 +283,8 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
   }
 
   Widget _orderCard(OrderModel o) {
-    final action = OrderFlow.staffPrimaryAction(o.status);
-    final canCancel = OrderFlow.staffCanCancel(o.status);
-    final awaiting = OrderFlow.isAwaitingCustomer(o.status);
     final busy = _busyId == o.id;
     final meta = _metaLine(o);
-
     return TvCard(
       padding: 14,
       child: Column(
@@ -196,17 +322,12 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
                   style: AppText.price().copyWith(fontSize: 15)),
             ],
           ),
-          if (action != null || canCancel || awaiting) ...[
-            const SizedBox(height: 12),
-            _actions(o, action, canCancel, awaiting, busy),
-          ],
+          ..._actions(o, busy),
         ],
       ),
     );
   }
 
-  /// "2 sản phẩm · 5 phút trước" — ẩn phần sản phẩm nếu BE không trả itemCount,
-  /// ẩn phần thời gian nếu orderDate không parse được.
   String? _metaLine(OrderModel o) {
     final time = formatRelativeFromIso(o.orderDate);
     final parts = <String>[
@@ -216,51 +337,125 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     return parts.isEmpty ? null : parts.join(' · ');
   }
 
-  Widget _actions(OrderModel o, StaffAction? action, bool canCancel,
-      bool awaiting, bool busy) {
-    if (awaiting) {
-      // Đang giao: chờ khách xác nhận đã nhận hàng — staff không thao tác.
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: AppColors.bgElevated,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderDefault),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+  List<Widget> _actions(OrderModel o, bool busy) {
+    // Đơn chưa giao → "Bắt đầu giao" + "Huỷ".
+    if (OrderFlow.staffCanStartDelivery(o.status)) {
+      return [
+        const SizedBox(height: 12),
+        Row(
           children: [
-            const TvIcon('clock', size: 15, color: AppColors.textTertiary),
-            const SizedBox(width: 8),
-            Text('Chờ khách xác nhận đã nhận hàng',
-                style: AppText.sm(AppColors.textSecondary)),
+            Expanded(
+              child: TvButton(
+                label: 'Bắt đầu giao',
+                size: TvButtonSize.md,
+                fullWidth: true,
+                loading: busy,
+                leadingIcon: const TvIcon('truck', size: 16),
+                onPressed: () => _startDelivery(o),
+              ),
+            ),
+            const SizedBox(width: 10),
+            TvButton(
+              label: 'Huỷ',
+              variant: TvButtonVariant.ghost,
+              size: TvButtonSize.md,
+              onPressed: busy ? null : () => _cancel(o),
+            ),
           ],
         ),
-      );
+      ];
     }
-    return Row(
-      children: [
-        if (action != null)
-          Expanded(
-            child: TvButton(
-              label: action.label,
-              size: TvButtonSize.md,
-              fullWidth: true,
-              loading: busy,
-              onPressed: () => _advance(o, action.nextStatus),
-            ),
+    // Đơn đang giao (Shipped) → GPS.
+    if (OrderFlow.isDelivering(o.status)) {
+      final isThis = _trackingOrderId == o.id;
+      final otherActive = _trackingOrderId != null && _trackingOrderId != o.id;
+      if (isThis) {
+        return [
+          const SizedBox(height: 12),
+          _liveMap(),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const TvIcon('zap', size: 14, color: AppColors.success500),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  _lastSentAt == null
+                      ? 'Đang lấy vị trí...'
+                      : 'Đang gửi vị trí · ${_hms(_lastSentAt!)}',
+                  style: AppText.xs(AppColors.textSecondary),
+                ),
+              ),
+            ],
           ),
-        if (action != null && canCancel) const SizedBox(width: 10),
-        if (canCancel)
+          const SizedBox(height: 10),
           TvButton(
-            label: 'Huỷ',
+            label: 'Dừng giao',
             variant: TvButtonVariant.ghost,
             size: TvButtonSize.md,
-            onPressed: busy ? null : () => _cancel(o),
+            fullWidth: true,
+            onPressed: _stopTracking,
           ),
-      ],
+        ];
+      }
+      return [
+        const SizedBox(height: 12),
+        TvButton(
+          label: otherActive ? 'Đang chạy đơn khác' : 'Xem & Chạy',
+          size: TvButtonSize.md,
+          fullWidth: true,
+          loading: busy,
+          leadingIcon: const TvIcon('zap', size: 16),
+          onPressed: otherActive ? null : () => _startTracking(o),
+        ),
+      ];
+    }
+    return const [];
+  }
+
+  Widget _liveMap() {
+    final pos = _lastPos;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        height: 160,
+        child: FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(
+            initialCenter: pos ?? _fallbackCenter,
+            initialZoom: 15,
+            interactionOptions:
+                const InteractionOptions(flags: InteractiveFlag.none),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: GoongConfig.osmTileUrl,
+              userAgentPackageName: 'com.techstore.tech_void',
+            ),
+            if (pos != null)
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: pos,
+                    width: 40,
+                    height: 40,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.bgBase,
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: AppColors.success500, width: 2),
+                      ),
+                      alignment: Alignment.center,
+                      child: const TvIcon('truck',
+                          size: 18, color: AppColors.success500),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

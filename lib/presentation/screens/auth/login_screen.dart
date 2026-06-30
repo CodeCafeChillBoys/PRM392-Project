@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:tech_void/data/helpers/auth_helper.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/services/api_client.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/local_notification_service.dart';
 import '../../routing/app_routes.dart';
 import '../../widgets/widgets.dart';
-import '../staff/staff_orders_screen.dart';
 import 'method_screen.dart';
 import 'register_screen.dart';
 
@@ -46,15 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (_loading || _googleLoading) return;
-    // Lối tắt TEST tài khoản Staff (bỏ qua OTP): staff@gmail.com / 123 → vào thẳng trang Staff.
-    if (_email.text.trim() == 'staff@gmail.com' && _password.text == '123') {
-      apiClient.userRole = 'Staff';
-      apiClient.userName = 'Nhân viên';
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const StaffOrdersScreen()),
-      );
-      return;
-    }
     setState(() => _loading = true);
     try {
       final device = await AuthHelper.getDeviceContext();

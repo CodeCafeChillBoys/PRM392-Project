@@ -2,30 +2,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tech_void/data/models/order_status.dart';
 
 void main() {
-  group('OrderFlow.staffPrimaryAction', () {
-    test('Pending/PendingPayment → Xác nhận đơn (Confirmed)', () {
-      for (final s in [OrderStatus.pending, OrderStatus.pendingPayment]) {
-        final a = OrderFlow.staffPrimaryAction(s);
-        expect(a?.nextStatus, OrderStatus.confirmed);
-        expect(a?.label, 'Xác nhận đơn');
-      }
+  group('OrderFlow.staffCanStartDelivery', () {
+    test('Pending hoặc Confirmed → cho "Bắt đầu giao"', () {
+      expect(OrderFlow.staffCanStartDelivery(OrderStatus.pending), isTrue);
+      expect(OrderFlow.staffCanStartDelivery(OrderStatus.confirmed), isTrue);
     });
-    test('Confirmed → Bắt đầu giao (Shipped)', () {
-      final a = OrderFlow.staffPrimaryAction(OrderStatus.confirmed);
-      expect(a?.nextStatus, OrderStatus.shipped);
-      expect(a?.label, 'Bắt đầu giao');
-    });
-    test('Shipped → KHÔNG có hành động staff (chờ khách) [bug fix]', () {
-      expect(OrderFlow.staffPrimaryAction(OrderStatus.shipped), isNull);
-    });
-    test('Delivered/Cancelled → null', () {
-      expect(OrderFlow.staffPrimaryAction(OrderStatus.delivered), isNull);
-      expect(OrderFlow.staffPrimaryAction(OrderStatus.cancelled), isNull);
+    test('PendingPayment/Shipped/Delivered/Cancelled → không', () {
+      expect(
+          OrderFlow.staffCanStartDelivery(OrderStatus.pendingPayment), isFalse);
+      expect(OrderFlow.staffCanStartDelivery(OrderStatus.shipped), isFalse);
+      expect(OrderFlow.staffCanStartDelivery(OrderStatus.delivered), isFalse);
+      expect(OrderFlow.staffCanStartDelivery(OrderStatus.cancelled), isFalse);
     });
   });
 
-  group('OrderFlow gates', () {
-    test('staffCanCancel chỉ khi chưa giao', () {
+  group('OrderFlow.isDelivering', () {
+    test('chỉ Shipped', () {
+      expect(OrderFlow.isDelivering(OrderStatus.shipped), isTrue);
+      expect(OrderFlow.isDelivering(OrderStatus.confirmed), isFalse);
+      expect(OrderFlow.isDelivering(OrderStatus.delivered), isFalse);
+    });
+  });
+
+  group('OrderFlow.staffCanCancel', () {
+    test('chỉ khi đơn chưa rời kho', () {
       expect(OrderFlow.staffCanCancel(OrderStatus.pending), isTrue);
       expect(OrderFlow.staffCanCancel(OrderStatus.pendingPayment), isTrue);
       expect(OrderFlow.staffCanCancel(OrderStatus.confirmed), isTrue);
@@ -33,27 +33,18 @@ void main() {
       expect(OrderFlow.staffCanCancel(OrderStatus.delivered), isFalse);
       expect(OrderFlow.staffCanCancel(OrderStatus.cancelled), isFalse);
     });
-    test('isAwaitingCustomer chỉ khi Shipped', () {
-      expect(OrderFlow.isAwaitingCustomer(OrderStatus.shipped), isTrue);
-      expect(OrderFlow.isAwaitingCustomer(OrderStatus.confirmed), isFalse);
-    });
-    test('customerCanConfirmReceipt chỉ khi Shipped', () {
-      expect(OrderFlow.customerCanConfirmReceipt(OrderStatus.shipped), isTrue);
-      expect(OrderFlow.customerCanConfirmReceipt(OrderStatus.delivered), isFalse);
-      expect(OrderFlow.customerCanConfirmReceipt(OrderStatus.confirmed), isFalse);
-    });
   });
 
   group('StaffTab.accepts', () {
-    test('pending = Pending + PendingPayment', () {
-      expect(StaffTab.pending.accepts(OrderStatus.pending), isTrue);
-      expect(StaffTab.pending.accepts(OrderStatus.pendingPayment), isTrue);
-      expect(StaffTab.pending.accepts(OrderStatus.confirmed), isFalse);
+    test('toDeliver = Pending + Confirmed', () {
+      expect(StaffTab.toDeliver.accepts(OrderStatus.pending), isTrue);
+      expect(StaffTab.toDeliver.accepts(OrderStatus.confirmed), isTrue);
+      expect(StaffTab.toDeliver.accepts(OrderStatus.pendingPayment), isFalse);
+      expect(StaffTab.toDeliver.accepts(OrderStatus.shipped), isFalse);
     });
-    test('shipping = Confirmed + Shipped', () {
-      expect(StaffTab.shipping.accepts(OrderStatus.confirmed), isTrue);
-      expect(StaffTab.shipping.accepts(OrderStatus.shipped), isTrue);
-      expect(StaffTab.shipping.accepts(OrderStatus.delivered), isFalse);
+    test('delivering = Shipped', () {
+      expect(StaffTab.delivering.accepts(OrderStatus.shipped), isTrue);
+      expect(StaffTab.delivering.accepts(OrderStatus.confirmed), isFalse);
     });
     test('done = Delivered + Cancelled', () {
       expect(StaffTab.done.accepts(OrderStatus.delivered), isTrue);
