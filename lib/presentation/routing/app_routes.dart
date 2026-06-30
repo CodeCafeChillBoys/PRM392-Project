@@ -1,17 +1,37 @@
 import 'package:flutter/material.dart';
 
+import '../../data/services/api_client.dart';
 import '../screens/root_shell.dart';
+import '../screens/staff/staff_orders_screen.dart';
 
 /// Small navigation helpers shared across screens.
 class AppRoutes {
   AppRoutes._();
 
-  /// Enter the main app after a successful verification, clearing the auth
-  /// stack so the back button can't return to the login flow.
+  /// Email được cấp quyền Staff → vào thẳng App Staff (dùng `userId` Guid thật
+  /// từ JWT làm `staffId`). Tạm hardcode để test; khi BE có role Staff thật thì
+  /// thay bằng đọc `role` từ JWT.
+  static const Set<String> staffEmails = {'vuquang02062004@gmail.com'};
+
+  static bool isStaffEmail(String? email) =>
+      email != null && staffEmails.contains(email.toLowerCase());
+
+  /// Vào app sau khi xác thực thành công, xoá stack đăng nhập để nút back không
+  /// quay lại được luồng login. Staff → App Staff; khách → RootShell.
   static void enterApp(BuildContext context) {
+    // Ưu tiên role thật từ JWT; email chỉ là fallback (trước khi BE set role).
+    if (apiClient.userRole == 'Staff' || isStaffEmail(apiClient.userEmail)) {
+      apiClient.userRole = 'Staff';
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const StaffOrdersScreen()),
+        (route) => false,
+      );
+      return;
+    }
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
-        builder: (_) => const RootShell(welcomeMessage: 'Đăng nhập thành công!'),
+        builder: (_) =>
+            const RootShell(welcomeMessage: 'Đăng nhập thành công!'),
       ),
       (route) => false,
     );

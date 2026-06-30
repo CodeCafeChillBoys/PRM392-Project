@@ -1,11 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/config/goong_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../data/models/address_option.dart';
+import '../../../data/models/place_suggestion.dart';
+import '../../../data/models/shipping_quote.dart';
 import '../../../data/services/api_client.dart';
+import '../../../data/services/goong_service.dart';
 import '../../../data/services/mock_data.dart';
 import '../../../data/services/order_service.dart';
 import '../../../data/services/shipping_service.dart';
@@ -14,8 +21,9 @@ import '../../state/cart_controller.dart';
 import '../../widgets/widgets.dart';
 import 'payment_waiting_screen.dart';
 
-/// Checkout — địa chỉ (dropdown Tỉnh/Huyện/Xã + GHN tính phí), thanh toán,
-/// tóm tắt hóa đơn (`POST /api/order/checkout`).
+/// Checkout — nhập địa chỉ (Goong autocomplete → toạ độ), tính phí ship theo
+/// khoảng cách (`POST /api/shipping/calculate`), xem bản đồ Shop→Nhà, chọn
+/// thanh toán rồi đặt hàng (`POST /api/order/checkout`).
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key, required this.total});
 
@@ -28,118 +36,136 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _orderService = OrderService();
   final _shippingService = ShippingService();
-  final _addressDetail = TextEditingController(); // số nhà, tên đường
+  final _goong = GoongService();
+  final _addressCtrl = TextEditingController();
+  final _mapController = MapController();
 
-  // Dropdown data + lựa chọn hiện tại.
-  List<AddressOption> _provinces = [];
-  List<AddressOption> _districts = [];
-  List<AddressOption> _wards = [];
-  AddressOption? _province;
-  AddressOption? _district;
-  AddressOption? _ward;
+  /// Toạ độ kho gửi — khớp BE `Goong:StoreLatitude/Longitude`.
+  static const LatLng _store = LatLng(10.841122, 106.809935);
 
-  int? _shipFee; // phí GHN (đ) — null khi chưa tính
+  Timer? _debounce;
+  List<PlaceSuggestion> _suggestions = [];
+  bool _searching = false;
+
+  LatLng? _dest; // toạ độ nhà khách đã chọn
+  String _selectedAddress = ''; // địa chỉ đã chọn (gửi BE + chặn search lại)
+  ShippingQuote? _quote; // kết quả tính phí
   bool _loadingFee = false;
 
   String _payment = 'VNPay';
   bool _confirming = false;
 
-  double get _grand => widget.total + (_shipFee ?? 0).toDouble();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProvinces();
-  }
+  double get _grand => widget.total + (_quote?.shippingFee ?? 0);
 
   @override
   void dispose() {
-    _addressDetail.dispose();
+    _debounce?.cancel();
+    _addressCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _loadProvinces() async {
+  // ── Địa chỉ: gõ → gợi ý (debounce) ───────────────────────────────────────
+  void _onAddressChanged(String v) {
+    _debounce?.cancel();
+    // Vừa chọn xong (text == địa chỉ đã chọn) → không search lại.
+    if (v.trim() == _selectedAddress.trim()) return;
+    // Người dùng sửa địa chỉ → toạ độ/phí cũ không còn đúng.
+    if (_dest != null || _quote != null) {
+      setState(() {
+        _dest = null;
+        _quote = null;
+      });
+    }
+    _debounce = Timer(const Duration(milliseconds: 400), () => _search(v));
+  }
+
+  Future<void> _search(String input) async {
+    if (input.trim().length < 3) {
+      if (mounted) setState(() => _suggestions = []);
+      return;
+    }
+    setState(() => _searching = true);
     try {
-      final list = await _shippingService.fetchProvinces();
-      if (mounted) setState(() => _provinces = list);
-    } catch (_) {/* để dropdown trống nếu lỗi */}
+      final list = await _goong.autocomplete(input);
+      if (mounted) setState(() => _suggestions = list);
+    } catch (_) {
+      if (mounted) setState(() => _suggestions = []);
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
   }
 
-  // Chọn Tỉnh → tải Huyện, reset các cấp dưới + phí.
-  Future<void> _onProvince(AddressOption? p) async {
-    if (p == null) return;
+  // ── Chọn 1 gợi ý → lấy toạ độ → tính phí ship ────────────────────────────
+  Future<void> _selectPlace(PlaceSuggestion p) async {
+    FocusScope.of(context).unfocus();
+    _selectedAddress = p.description;
+    _addressCtrl.text = p.description;
+    _addressCtrl.selection =
+        TextSelection.collapsed(offset: p.description.length);
     setState(() {
-      _province = p;
-      _district = null;
-      _ward = null;
-      _districts = [];
-      _wards = [];
-      _shipFee = null;
+      _suggestions = [];
+      _dest = null;
+      _quote = null;
+      _loadingFee = true;
     });
-    final list = await _shippingService.fetchDistricts(int.tryParse(p.id) ?? 0);
-    if (mounted) setState(() => _districts = list);
-  }
-
-  // Chọn Huyện → tải Xã.
-  Future<void> _onDistrict(AddressOption? d) async {
-    if (d == null) return;
-    setState(() {
-      _district = d;
-      _ward = null;
-      _wards = [];
-      _shipFee = null;
-    });
-    final list = await _shippingService.fetchWards(int.tryParse(d.id) ?? 0);
-    if (mounted) setState(() => _wards = list);
-  }
-
-  // Chọn Xã → tính phí GHN.
-  Future<void> _onWard(AddressOption? w) async {
-    if (w == null) return;
-    setState(() => _ward = w);
-    await _calcFee();
-  }
-
-  Future<void> _calcFee() async {
-    if (_district == null || _ward == null) return;
-    setState(() => _loadingFee = true);
     try {
-      final fee = await _shippingService.calcFee(
-        toDistrictId: int.tryParse(_district!.id) ?? 0,
-        toWardCode: _ward!.id,
+      final latLng = await _goong.placeLatLng(p.placeId);
+      if (latLng == null) throw Exception('no-coords');
+      final quote = await _shippingService.calculate(
+        destinationLat: latLng.latitude,
+        destinationLng: latLng.longitude,
       );
-      if (mounted) setState(() => _shipFee = fee);
+      if (!mounted) return;
+      setState(() {
+        _dest = latLng;
+        _quote = quote;
+      });
+      _fitMap(latLng, quote);
     } catch (_) {
       if (mounted) {
-        setState(() => _shipFee = null);
-        TvToast.show(context, 'Không tính được phí ship cho địa chỉ này.');
+        setState(() {
+          _dest = null;
+          _quote = null;
+        });
+        TvToast.show(context, 'Không tính được phí cho địa chỉ này.');
       }
     } finally {
       if (mounted) setState(() => _loadingFee = false);
     }
   }
 
+  // Canh bản đồ vừa khít kho + nhà + tuyến đường.
+  void _fitMap(LatLng dest, ShippingQuote quote) {
+    final pts = <LatLng>[_store, dest, ...quote.decodedRoute()];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        _mapController.fitCamera(
+          CameraFit.coordinates(
+            coordinates: pts,
+            padding: const EdgeInsets.all(36),
+          ),
+        );
+      } catch (_) {/* map chưa gắn xong */}
+    });
+  }
+
   Future<void> _confirm() async {
     if (_confirming) return;
-    if (_province == null ||
-        _district == null ||
-        _ward == null ||
-        _addressDetail.text.trim().isEmpty) {
-      TvToast.show(context, 'Vui lòng chọn đủ địa chỉ nhận hàng.');
+    if (_dest == null || _quote == null || _selectedAddress.isEmpty) {
+      TvToast.show(context, 'Vui lòng chọn địa chỉ nhận hàng để tính phí.');
       return;
     }
     setState(() => _confirming = true);
     final cart = context.read<CartController>();
     final navigator = Navigator.of(context);
-
-    // Ghép địa chỉ thành 1 chuỗi gửi BE (BE lưu shippingAddress dạng text).
-    final shippingAddress =
-        '${_addressDetail.text.trim()}, ${_ward!.name}, ${_district!.name}, ${_province!.name}';
     try {
       final result = await _orderService.checkout(
-        shippingAddress: shippingAddress,
+        shippingAddress: _selectedAddress,
         paymentMethod: _payment,
         total: _grand,
+        destinationLat: _dest!.latitude,
+        destinationLng: _dest!.longitude,
+        shippingFee: _quote!.shippingFee,
       );
       if (!mounted) return;
 
@@ -147,7 +173,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       cart.refresh();
 
       if (result.needsGateway && result.gatewayUrl != null) {
-        // Sang màn "Chờ thanh toán": tự mở cổng VNPay + poll trạng thái đơn.
         navigator.pushReplacement(MaterialPageRoute(
           builder: (_) => PaymentWaitingScreen(
             orderId: result.orderId,
@@ -254,73 +279,176 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        _dropdown(
-          hint: 'Tỉnh / Thành phố',
-          value: _province,
-          items: _provinces,
-          onChanged: _onProvince,
-        ),
-        const SizedBox(height: 10),
-        _dropdown(
-          hint: 'Quận / Huyện',
-          value: _district,
-          items: _districts,
-          onChanged: _onDistrict,
-          enabled: _province != null,
-        ),
-        const SizedBox(height: 10),
-        _dropdown(
-          hint: 'Phường / Xã',
-          value: _ward,
-          items: _wards,
-          onChanged: _onWard,
-          enabled: _district != null,
-        ),
-        const SizedBox(height: 10),
         TvInput(
-          controller: _addressDetail,
-          leading: const TvIcon('home'),
-          hintText: 'Số nhà, tên đường...',
+          controller: _addressCtrl,
+          leading: const TvIcon('search'),
+          hintText: 'Nhập địa chỉ nhận hàng...',
+          onChanged: _onAddressChanged,
+          trailing: _searching
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: AppColors.textAccent))
+              : null,
         ),
+        if (_suggestions.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          _suggestionList(),
+        ],
+        if (_loadingFee) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: AppColors.textAccent)),
+              const SizedBox(width: 10),
+              Text('Đang tính phí giao hàng...',
+                  style: AppText.sm(AppColors.textSecondary)),
+            ],
+          ),
+        ],
+        if (_dest != null && _quote != null) ...[
+          const SizedBox(height: 12),
+          _mapPreview(),
+          const SizedBox(height: 10),
+          _routeInfo(),
+        ],
       ],
     );
   }
 
-  Widget _dropdown({
-    required String hint,
-    required AddressOption? value,
-    required List<AddressOption> items,
-    required ValueChanged<AddressOption?> onChanged,
-    bool enabled = true,
-  }) {
+  Widget _suggestionList() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: AppColors.bgElevated,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.borderDefault),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<AddressOption>(
-          isExpanded: true,
-          value: value,
-          dropdownColor: AppColors.bgElevated,
-          iconEnabledColor: AppColors.textSecondary,
-          style: AppText.body(),
-          hint: Text(hint, style: AppText.body(AppColors.textTertiary)),
-          items: enabled
-              ? items
-                  .map((o) => DropdownMenuItem(
-                        value: o,
-                        child: Text(o.name, overflow: TextOverflow.ellipsis),
-                      ))
-                  .toList()
-              : const [],
-          onChanged: enabled ? onChanged : null,
+      child: Column(
+        children: [
+          for (var i = 0; i < _suggestions.length; i++) ...[
+            if (i > 0)
+              const Divider(height: 1, color: AppColors.borderSubtle),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _selectPlace(_suggestions[i]),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                child: Row(
+                  children: [
+                    const TvIcon('map-pin',
+                        size: 16, color: AppColors.textTertiary),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _suggestions[i].description,
+                        style: AppText.sm(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _mapPreview() {
+    final route = _quote?.decodedRoute() ?? const <LatLng>[];
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        height: 190,
+        child: FlutterMap(
+          mapController: _mapController,
+          options: const MapOptions(
+            initialCenter: _store,
+            initialZoom: 12,
+            interactionOptions: InteractionOptions(
+              flags: InteractiveFlag.pinchZoom |
+                  InteractiveFlag.drag |
+                  InteractiveFlag.doubleTapZoom,
+            ),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: GoongConfig.osmTileUrl,
+              userAgentPackageName: 'com.techstore.tech_void',
+            ),
+            if (route.isNotEmpty)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                      points: route, strokeWidth: 4, color: AppColors.accent),
+                ],
+              ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                    point: _store,
+                    width: 38,
+                    height: 38,
+                    child: _pin('truck', AppColors.textSecondary)),
+                if (_dest != null)
+                  Marker(
+                      point: _dest!,
+                      width: 38,
+                      height: 38,
+                      child: _pin('map-pin', AppColors.accent)),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
+
+  Widget _pin(String icon, Color color) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.bgBase,
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 2),
+        ),
+        alignment: Alignment.center,
+        child: TvIcon(icon, size: 18, color: color),
+      );
+
+  Widget _routeInfo() {
+    final q = _quote!;
+    return Row(
+      children: [
+        _infoChip('truck', '${q.distanceKm.toStringAsFixed(1)} km'),
+        const SizedBox(width: 10),
+        _infoChip('clock', '~${q.durationMinutes.round()} phút'),
+      ],
+    );
+  }
+
+  Widget _infoChip(String icon, String text) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.bgElevated,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.borderDefault),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TvIcon(icon, size: 14, color: AppColors.textAccent),
+            const SizedBox(width: 6),
+            Text(text, style: AppText.sm()),
+          ],
+        ),
+      );
 
   Widget _paymentSection() {
     // Chỉ giữ phương thức call API thật: VNPay (cổng thật) + COD (trả khi nhận).
@@ -352,7 +480,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _invoiceCard() {
     final feeText = _loadingFee
         ? 'Đang tính...'
-        : (_shipFee != null ? formatVnd(_shipFee!.toDouble()) : 'Chọn địa chỉ');
+        : (_quote != null ? formatVnd(_quote!.shippingFee) : 'Chọn địa chỉ');
     return TvCard(
       padding: 18,
       child: Column(
@@ -361,7 +489,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const TvSectionHeader(title: 'Tóm tắt hóa đơn'),
           const SizedBox(height: 12),
           TvSummaryRow(label: 'Tiền hàng', value: formatVnd(widget.total)),
-          TvSummaryRow(label: 'Phí vận chuyển (GHN)', value: feeText),
+          TvSummaryRow(label: 'Phí vận chuyển', value: feeText),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 14),
             child: Divider(height: 1, color: AppColors.borderSubtle),
