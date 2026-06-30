@@ -23,6 +23,7 @@ class AppIcons {
 
     // status / feedback
     'check': Icons.check_rounded,
+    'check-check': Icons.done_all_rounded,
     'check-circle': Icons.check_circle_outline_rounded,
     'x-circle': Icons.highlight_off_rounded,
     'shield-check': Icons.verified_user_outlined,
