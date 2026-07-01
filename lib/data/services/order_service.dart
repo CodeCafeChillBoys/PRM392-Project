@@ -121,6 +121,27 @@ class OrderService {
     });
   }
 
+  /// Staff xác nhận đã giao + ảnh chứng minh → BE đổi status sang Delivered,
+  /// lưu ảnh và bắn thông báo cho khách.
+  /// POST /api/orders/{id}/confirm-delivery (multipart, field "Image").
+  Future<void> confirmDelivery(String orderId, String imagePath) async {
+    await _client.postMultipart(
+      ApiConfig.confirmDelivery(orderId),
+      fileField: 'Image',
+      filePath: imagePath,
+    );
+  }
+
+  /// Trạng thái đơn hiện tại (cho khách phát hiện khi đơn đã giao xong → ngừng theo dõi).
+  Future<String> fetchOrderStatus(String orderId) async {
+    final json = await _client.get(ApiConfig.orderById(orderId));
+    final map =
+        (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
+            ? json['data'] as Map<String, dynamic>
+            : (json is Map<String, dynamic> ? json : <String, dynamic>{});
+    return map['status'] as String? ?? '';
+  }
+
   /// Vị trí shipper hiện tại của đơn (gọi 1 lần khi mở map theo dõi).
   /// null nếu BE chưa có (đơn chưa giao / shipper chưa gửi GPS).
   Future<LatLng?> fetchShipperLocation(String orderId) async {
