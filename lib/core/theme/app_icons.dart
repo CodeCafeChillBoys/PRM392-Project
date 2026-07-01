@@ -65,6 +65,8 @@ class AppIcons {
     'package': Icons.inventory_2_outlined,
     'inbox': Icons.inbox_outlined,
     'log-out': Icons.logout_rounded,
+    'camera': Icons.photo_camera_outlined,
+    'image': Icons.image_outlined,
 
     // device status bar
     'signal': Icons.signal_cellular_alt_rounded,
