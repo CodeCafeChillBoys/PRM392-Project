@@ -17,6 +17,9 @@ class ProductService {
   /// nên không chèn vào được; giữ riêng để demo offline vẫn thấy SP mới.
   static final List<Product> _mockCreated = [];
 
+  /// Ghi đè mock theo id — để demo offline sửa sản phẩm THẤY kết quả.
+  static final Map<String, Product> _mockOverrides = {};
+
   /// Category chips. (`'Tất cả'` is the "all" sentinel — not a real category.)
   Future<List<String>> fetchCategories() async {
     if (AppConfig.useMockData) {
@@ -50,10 +53,9 @@ class ProductService {
         .toList();
   }
 
-  /// Tạo sản phẩm mới (`POST /api/Products`, body khớp CreateProductDTO).
-  /// [categoryName] chỉ để dựng Product hiển thị ở chế độ mock (BE thật tự
-  /// trả về categoryName). Sau khi tạo, BE broadcast notification
-  /// "Siêu phẩm mới" tới mọi thiết bị — không cần FE làm gì thêm.
+  /// Tạo sản phẩm (`POST /api/Products`, multipart — ảnh upload từ máy).
+  /// [categoryName] chỉ dùng dựng Product hiển thị ở mock. BE tự broadcast
+  /// notification "Siêu phẩm mới" sau khi tạo.
   Future<Product> createProduct({
     required String name,
     required String brand,
@@ -61,7 +63,7 @@ class ProductService {
     required int stockQuantity,
     required String categoryId,
     required String categoryName,
-    String? imageUrl,
+    String? imagePath,
     String? description,
   }) async {
     if (AppConfig.useMockData) {
@@ -73,22 +75,20 @@ class ProductService {
         categoryName: categoryName,
         price: price,
         stockQuantity: stockQuantity,
-        imageUrl: imageUrl ?? '',
+        // File local không render qua ProductImage — mock hiện placeholder.
+        imageUrl: '',
         description: description ?? '',
       );
       _mockCreated.insert(0, created);
       return created;
     }
-    final json = await _client.post(ApiConfig.products, body: {
-      'name': name,
-      'brand': brand,
-      'price': price,
-      'stockQuantity': stockQuantity,
-      if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
-      if (description != null && description.isNotEmpty)
-        'description': description,
-      'categoryId': categoryId,
-    });
+    final json = await _client.sendMultipart('POST', ApiConfig.products,
+        fields: _productFields(
+          name: name, brand: brand, price: price,
+          stockQuantity: stockQuantity, categoryId: categoryId,
+          description: description,
+        ),
+        filePath: imagePath);
     final Map<String, dynamic> data =
         (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
             ? (json['data'] as Map<String, dynamic>)
@@ -96,13 +96,74 @@ class ProductService {
     return Product.fromJson(data);
   }
 
+  /// Cập nhật sản phẩm (`PUT /api/Products/{id}`, multipart).
+  /// Không gửi [imagePath] = BE giữ ảnh cũ. BE trả 204.
+  Future<void> updateProduct({
+    required String id,
+    required String name,
+    required String brand,
+    required double price,
+    required int stockQuantity,
+    required String categoryId,
+    required String categoryName,
+    String? imagePath,
+    String? description,
+  }) async {
+    if (AppConfig.useMockData) {
+      await Future.delayed(AppConfig.mockLatency);
+      final all = [..._mockCreated, ...MockData.products];
+      final old = _mockOverrides[id] ??
+          all.where((p) => p.id == id).firstOrNull;
+      _mockOverrides[id] = Product(
+        id: id,
+        name: name,
+        brand: brand,
+        categoryName: categoryName,
+        price: price,
+        stockQuantity: stockQuantity,
+        imageUrl: old?.imageUrl ?? '',
+        description: description ?? '',
+      );
+      return;
+    }
+    await _client.sendMultipart('PUT', ApiConfig.productById(id),
+        fields: _productFields(
+          name: name, brand: brand, price: price,
+          stockQuantity: stockQuantity, categoryId: categoryId,
+          description: description,
+        ),
+        filePath: imagePath);
+  }
+
+  /// Field form-data chung cho POST/PUT — tên viết hoa khớp DTO bên BE.
+  /// Price gửi nguyên đồng (toStringAsFixed(0)) tránh lỗi parse theo culture.
+  Map<String, String> _productFields({
+    required String name,
+    required String brand,
+    required double price,
+    required int stockQuantity,
+    required String categoryId,
+    String? description,
+  }) =>
+      {
+        'Name': name,
+        'Brand': brand,
+        'Price': price.toStringAsFixed(0),
+        'StockQuantity': '$stockQuantity',
+        'CategoryId': categoryId,
+        if (description != null && description.isNotEmpty)
+          'Description': description,
+      };
+
   /// All products, optionally filtered by [category] and a free-text [query]
   /// (name + brand). The same filtering the backend `?category=&q=` would do.
   Future<List<Product>> fetchProducts({String? category, String? query}) async {
     if (AppConfig.useMockData) {
       await Future.delayed(AppConfig.mockLatency);
-      return _filter([..._mockCreated, ...MockData.products],
-          category: category, query: query);
+      final base = [..._mockCreated, ...MockData.products]
+          .map((p) => _mockOverrides[p.id] ?? p)
+          .toList();
+      return _filter(base, category: category, query: query);
     }
     final json = await _client.get(ApiConfig.products, query: {
       if (category != null && category != 'Tất cả') 'category': category,
