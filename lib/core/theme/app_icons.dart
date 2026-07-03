@@ -71,6 +71,11 @@ class AppIcons {
     'signal': Icons.signal_cellular_alt_rounded,
     'wifi': Icons.wifi_rounded,
     'battery-full': Icons.battery_full_rounded,
+
+    // media / image upload
+    'image': Icons.image_outlined,
+    'camera': Icons.photo_camera_outlined,
+    'edit': Icons.edit_outlined,
   };
 
   /// Resolve a Lucide name to an [IconData], falling back to a neutral glyph.
