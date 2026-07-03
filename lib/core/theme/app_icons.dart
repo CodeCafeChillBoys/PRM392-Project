@@ -19,6 +19,8 @@ class AppIcons {
     'arrow-left': Icons.arrow_back_rounded,
     'arrow-right': Icons.arrow_forward_rounded,
     'chevron-right': Icons.chevron_right_rounded,
+    'chevron-down': Icons.keyboard_arrow_down_rounded,
+    'plus': Icons.add_rounded,
     'sliders-horizontal': Icons.tune_rounded,
 
     // status / feedback
@@ -65,11 +67,16 @@ class AppIcons {
     'package': Icons.inventory_2_outlined,
     'inbox': Icons.inbox_outlined,
     'log-out': Icons.logout_rounded,
+    'camera': Icons.photo_camera_outlined,
+    'image': Icons.image_outlined,
 
     // device status bar
     'signal': Icons.signal_cellular_alt_rounded,
     'wifi': Icons.wifi_rounded,
     'battery-full': Icons.battery_full_rounded,
+
+    // media / image upload
+    'edit': Icons.edit_outlined,
   };
 
   /// Resolve a Lucide name to an [IconData], falling back to a neutral glyph.

@@ -53,6 +53,24 @@ class ApiClient {
     return _decode(res);
   }
 
+  /// POST multipart/form-data — dùng cho upload file (vd ảnh xác nhận giao hàng).
+  Future<dynamic> postMultipart(
+    String endpoint, {
+    required String fileField,
+    required String filePath,
+    Map<String, String>? fields,
+  }) async {
+    final req = http.MultipartRequest('POST', ApiConfig.uri(endpoint));
+    if (authToken != null) {
+      req.headers['Authorization'] = 'Bearer $authToken';
+    }
+    if (fields != null) req.fields.addAll(fields);
+    req.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+    final streamed = await req.send().timeout(ApiConfig.timeout);
+    final res = await http.Response.fromStream(streamed);
+    return _decode(res);
+  }
+
   Future<dynamic> put(String endpoint, {Object? body}) async {
     final res = await _client
         .put(ApiConfig.uri(endpoint),
@@ -68,12 +86,52 @@ class ApiClient {
     return _decode(res);
   }
 
+  /// Gửi multipart/form-data (POST/PUT) — upload ảnh sản phẩm.
+  /// [fileField] phải khớp tên property IFormFile bên BE (mặc định `Image`).
+  Future<dynamic> sendMultipart(
+    String method,
+    String endpoint, {
+    Map<String, String> fields = const {},
+    String? filePath,
+    String fileField = 'Image',
+  }) async {
+    final request = http.MultipartRequest(method, ApiConfig.uri(endpoint));
+    request.headers['Accept'] = 'application/json';
+    if (authToken != null) {
+      request.headers['Authorization'] = 'Bearer $authToken';
+    }
+    request.fields.addAll(fields);
+    if (filePath != null && filePath.isNotEmpty) {
+      request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+    }
+    final streamed = await request.send().timeout(ApiConfig.timeout);
+    final res = await http.Response.fromStream(streamed);
+    return _decode(res);
+  }
+
   dynamic _decode(http.Response res) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (res.body.isEmpty) return null;
       return jsonDecode(res.body);
     }
-    throw ApiException(res.statusCode, res.body);
+    throw ApiException(res.statusCode, _errorMessage(res.body));
+  }
+
+  /// BE trả lỗi dạng JSON string ("Ảnh tối đa 5MB") hoặc object — bóc ra
+  /// text đọc được cho toast; body không phải JSON thì dùng thô.
+  static String _errorMessage(String body) {
+    if (body.isEmpty) return body;
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is String) return decoded;
+      if (decoded is Map<String, dynamic>) {
+        final m = decoded['message'] ?? decoded['title'] ?? decoded['error'];
+        if (m is String) return m;
+      }
+    } catch (_) {
+      // body không phải JSON → giữ nguyên.
+    }
+    return body;
   }
 }
 

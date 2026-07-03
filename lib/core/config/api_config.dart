@@ -27,6 +27,9 @@ class ApiConfig {
     }
     try {
       if (Platform.isAndroid) {
+        // Máy ảo Android → 10.0.2.2 = localhost của PC (demo hằng ngày).
+        // ĐIỆN THOẠI THẬT: đổi thành 'http://localhost:5173' + `adb reverse
+        // tcp:5173 tcp:5173` (qua cáp), hoặc URL tunnel (ngrok/cloudflared) khi đi 4G.
         return 'http://10.0.2.2:5173';
       }
     } catch (_) {}
