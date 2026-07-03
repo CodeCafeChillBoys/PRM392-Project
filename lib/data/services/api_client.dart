@@ -68,6 +68,29 @@ class ApiClient {
     return _decode(res);
   }
 
+  /// Gửi multipart/form-data (POST/PUT) — upload ảnh sản phẩm.
+  /// [fileField] phải khớp tên property IFormFile bên BE (mặc định `Image`).
+  Future<dynamic> sendMultipart(
+    String method,
+    String endpoint, {
+    Map<String, String> fields = const {},
+    String? filePath,
+    String fileField = 'Image',
+  }) async {
+    final request = http.MultipartRequest(method, ApiConfig.uri(endpoint));
+    request.headers['Accept'] = 'application/json';
+    if (authToken != null) {
+      request.headers['Authorization'] = 'Bearer $authToken';
+    }
+    request.fields.addAll(fields);
+    if (filePath != null && filePath.isNotEmpty) {
+      request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+    }
+    final streamed = await request.send().timeout(ApiConfig.timeout);
+    final res = await http.Response.fromStream(streamed);
+    return _decode(res);
+  }
+
   dynamic _decode(http.Response res) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (res.body.isEmpty) return null;

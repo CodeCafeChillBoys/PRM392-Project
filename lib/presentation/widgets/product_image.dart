@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config/api_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_icons.dart';
 
@@ -31,6 +32,15 @@ class ProductImage extends StatelessWidget {
     } else if (_isNetwork) {
       image = Image.network(
         url,
+        fit: fit,
+        errorBuilder: (_, _, _) => _placeholder(),
+        loadingBuilder: (context, child, progress) =>
+            progress == null ? child : _placeholder(loading: true),
+      );
+    } else if (url.startsWith('/')) {
+      // BE trả URL tương đối (vd /uploads/products/x.jpg) → ghép baseUrl.
+      image = Image.network(
+        '${ApiConfig.baseUrl}$url',
         fit: fit,
         errorBuilder: (_, _, _) => _placeholder(),
         loadingBuilder: (context, child, progress) =>
