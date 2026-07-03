@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/services/api_client.dart';
 import '../screens/root_shell.dart';
-import '../screens/staff/staff_orders_screen.dart';
+import '../screens/staff/staff_shell.dart';
 
 /// Small navigation helpers shared across screens.
 class AppRoutes {
@@ -23,7 +23,7 @@ class AppRoutes {
     if (apiClient.userRole == 'Staff' || isStaffEmail(apiClient.userEmail)) {
       apiClient.userRole = 'Staff';
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const StaffOrdersScreen()),
+        MaterialPageRoute(builder: (_) => const StaffShell()),
         (route) => false,
       );
       return;
