@@ -19,6 +19,8 @@ class AppIcons {
     'arrow-left': Icons.arrow_back_rounded,
     'arrow-right': Icons.arrow_forward_rounded,
     'chevron-right': Icons.chevron_right_rounded,
+    'chevron-down': Icons.keyboard_arrow_down_rounded,
+    'plus': Icons.add_rounded,
     'sliders-horizontal': Icons.tune_rounded,
 
     // status / feedback

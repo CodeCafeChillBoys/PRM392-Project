@@ -24,6 +24,7 @@ class TvInput extends StatelessWidget {
     this.autofocus = false,
     this.fillColor,
     this.dashed = false,
+    this.maxLines = 1,
   });
 
   final TextEditingController? controller;
@@ -40,19 +41,26 @@ class TvInput extends StatelessWidget {
   final Color? fillColor;
   final bool dashed;
 
+  /// Số dòng tối đa — > 1 biến ô thành textarea (bỏ chiều cao cố định).
+  final int maxLines;
+
   @override
   Widget build(BuildContext context) {
     final height = size == TvInputSize.lg ? 52.0 : 44.0;
+    final multiline = maxLines > 1;
 
     Widget field = Container(
-      height: height,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
+      height: multiline ? null : height,
+      padding: EdgeInsets.symmetric(
+          horizontal: 14, vertical: multiline ? 10 : 0),
       decoration: BoxDecoration(
         color: fillColor ?? (dashed ? Colors.transparent : AppColors.bgElevated),
         borderRadius: BorderRadius.circular(12),
         border: dashed ? null : Border.all(color: AppColors.borderDefault),
       ),
       child: Row(
+        crossAxisAlignment:
+            multiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           if (leading != null) ...[
             IconTheme.merge(
@@ -72,7 +80,10 @@ class TvInput extends StatelessWidget {
               autofocus: autofocus,
               cursorColor: AppColors.accent,
               style: AppText.body(),
-              textAlignVertical: TextAlignVertical.center,
+              maxLines: maxLines,
+              textAlignVertical: multiline
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
