@@ -1,16 +1,23 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/category_option.dart';
+import '../../../data/models/product.dart';
+import '../../../data/services/api_client.dart';
 import '../../../data/services/product_service.dart';
 import '../../widgets/widgets.dart';
 
-/// Form Staff thêm sản phẩm mới (`POST /api/Products`, body khớp
-/// CreateProductDTO). Pop `true` khi tạo thành công để danh sách reload.
-/// BE sau khi tạo tự broadcast notification "Siêu phẩm mới" cho mọi máy.
+/// Form Thêm/Sửa sản phẩm (multipart, ảnh upload từ máy).
+/// [initial] == null → Thêm (`POST`); != null → Sửa (`PUT`, không chọn ảnh
+/// mới = giữ ảnh cũ). Pop `true` khi lưu thành công.
 class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({super.key});
+  const AddProductScreen({super.key, this.initial});
+
+  final Product? initial;
 
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
@@ -23,8 +30,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _brandCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
   final _stockCtrl = TextEditingController(text: '0');
-  final _imageCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+
+  final _picker = ImagePicker();
+  XFile? _pickedImage;
 
   List<CategoryOption> _categories = [];
   CategoryOption? _category;
@@ -34,9 +43,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
   /// key field → thông điệp lỗi, hiện dưới field; xoá khi user gõ lại.
   final Map<String, String> _errors = {};
 
+  bool get _isEdit => widget.initial != null;
+
   @override
   void initState() {
     super.initState();
+    final p = widget.initial;
+    if (p != null) {
+      _nameCtrl.text = p.name;
+      _brandCtrl.text = p.brand;
+      _priceCtrl.text = p.price.toStringAsFixed(0);
+      _stockCtrl.text = '${p.stockQuantity}';
+      _descCtrl.text = p.description;
+    }
     _loadCategories();
   }
 
@@ -46,7 +65,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
     _brandCtrl.dispose();
     _priceCtrl.dispose();
     _stockCtrl.dispose();
-    _imageCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
   }
@@ -55,7 +73,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
     setState(() => _loadingCategories = true);
     try {
       final list = await _service.fetchCategoryOptions();
-      if (mounted) setState(() => _categories = list);
+      if (mounted) {
+        setState(() => _categories = list);
+        final p = widget.initial;
+        if (p != null && _category == null) {
+          setState(() {
+            _category = list.where((c) => c.id == p.categoryId).firstOrNull ??
+                list.where((c) => c.name == p.categoryName).firstOrNull;
+          });
+        }
+      }
     } catch (_) {
       if (mounted) TvToast.show(context, 'Không tải được danh mục.');
     } finally {
@@ -114,6 +141,52 @@ class _AddProductScreenState extends State<AddProductScreen> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.bgSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Ảnh sản phẩm', style: AppText.h3()),
+              const SizedBox(height: 12),
+              TvOptionRow(
+                title: 'Chọn từ thư viện',
+                icon: const TvIcon('image'),
+                showRadio: false,
+                onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
+              ),
+              const SizedBox(height: 8),
+              TvOptionRow(
+                title: 'Chụp ảnh mới',
+                icon: const TvIcon('camera'),
+                showRadio: false,
+                onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (source == null) return;
+    try {
+      final picked = await _picker.pickImage(
+          source: source, imageQuality: 80, maxWidth: 1600);
+      if (picked != null && mounted) {
+        setState(() => _pickedImage = picked);
+      }
+    } catch (_) {
+      if (mounted) TvToast.show(context, 'Không chọn được ảnh.');
+    }
+  }
+
   void _clearError(String key) {
     if (_errors.containsKey(key)) setState(() => _errors.remove(key));
   }
@@ -149,21 +222,38 @@ class _AddProductScreenState extends State<AddProductScreen> {
     if (!_validate()) return;
     setState(() => _submitting = true);
     try {
-      await _service.createProduct(
-        name: _nameCtrl.text.trim(),
-        brand: _brandCtrl.text.trim(),
-        price: double.parse(_priceCtrl.text.trim()),
-        stockQuantity: int.parse(_stockCtrl.text.trim()),
-        categoryId: _category!.id,
-        categoryName: _category!.name,
-        imageUrl: _imageCtrl.text.trim(),
-        description: _descCtrl.text.trim(),
-      );
+      if (_isEdit) {
+        await _service.updateProduct(
+          id: widget.initial!.id,
+          name: _nameCtrl.text.trim(),
+          brand: _brandCtrl.text.trim(),
+          price: double.parse(_priceCtrl.text.trim()),
+          stockQuantity: int.parse(_stockCtrl.text.trim()),
+          categoryId: _category!.id,
+          categoryName: _category!.name,
+          imagePath: _pickedImage?.path,
+          description: _descCtrl.text.trim(),
+        );
+      } else {
+        await _service.createProduct(
+          name: _nameCtrl.text.trim(),
+          brand: _brandCtrl.text.trim(),
+          price: double.parse(_priceCtrl.text.trim()),
+          stockQuantity: int.parse(_stockCtrl.text.trim()),
+          categoryId: _category!.id,
+          categoryName: _category!.name,
+          imagePath: _pickedImage?.path,
+          description: _descCtrl.text.trim(),
+        );
+      }
       if (!mounted) return;
       Navigator.of(context).pop(true);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        TvToast.show(context, 'Thêm sản phẩm thất bại. Thử lại nhé.');
+        final msg = e is ApiException && e.statusCode == 400
+            ? 'Lỗi: ${e.message}'
+            : (_isEdit ? 'Cập nhật thất bại. Thử lại nhé.' : 'Thêm sản phẩm thất bại. Thử lại nhé.');
+        TvToast.show(context, msg);
         setState(() => _submitting = false);
       }
     }
@@ -171,13 +261,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = _imageCtrl.text.trim();
     return Scaffold(
       backgroundColor: AppColors.bgBase,
       body: Column(
         children: [
           TvAppBar(
-            title: 'Thêm sản phẩm',
+            title: _isEdit ? 'Sửa sản phẩm' : 'Thêm sản phẩm',
             onBack: () => Navigator.of(context).pop(),
           ),
           Expanded(
@@ -239,26 +328,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     child: _categoryPicker(),
                   ),
                   _field(
-                    label: 'Ảnh (URL)',
+                    label: _isEdit ? 'Ảnh (bấm để đổi, bỏ qua = giữ cũ)' : 'Ảnh sản phẩm',
                     errorKey: 'image',
-                    child: TvInput(
-                      controller: _imageCtrl,
-                      hintText: 'https://...',
-                      keyboardType: TextInputType.url,
-                      onChanged: (_) => setState(() {}),
-                    ),
+                    child: _imageSection(),
                   ),
-                  if (imageUrl.isNotEmpty) ...[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: SizedBox(
-                        height: 140,
-                        width: double.infinity,
-                        child: ProductImage(url: imageUrl),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                  ],
                   _field(
                     label: 'Mô tả',
                     errorKey: 'description',
@@ -270,10 +343,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   ),
                   const SizedBox(height: 10),
                   TvButton(
-                    label: 'Thêm sản phẩm',
+                    label: _isEdit ? 'Lưu thay đổi' : 'Thêm sản phẩm',
                     fullWidth: true,
                     loading: _submitting,
-                    leadingIcon: const TvIcon('plus', size: 16),
+                    leadingIcon: TvIcon(_isEdit ? 'edit' : 'plus', size: 16),
                     onPressed: _submit,
                   ),
                 ],
@@ -343,6 +416,45 @@ class _AddProductScreenState extends State<AddProductScreen> {
             else
               const TvIcon('chevron-down', color: AppColors.textTertiary),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Khung ảnh: bấm để chọn; ưu tiên ảnh mới chọn → ảnh cũ (chế độ Sửa)
+  /// → khung trống.
+  Widget _imageSection() {
+    final oldUrl = widget.initial?.imageUrl ?? '';
+    Widget content;
+    if (_pickedImage != null) {
+      content = Image.file(File(_pickedImage!.path), fit: BoxFit.cover);
+    } else if (oldUrl.isNotEmpty) {
+      content = ProductImage(url: oldUrl);
+    } else {
+      content = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const TvIcon('image', size: 32, color: AppColors.textTertiary),
+          const SizedBox(height: 8),
+          Text('Bấm để chọn ảnh từ máy',
+              style: AppText.xs(AppColors.textTertiary)),
+        ],
+      );
+    }
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _submitting ? null : _pickImage,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 160,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.bgElevated,
+            border: Border.all(color: AppColors.borderDefault),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: content,
         ),
       ),
     );
