@@ -215,34 +215,32 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bgBase,
-      body: Column(
-        children: [
-          TvAppBar(
-            mode: TvAppBarMode.page,
-            title: 'Quản lý giao hàng',
-            actions: [
-              TvIconButton(
-                icon: const TvIcon('log-out', color: AppColors.textAccent),
-                tooltip: 'Đăng xuất',
-                onPressed: _logout,
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: TvTabs(
-              distribute: true,
-              value: _tab.name,
-              tabs: [for (final t in StaffTab.values) TvTab(t.name, t.label)],
-              onChanged: (v) => setState(
-                  () => _tab = StaffTab.values.firstWhere((t) => t.name == v)),
+    // Tab-page trong StaffShell: shell lo Scaffold + bottom nav.
+    return Column(
+      children: [
+        TvAppBar(
+          mode: TvAppBarMode.page,
+          title: 'Quản lý giao hàng',
+          actions: [
+            TvIconButton(
+              icon: const TvIcon('log-out', color: AppColors.textAccent),
+              tooltip: 'Đăng xuất',
+              onPressed: _logout,
             ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: TvTabs(
+            distribute: true,
+            value: _tab.name,
+            tabs: [for (final t in StaffTab.values) TvTab(t.name, t.label)],
+            onChanged: (v) => setState(
+                () => _tab = StaffTab.values.firstWhere((t) => t.name == v)),
           ),
-          Expanded(child: _list()),
-        ],
-      ),
+        ),
+        Expanded(child: _list()),
+      ],
     );
   }
 
