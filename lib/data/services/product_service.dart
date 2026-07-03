@@ -121,7 +121,11 @@ class ProductService {
         categoryName: categoryName,
         price: price,
         stockQuantity: stockQuantity,
-        imageUrl: old?.imageUrl ?? '',
+        // File local không render được qua ProductImage — có ảnh mới thì
+        // dùng placeholder (giống createProduct mock), không thì giữ ảnh cũ.
+        imageUrl: (imagePath != null && imagePath.isNotEmpty)
+            ? ''
+            : (old?.imageUrl ?? ''),
         description: description ?? '',
       );
       return;

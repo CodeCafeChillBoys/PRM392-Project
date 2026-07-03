@@ -96,7 +96,24 @@ class ApiClient {
       if (res.body.isEmpty) return null;
       return jsonDecode(res.body);
     }
-    throw ApiException(res.statusCode, res.body);
+    throw ApiException(res.statusCode, _errorMessage(res.body));
+  }
+
+  /// BE trả lỗi dạng JSON string ("Ảnh tối đa 5MB") hoặc object — bóc ra
+  /// text đọc được cho toast; body không phải JSON thì dùng thô.
+  static String _errorMessage(String body) {
+    if (body.isEmpty) return body;
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is String) return decoded;
+      if (decoded is Map<String, dynamic>) {
+        final m = decoded['message'] ?? decoded['title'] ?? decoded['error'];
+        if (m is String) return m;
+      }
+    } catch (_) {
+      // body không phải JSON → giữ nguyên.
+    }
+    return body;
   }
 }
 
