@@ -11,7 +11,11 @@ import 'otp_screen.dart';
 /// Choose verification method — Email Link vs OTP (BE flow screen 2).
 /// Mirrors `MethodScreen.jsx`.
 class MethodScreen extends StatelessWidget {
-  const MethodScreen({super.key, required this.email, required this.verifyToken});
+  const MethodScreen({
+    super.key,
+    required this.email,
+    required this.verifyToken,
+  });
 
   final String email;
   final String verifyToken;

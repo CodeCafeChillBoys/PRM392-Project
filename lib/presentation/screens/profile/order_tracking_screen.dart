@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -32,11 +34,13 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   LatLng? _shipper;
   LatLng? _dest;
   List<LatLng> _route = [];
+  Timer? _pollTimer; // lưới an toàn khi SignalR gián đoạn
   DateTime? _lastRouteAt;
   String? _updatedAt;
   bool _loading = true; // đang lấy vị trí lần đầu
   bool _live = false; // đã kết nối realtime
   bool _initialFitDone = false;
+  bool _delivered = false; // đơn đã giao xong → ngừng theo dõi
   String? _error;
 
   /// Toạ độ kho — khớp BE `Goong:StoreLatitude/Longitude` và checkout.
@@ -74,6 +78,33 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         setState(() => _error = 'Không kết nối được theo dõi realtime.');
       }
     }
+
+    // 3) Lưới an toàn: SignalR có thể chập chờn (rớt/reconnect) trên emulator &
+    //    mạng yếu. Poll REST định kỳ để xe vẫn cập nhật dù realtime gián đoạn.
+    _pollTimer =
+        Timer.periodic(const Duration(seconds: 5), (_) => _pollLocation());
+  }
+
+  /// Lấy vị trí shipper mới nhất qua REST (dự phòng khi SignalR không đẩy kịp)
+  /// và phát hiện đơn đã giao xong để ngừng theo dõi.
+  Future<void> _pollLocation() async {
+    // Đơn đã giao (Staff "Xác nhận đã giao") → dừng poll + realtime, báo thành công.
+    final status = await _service.fetchOrderStatus(widget.order.id);
+    if (!mounted) return;
+    if (status == 'Delivered') {
+      _pollTimer?.cancel();
+      _hub.disconnect();
+      setState(() => _delivered = true);
+      return;
+    }
+    final p = await _service.fetchShipperLocation(widget.order.id);
+    if (p == null || !mounted) return;
+    final cur = _shipper;
+    if (cur != null && p.latitude == cur.latitude && p.longitude == cur.longitude) {
+      return; // không đổi -> khỏi vẽ lại
+    }
+    setState(() => _shipper = p);
+    _updateRoute();
   }
 
   void _onLocation(double lat, double lng, String? updatedAt) {
@@ -131,6 +162,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _hub.disconnect();
     super.dispose();
   }
@@ -276,6 +308,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   (String, String, Color) _statusInfo() {
+    if (_delivered) {
+      return ('package-check', 'Đơn đã giao thành công 🎉', AppColors.success500);
+    }
     if (_error != null) {
       return ('x-circle', _error!, AppColors.danger500);
     }

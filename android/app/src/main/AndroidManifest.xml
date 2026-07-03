@@ -7,6 +7,9 @@
         android:label="tech_void"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data
+            android:name="flutter_deeplinking_enabled"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -27,6 +27,9 @@ class ApiConfig {
     }
     try {
       if (Platform.isAndroid) {
+        // Máy ảo Android → 10.0.2.2 = localhost của PC (demo hằng ngày).
+        // ĐIỆN THOẠI THẬT: đổi thành 'http://localhost:5173' + `adb reverse
+        // tcp:5173 tcp:5173` (qua cáp), hoặc URL tunnel (ngrok/cloudflared) khi đi 4G.
         return 'http://10.0.2.2:5173';
       }
     } catch (_) {}
@@ -108,6 +111,8 @@ class ApiConfig {
   // Notifications.
   // ----------------------------------------------------------------------
   static const String notifications = '/api/notifications';
+  static String markNotificationRead(String id) => '/api/notifications/$id/read';
+  static const String markAllNotificationsRead = '/api/notifications/read-all';
 
   /// Build an absolute URL from one of the endpoint constants above.
   static Uri uri(String endpoint, [Map<String, dynamic>? query]) {

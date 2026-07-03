@@ -31,6 +31,16 @@ class TrackingHubClient {
       }
     });
 
+    // QUAN TRỌNG: group SignalR gắn theo connectionId. Khi rớt mạng và
+    // `withAutomaticReconnect` nối lại, connectionId mới KHÔNG còn trong group
+    // của đơn nên ngừng nhận `ReceiveLocation` (xe đứng yên cho tới khi mở lại
+    // màn). Phải tham gia lại group sau mỗi lần reconnect.
+    hub.onreconnected(({connectionId}) async {
+      try {
+        await hub.invoke('JoinOrderGroup', args: [orderId]);
+      } catch (_) {/* lần poll/nhịp sau sẽ bù */}
+    });
+
     await hub.start();
     await hub.invoke('JoinOrderGroup', args: [orderId]);
     _hub = hub;

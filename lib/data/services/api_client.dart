@@ -53,6 +53,24 @@ class ApiClient {
     return _decode(res);
   }
 
+  /// POST multipart/form-data — dùng cho upload file (vd ảnh xác nhận giao hàng).
+  Future<dynamic> postMultipart(
+    String endpoint, {
+    required String fileField,
+    required String filePath,
+    Map<String, String>? fields,
+  }) async {
+    final req = http.MultipartRequest('POST', ApiConfig.uri(endpoint));
+    if (authToken != null) {
+      req.headers['Authorization'] = 'Bearer $authToken';
+    }
+    if (fields != null) req.fields.addAll(fields);
+    req.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+    final streamed = await req.send().timeout(ApiConfig.timeout);
+    final res = await http.Response.fromStream(streamed);
+    return _decode(res);
+  }
+
   Future<dynamic> put(String endpoint, {Object? body}) async {
     final res = await _client
         .put(ApiConfig.uri(endpoint),
