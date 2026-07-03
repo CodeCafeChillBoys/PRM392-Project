@@ -87,10 +87,14 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
     }
   }
 
-  void _openDetail(Product p) {
-    Navigator.of(context).push(
+  Future<void> _openDetail(Product p) async {
+    final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => StaffProductDetailScreen(product: p)),
     );
+    if (changed == true && mounted) {
+      TvToast.show(context, 'Đã cập nhật sản phẩm.');
+      await _load();
+    }
   }
 
   Future<void> _logout() async {

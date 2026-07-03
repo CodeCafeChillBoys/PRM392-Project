@@ -5,10 +5,11 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/product.dart';
 import '../../widgets/widgets.dart';
+import 'add_product_screen.dart';
 
-/// Chi tiết sản phẩm cho Staff — CHỈ ĐỌC (đối chiếu thông tin, tồn kho).
-/// Không có nút giỏ hàng; sửa/xoá chưa làm vì BE chưa có endpoint
-/// (xem spec 2026-07-02). Màn push full-screen nên tự bọc Scaffold.
+/// Chi tiết sản phẩm cho Staff — hiển thị CHỈ ĐỌC (đối chiếu thông tin, tồn
+/// kho), có nút Sửa sản phẩm (BE đã có PUT). Không có nút giỏ hàng.
+/// Màn push full-screen nên tự bọc Scaffold.
 class StaffProductDetailScreen extends StatelessWidget {
   const StaffProductDetailScreen({super.key, required this.product});
 
@@ -66,6 +67,21 @@ class StaffProductDetailScreen extends StatelessWidget {
                     style: AppText.body(product.description.isEmpty
                         ? AppColors.textTertiary
                         : AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 24),
+                  TvButton(
+                    label: 'Sửa sản phẩm',
+                    fullWidth: true,
+                    leadingIcon: const TvIcon('edit', size: 16),
+                    onPressed: () async {
+                      final updated = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute(
+                            builder: (_) => AddProductScreen(initial: product)),
+                      );
+                      if (updated == true && context.mounted) {
+                        Navigator.of(context).pop(true);
+                      }
+                    },
                   ),
                 ],
               ),
