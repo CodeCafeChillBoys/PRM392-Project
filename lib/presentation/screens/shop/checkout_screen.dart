@@ -19,6 +19,7 @@ import '../../../data/services/shipping_service.dart';
 import '../../state/app_nav.dart';
 import '../../state/cart_controller.dart';
 import '../../widgets/widgets.dart';
+import 'payment_result_screen.dart';
 import 'payment_waiting_screen.dart';
 
 /// Checkout — nhập địa chỉ (Goong autocomplete → toạ độ), tính phí ship theo
@@ -157,7 +158,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
     setState(() => _confirming = true);
     final cart = context.read<CartController>();
-    final appNav = context.read<AppNav>();
     final navigator = Navigator.of(context);
     try {
       final result = await _orderService.checkout(
@@ -181,10 +181,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ));
       } else {
-        appNav.goExplore();
-        navigator.pop();
-        TvToast.show(
-            navigator.context, 'Đặt hàng thành công! Đơn đang chờ xử lý.');
+        // Thay thế màn hình Checkout bằng màn hình Kết quả thanh toán
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => PaymentResultScreen(
+              success: true,
+              orderId: result.orderId,
+              totalAmount: _grand,
+              paymentMethod: _payment,
+            ),
+          ),
+        );
       }
     } catch (_) {
       if (mounted) {
@@ -221,19 +228,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   size: TvButtonSize.lg,
                   fullWidth: true,
                   loading: _confirming,
-                  leadingIcon:
-                      isVNPay ? const TvIcon('external-link', size: 18) : null,
+                  leadingIcon: isVNPay
+                      ? const TvIcon('external-link', size: 18)
+                      : null,
                   onPressed: _confirm,
                 ),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const TvIcon('shield-check',
-                        size: 13, color: AppColors.textTertiary),
+                    const TvIcon(
+                      'shield-check',
+                      size: 13,
+                      color: AppColors.textTertiary,
+                    ),
                     const SizedBox(width: 6),
-                    Text('Thanh toán an toàn với mã hóa AES-256',
-                        style: AppText.xs(AppColors.textTertiary)),
+                    Text(
+                      'Thanh toán an toàn với mã hóa AES-256',
+                      style: AppText.xs(AppColors.textTertiary),
+                    ),
                   ],
                 ),
               ],
@@ -249,7 +262,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const TvSectionHeader(
-            icon: TvIcon('map-pin'), title: 'Địa chỉ nhận hàng'),
+          icon: TvIcon('map-pin'),
+          title: 'Địa chỉ nhận hàng',
+        ),
         const SizedBox(height: 12),
         Text.rich(
           TextSpan(
@@ -445,7 +460,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const TvSectionHeader(
-            icon: TvIcon('credit-card'), title: 'Phương thức thanh toán'),
+          icon: TvIcon('credit-card'),
+          title: 'Phương thức thanh toán',
+        ),
         const SizedBox(height: 12),
         for (final method in methods) ...[
           TvOptionRow(

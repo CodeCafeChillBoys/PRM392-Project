@@ -25,6 +25,7 @@ class AppIcons {
 
     // status / feedback
     'check': Icons.check_rounded,
+    'check-check': Icons.done_all_rounded,
     'check-circle': Icons.check_circle_outline_rounded,
     'x-circle': Icons.highlight_off_rounded,
     'shield-check': Icons.verified_user_outlined,
@@ -66,6 +67,8 @@ class AppIcons {
     'package': Icons.inventory_2_outlined,
     'inbox': Icons.inbox_outlined,
     'log-out': Icons.logout_rounded,
+    'camera': Icons.photo_camera_outlined,
+    'image': Icons.image_outlined,
 
     // device status bar
     'signal': Icons.signal_cellular_alt_rounded,
@@ -73,8 +76,6 @@ class AppIcons {
     'battery-full': Icons.battery_full_rounded,
 
     // media / image upload
-    'image': Icons.image_outlined,
-    'camera': Icons.photo_camera_outlined,
     'edit': Icons.edit_outlined,
   };
 

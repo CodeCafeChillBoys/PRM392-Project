@@ -13,7 +13,11 @@ import '../../widgets/widgets.dart';
 
 /// "Kiểm tra email" waiting state (BE flow screen 3). Mirrors `EmailWaitScreen.jsx`.
 class EmailWaitScreen extends StatefulWidget {
-  const EmailWaitScreen({super.key, required this.email, required this.verifyToken});
+  const EmailWaitScreen({
+    super.key,
+    required this.email,
+    required this.verifyToken,
+  });
 
   final String email;
   final String verifyToken;
@@ -51,7 +55,10 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
         _timer?.cancel();
         AppRoutes.enterApp(context);
       } else if (!approved && !isAuto && mounted) {
-        TvToast.show(context, 'Tài khoản chưa được xác nhận. Vui lòng bấm vào link trong email.');
+        TvToast.show(
+          context,
+          'Tài khoản chưa được xác nhận. Vui lòng bấm vào link trong email.',
+        );
       }
     } catch (e) {
       if (!isAuto && mounted) {
@@ -68,7 +75,10 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
       backgroundColor: AppColors.bgBase,
       body: Column(
         children: [
-          TvAppBar(mode: TvAppBarMode.page, onBack: () => Navigator.pop(context)),
+          TvAppBar(
+            mode: TvAppBarMode.page,
+            onBack: () => Navigator.pop(context),
+          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -86,16 +96,23 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: AppColors.accentSoft,
-                              border:
-                                  Border.all(color: AppColors.accentSoftLine),
+                              border: Border.all(
+                                color: AppColors.accentSoftLine,
+                              ),
                               boxShadow: AppEffects.glowCyanMd,
                             ),
-                            child: const TvIcon('mail-open',
-                                size: 42, color: AppColors.textAccent),
+                            child: const TvIcon(
+                              'mail-open',
+                              size: 42,
+                              color: AppColors.textAccent,
+                            ),
                           ),
                           const SizedBox(height: 24),
-                          Text('Kiểm tra email của bạn',
-                              style: AppText.h1(), textAlign: TextAlign.center),
+                          Text(
+                            'Kiểm tra email của bạn',
+                            style: AppText.h1(),
+                            textAlign: TextAlign.center,
+                          ),
                           const SizedBox(height: 10),
                           ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 300),
@@ -104,22 +121,26 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                                 Text(
                                   'Chúng tôi đã gửi link đăng nhập tới',
                                   textAlign: TextAlign.center,
-                                  style: AppText.body(AppColors.textSecondary)
-                                      .copyWith(fontSize: 14, height: 1.55),
+                                  style: AppText.body(
+                                    AppColors.textSecondary,
+                                  ).copyWith(fontSize: 14, height: 1.55),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   widget.email,
                                   textAlign: TextAlign.center,
                                   style: AppText.mono(
-                                      size: 13, color: AppColors.textAccent),
+                                    size: 13,
+                                    color: AppColors.textAccent,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   'Vui lòng bấm vào link đó để đăng nhập.',
                                   textAlign: TextAlign.center,
-                                  style: AppText.body(AppColors.textSecondary)
-                                      .copyWith(fontSize: 14, height: 1.55),
+                                  style: AppText.body(
+                                    AppColors.textSecondary,
+                                  ).copyWith(fontSize: 14, height: 1.55),
                                 ),
                               ],
                             ),
@@ -143,7 +164,10 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                           await intent.launch();
                         } catch (e) {
                           if (context.mounted) {
-                            TvToast.show(context, 'Lỗi khi mở ứng dụng Email: ${e.toString()}');
+                            TvToast.show(
+                              context,
+                              'Lỗi khi mở ứng dụng Email: ${e.toString()}',
+                            );
                           }
                         }
                       } else {
@@ -152,21 +176,30 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                           if (!context.mounted) return;
 
                           if (!result.didOpen && !result.canOpen) {
-                            TvToast.show(context, 'Không tìm thấy ứng dụng Email nào trên thiết bị.');
-                          } else if (!result.didOpen && result.canOpen) {
-                            final selectedApp = await OpenMailLauncher.showMailAppPicker(
-                              context: context,
-                              mailApps: result.options,
-                              title: 'Chọn ứng dụng Email',
-                              cancelText: 'Hủy',
+                            TvToast.show(
+                              context,
+                              'Không tìm thấy ứng dụng Email nào trên thiết bị.',
                             );
+                          } else if (!result.didOpen && result.canOpen) {
+                            final selectedApp =
+                                await OpenMailLauncher.showMailAppPicker(
+                                  context: context,
+                                  mailApps: result.options,
+                                  title: 'Chọn ứng dụng Email',
+                                  cancelText: 'Hủy',
+                                );
                             if (selectedApp != null && context.mounted) {
-                              await OpenMailLauncher.openSpecificMailApp(mailApp: selectedApp);
+                              await OpenMailLauncher.openSpecificMailApp(
+                                mailApp: selectedApp,
+                              );
                             }
                           }
                         } catch (e) {
                           if (context.mounted) {
-                            TvToast.show(context, 'Lỗi khi mở ứng dụng Email: ${e.toString()}');
+                            TvToast.show(
+                              context,
+                              'Lỗi khi mở ứng dụng Email: ${e.toString()}',
+                            );
                           }
                         }
                       }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/config/goong_config.dart';
@@ -193,6 +194,65 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
       _lastPos = null;
       _lastSentAt = null;
     });
+  }
+
+  // ── Xác nhận đã giao + ảnh chứng minh ─────────────────────────────────────
+  Future<void> _confirmDelivery(OrderModel o) async {
+    if (_busyId == o.id) return;
+    final source = await _pickImageSource();
+    if (source == null) return;
+    final XFile? photo = await ImagePicker().pickImage(
+      source: source,
+      imageQuality: 70,
+      maxWidth: 1280,
+    );
+    if (photo == null || !mounted) return;
+    setState(() => _busyId = o.id);
+    try {
+      await _service.confirmDelivery(o.id, photo.path);
+      if (_trackingOrderId == o.id) _stopTracking(); // đang gửi GPS đơn này → dừng
+      await _load(); // đơn chuyển sang "Xong"
+      if (mounted) {
+        TvToast.show(context, 'Đã giao thành công đơn #${_shortId(o.id)}.');
+      }
+    } catch (_) {
+      if (mounted) TvToast.show(context, 'Xác nhận giao thất bại.');
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
+  /// Bottom sheet chọn nguồn ảnh: chụp mới hoặc lấy từ thư viện.
+  Future<ImageSource?> _pickImageSource() {
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.bgSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Text('Ảnh xác nhận giao hàng',
+                style: AppText.h3().copyWith(fontSize: 15)),
+            const SizedBox(height: 6),
+            ListTile(
+              leading: const TvIcon('camera', color: AppColors.textAccent),
+              title: Text('Chụp ảnh', style: AppText.body()),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const TvIcon('image', color: AppColors.textAccent),
+              title: Text('Chọn từ thư viện', style: AppText.body()),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _logout() async {
@@ -388,6 +448,15 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
           ),
           const SizedBox(height: 10),
           TvButton(
+            label: 'Xác nhận đã giao',
+            size: TvButtonSize.md,
+            fullWidth: true,
+            loading: busy,
+            leadingIcon: const TvIcon('package-check', size: 16),
+            onPressed: () => _confirmDelivery(o),
+          ),
+          const SizedBox(height: 10),
+          TvButton(
             label: 'Dừng giao',
             variant: TvButtonVariant.ghost,
             size: TvButtonSize.md,
@@ -405,6 +474,16 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
           loading: busy,
           leadingIcon: const TvIcon('zap', size: 16),
           onPressed: otherActive ? null : () => _startTracking(o),
+        ),
+        const SizedBox(height: 10),
+        TvButton(
+          label: 'Xác nhận đã giao',
+          variant: TvButtonVariant.ghost,
+          size: TvButtonSize.md,
+          fullWidth: true,
+          loading: busy,
+          leadingIcon: const TvIcon('package-check', size: 16),
+          onPressed: () => _confirmDelivery(o),
         ),
       ];
     }
