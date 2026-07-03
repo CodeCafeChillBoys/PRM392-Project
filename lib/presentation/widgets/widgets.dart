@@ -7,6 +7,7 @@ export 'order_status_badge.dart';
 export 'pressable.dart';
 export 'product_card.dart';
 export 'product_image.dart';
+export 'product_stock_badge.dart';
 export 'tv_app_bar.dart';
 export 'tv_badge.dart';
 export 'tv_bottom_nav.dart';

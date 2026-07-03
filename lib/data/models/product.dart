@@ -1,7 +1,7 @@
 /// A product from the TechStoreAPI `Product` module.
 ///
 /// Backend DTO shape (per the API design doc):
-/// `{ id, name, brand, price, stockQuantity, imageUrl, description, categoryName }`
+/// `{ id, name, brand, price, stockQuantity, imageUrl, description, categoryName, categoryId }`
 ///
 /// [heroImageUrl] is a UI-only convenience (large detail image); the backend
 /// currently exposes a single `imageUrl`, so it falls back to that.
@@ -16,6 +16,7 @@ class Product {
     required this.imageUrl,
     required this.description,
     String? heroImageUrl,
+    this.categoryId = '',
   }) : heroImageUrl = heroImageUrl ?? imageUrl;
 
   final String id;
@@ -27,6 +28,7 @@ class Product {
   final String imageUrl;
   final String heroImageUrl;
   final String description;
+  final String categoryId;
 
   bool get isSoldOut => stockQuantity <= 0;
   bool get isLowStock => !isSoldOut && stockQuantity <= 10;
@@ -43,6 +45,7 @@ class Product {
             json['imageUrl'] as String? ?? json['img'] as String? ?? '',
         heroImageUrl: json['heroImageUrl'] as String? ?? json['hero'] as String?,
         description: json['description'] as String? ?? '',
+        categoryId: '${json['categoryId'] ?? ''}',
       );
 
   Map<String, dynamic> toJson() => {
@@ -54,5 +57,6 @@ class Product {
         'stockQuantity': stockQuantity,
         'imageUrl': imageUrl,
         'description': description,
+        'categoryId': categoryId,
       };
 }
