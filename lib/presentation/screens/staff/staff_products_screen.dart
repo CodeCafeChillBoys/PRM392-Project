@@ -13,8 +13,8 @@ import 'add_product_screen.dart';
 import 'staff_product_detail_screen.dart';
 
 /// Trang Staff — quản lý sản phẩm: xem danh sách + tồn kho, tìm kiếm, lọc
-/// theo danh mục, thêm sản phẩm mới. BE chưa có API sửa/xoá nên chỉ có
-/// Xem + Thêm (spec 2026-07-02). Tab-page: tự có app bar, không Scaffold.
+/// theo danh mục, thêm sản phẩm mới; sửa qua màn chi tiết (spec 2026-07-03).
+/// BE chưa có API xoá. Tab-page: tự có app bar, không Scaffold.
 class StaffProductsScreen extends StatefulWidget {
   const StaffProductsScreen({super.key});
 
