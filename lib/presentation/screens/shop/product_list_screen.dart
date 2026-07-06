@@ -9,6 +9,7 @@ import '../../state/app_nav.dart';
 import '../../state/cart_controller.dart';
 import '../../state/catalog_controller.dart';
 import '../../widgets/widgets.dart';
+import '../chat/chat_screen.dart';
 import '../notifications/notifications_screen.dart';
 import 'product_detail_screen.dart';
 
@@ -60,6 +61,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
           mode: TvAppBarMode.brand,
           brand: const TvLogo(),
           actions: [
+            TvIconButton(
+              icon: const TvIcon('bot'),
+              tooltip: 'Trợ lý AI',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ChatScreen()),
+              ),
+            ),
             TvIconButton(
               icon: const TvIcon('bell'),
               tooltip: 'Thông báo',
