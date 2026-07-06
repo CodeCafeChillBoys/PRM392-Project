@@ -77,6 +77,10 @@ class AppIcons {
 
     // media / image upload
     'edit': Icons.edit_outlined,
+
+    // chat AI
+    'bot': Icons.smart_toy_outlined,
+    'send': Icons.send_rounded,
   };
 
   /// Resolve a Lucide name to an [IconData], falling back to a neutral glyph.
