@@ -23,12 +23,13 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final _service = ChatService();
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final List<_ChatEntry> _messages = [];
   bool _waiting = false;
+  double _lastBottomInset = 0;
 
   static const _suggestions = [
     'Shop đang có những sản phẩm gì?',
@@ -39,6 +40,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _messages.add(_ChatEntry(
       text: 'Xin chào! Mình là trợ lý AI của TechStore. Bạn cần tìm sản phẩm '
           'hay có câu hỏi gì cứ nhắn mình nhé 🤖',
@@ -49,9 +51,19 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    final inset =
+        WidgetsBinding.instance.platformDispatcher.implicitView?.viewInsets.bottom ?? 0;
+    // Bàn phím vừa mở → viewport co lại, cuộn theo để tin mới nhất không bị che.
+    if (inset > _lastBottomInset) _scrollToBottom();
+    _lastBottomInset = inset;
   }
 
   bool get _showSuggestions => !_messages.any((m) => m.fromUser);
@@ -61,7 +73,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isEmpty || _waiting) return;
     setState(() {
       _messages.add(_ChatEntry(text: text, fromUser: true, at: DateTime.now()));
-      _controller.clear();
+      if (presetText == null) _controller.clear();
       _waiting = true;
     });
     _scrollToBottom();
@@ -80,7 +92,9 @@ class _ChatScreenState extends State<ChatScreen> {
           fromUser: false,
           at: DateTime.now(),
         ));
-        _controller.text = text;
+        if (presetText == null && _controller.text.trim().isEmpty) {
+          _controller.text = text;
+        }
       });
     } finally {
       if (mounted) setState(() => _waiting = false);
@@ -171,7 +185,13 @@ class _ChatScreenState extends State<ChatScreen> {
               controller: _controller,
               hintText: 'Nhập câu hỏi...',
               textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _send(),
+              onEditingComplete: () {
+                if (_waiting) {
+                  TvToast.show(context, 'Chờ trợ lý trả lời xong đã nhé.');
+                } else {
+                  _send();
+                }
+              },
             ),
           ),
           const SizedBox(width: 8),
