@@ -66,6 +66,7 @@ class AppIcons {
     'package-check': Icons.inventory_2_outlined,
     'package': Icons.inventory_2_outlined,
     'inbox': Icons.inbox_outlined,
+    'bar-chart': Icons.bar_chart_rounded,
     'log-out': Icons.logout_rounded,
     'camera': Icons.photo_camera_outlined,
     'image': Icons.image_outlined,
@@ -77,6 +78,10 @@ class AppIcons {
 
     // media / image upload
     'edit': Icons.edit_outlined,
+
+    // chat AI
+    'bot': Icons.smart_toy_outlined,
+    'send': Icons.send_rounded,
   };
 
   /// Resolve a Lucide name to an [IconData], falling back to a neutral glyph.
