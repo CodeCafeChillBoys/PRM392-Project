@@ -15,4 +15,8 @@ class AppConfig {
   /// Phone-canvas max width from the design system (`--app-max-width: 430px`).
   /// Used to keep the layout phone-shaped on wide screens (web/tablet).
   static const double appMaxWidth = 430;
+
+  /// Tỷ lệ hoa hồng shipper trên phí ship mỗi cuốc giao xong (shop giữ phần còn lại).
+  /// Đã chốt theo chuẩn thị trường (Ahamove/Grab ăn 20–30%): shipper 78% — shop 22%.
+  static const double shipperCommissionRate = 0.78;
 }

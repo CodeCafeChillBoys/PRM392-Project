@@ -66,6 +66,7 @@ class AppIcons {
     'package-check': Icons.inventory_2_outlined,
     'package': Icons.inventory_2_outlined,
     'inbox': Icons.inbox_outlined,
+    'bar-chart': Icons.bar_chart_rounded,
     'log-out': Icons.logout_rounded,
     'camera': Icons.photo_camera_outlined,
     'image': Icons.image_outlined,
