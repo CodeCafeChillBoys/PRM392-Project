@@ -25,13 +25,18 @@ class OrderTrackingScreen extends StatefulWidget {
   State<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
 }
 
-class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
+class _OrderTrackingScreenState extends State<OrderTrackingScreen>
+    with SingleTickerProviderStateMixin {
   final _service = OrderService();
   final _goong = GoongService();
   final _hub = TrackingHubClient();
   final _mapController = MapController();
 
-  LatLng? _shipper;
+  LatLng? _shipper; // vị trí mục tiêu mới nhất (dùng cho route/fit khung)
+  // Nội suy marker: xe trượt mượt từ _animFrom → _animTo thay vì nhảy giật.
+  late final AnimationController _moveCtrl;
+  LatLng? _animFrom;
+  LatLng? _animTo;
   LatLng? _dest;
   List<LatLng> _route = [];
   Timer? _pollTimer; // lưới an toàn khi SignalR gián đoạn
@@ -47,24 +52,122 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   static const LatLng _store = LatLng(10.841122, 106.809935);
   static const LatLng _fallbackCenter = LatLng(10.841122, 106.809935);
   static const Duration _routeThrottle = Duration(seconds: 5);
+  static const Distance _dist = Distance(); // đo khoảng cách khi trim đường
+
+  /// Vị trí marker đang HIỂN THỊ (nội suy giữa 2 điểm liên tiếp cho mượt).
+  /// Khi không có chặng nào đang chạy, trả về vị trí mục tiêu `_shipper`.
+  LatLng? get _animatedShipper {
+    final a = _animFrom, b = _animTo;
+    if (a == null || b == null) return _shipper;
+    final t = Curves.easeInOut.transform(_moveCtrl.value);
+    return LatLng(
+      a.latitude + (b.latitude - a.latitude) * t,
+      a.longitude + (b.longitude - a.longitude) * t,
+    );
+  }
+
+  /// Chiếu điểm [p] xuống đoạn [a]-[b]; trả về (chân vuông góc, t trong [0,1]).
+  (LatLng, double) _projectOnSeg(LatLng p, LatLng a, LatLng b) {
+    final ax = a.longitude, ay = a.latitude;
+    final bx = b.longitude, by = b.latitude;
+    final dx = bx - ax, dy = by - ay;
+    final len2 = dx * dx + dy * dy;
+    if (len2 == 0) return (a, 0);
+    var t = ((p.longitude - ax) * dx + (p.latitude - ay) * dy) / len2;
+    t = t.clamp(0.0, 1.0);
+    return (LatLng(ay + dy * t, ax + dx * t), t);
+  }
+
+  /// Đường polyline THỰC SỰ vẽ: bắt đầu ĐÚNG tại xe [car], rồi kéo dài theo phần
+  /// tuyến còn Ở PHÍA TRƯỚC xe tới đích. Tính lại mỗi frame cùng lúc với marker
+  /// nên đoạn sau lưng xe "bị ăn" đúng frame xe đi qua (kiểu Grab/Gojek).
+  List<LatLng> _visibleRoute(LatLng? car) {
+    final r = _route;
+    if (car == null || r.length < 2) return const [];
+    // Tìm đoạn gần xe nhất theo khoảng cách vuông góc (trượt liên tục, không giật đỉnh).
+    var bestSeg = 0;
+    var bestD = double.infinity;
+    var bestFoot = r[0];
+    for (var i = 0; i < r.length - 1; i++) {
+      final (foot, _) = _projectOnSeg(car, r[i], r[i + 1]);
+      final d = _dist.as(LengthUnit.Meter, car, foot);
+      if (d < bestD) {
+        bestD = d;
+        bestSeg = i;
+        bestFoot = foot;
+      }
+    }
+    // Xe → chân vuông góc → các đỉnh phía trước → đích.
+    final out = <LatLng>[car, bestFoot];
+    for (var i = bestSeg + 1; i < r.length; i++) {
+      out.add(r[i]);
+    }
+    // Khử điểm trùng sát nhau để không tạo polyline suy biến (1 điểm) lúc tới đích.
+    final dedup = <LatLng>[];
+    for (final pt in out) {
+      if (dedup.isEmpty || _dist.as(LengthUnit.Meter, dedup.last, pt) > 0.5) {
+        dedup.add(pt);
+      }
+    }
+    return dedup.length >= 2 ? dedup : const [];
+  }
+
+  /// Nhận vị trí shipper mới → cho marker TRƯỢT mượt tới đó (thay vì teleport).
+  /// Bắt đầu chặng mới từ vị trí đang hiển thị nên nếu điểm mới tới khi chặng
+  /// cũ chưa xong vẫn liền mạch, không giật ngược.
+  void _moveShipperTo(LatLng target) {
+    // Bỏ qua nếu đích không đổi (tránh chạy tween thừa).
+    final to = _animTo ?? _shipper;
+    if (to != null &&
+        target.latitude == to.latitude &&
+        target.longitude == to.longitude) {
+      return;
+    }
+    final start = _animatedShipper ?? target;
+    setState(() {
+      _shipper = target;
+      _animFrom = start;
+      _animTo = target;
+    });
+    _moveCtrl.forward(from: 0);
+    _updateRoute();
+  }
 
   @override
   void initState() {
     super.initState();
+    // Duration 2000ms = khớp nhịp máy Staff gửi vị trí (StaffOrders _gpsInterval
+    // = 2s). Marker trượt mượt từ điểm cũ → điểm mới bằng tween easeInOut.
+    _moveCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..addListener(() {
+        if (mounted) setState(() {}); // redraw marker mỗi frame khi tween chạy
+      });
     _init();
   }
 
   Future<void> _init() async {
     // 1) Vị trí shipper (REST) + geocode địa chỉ nhà khách (song song).
-    final shipperFuture = _service.fetchShipperLocation(widget.order.id);
-    final destFuture = _goong.geocodeAddress(widget.order.shippingAddress);
-    final initial = await shipperFuture;
-    final dest = await destFuture;
+    //    BỌC try/catch: nếu Goong/REST timeout hoặc lỗi mạng, KHÔNG được để
+    //    exception văng ra trước khi tắt spinner — nếu không _loading kẹt `true`
+    //    → xoay mãi không phục hồi. Lỗi mạng lúc mở màn vẫn cho vào; poll/SignalR
+    //    sẽ tự cập nhật vị trí + tuyến sau đó.
+    LatLng? initial;
+    LatLng? dest;
+    try {
+      final shipperFuture = _service.fetchShipperLocation(widget.order.id);
+      final destFuture = _goong.geocodeAddress(widget.order.shippingAddress);
+      initial = await shipperFuture;
+      dest = await destFuture;
+    } catch (_) {
+      // Nuốt lỗi mạng lúc khởi tạo — spinner vẫn phải tắt ở dưới.
+    }
     if (!mounted) return;
     setState(() {
       _shipper = initial;
       _dest = dest;
-      _loading = false;
+      _loading = false; // LUÔN tắt spinner dù thành công hay lỗi
     });
     _fitAllMarkers();
     await _updateRoute(force: true);
@@ -88,35 +191,38 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   /// Lấy vị trí shipper mới nhất qua REST (dự phòng khi SignalR không đẩy kịp)
   /// và phát hiện đơn đã giao xong để ngừng theo dõi.
   Future<void> _pollLocation() async {
-    // Đơn đã giao (Staff "Xác nhận đã giao") → dừng poll + realtime, báo thành công.
-    final status = await _service.fetchOrderStatus(widget.order.id);
-    if (!mounted) return;
-    if (status == 'Delivered') {
-      _pollTimer?.cancel();
-      _hub.disconnect();
-      setState(() => _delivered = true);
-      return;
+    try {
+      // Đơn đã giao (Staff "Xác nhận đã giao") → dừng poll + realtime, báo thành công.
+      final status = await _service.fetchOrderStatus(widget.order.id);
+      if (!mounted) return;
+      if (status == 'Delivered') {
+        _pollTimer?.cancel();
+        _hub.disconnect();
+        setState(() => _delivered = true);
+        return;
+      }
+      final p = await _service.fetchShipperLocation(widget.order.id);
+      if (p == null || !mounted) return;
+      final cur = _shipper;
+      if (cur != null &&
+          p.latitude == cur.latitude &&
+          p.longitude == cur.longitude) {
+        return; // không đổi -> khỏi vẽ lại
+      }
+      _moveShipperTo(p); // trượt mượt tới điểm mới (đã gọi _updateRoute bên trong)
+    } catch (_) {
+      // Lỗi mạng thoáng qua (reset/timeout) — bỏ qua nhịp này, vòng poll sau thử lại.
     }
-    final p = await _service.fetchShipperLocation(widget.order.id);
-    if (p == null || !mounted) return;
-    final cur = _shipper;
-    if (cur != null && p.latitude == cur.latitude && p.longitude == cur.longitude) {
-      return; // không đổi -> khỏi vẽ lại
-    }
-    setState(() => _shipper = p);
-    _updateRoute();
   }
 
   void _onLocation(double lat, double lng, String? updatedAt) {
     if (!mounted) return;
-    final p = LatLng(lat, lng);
     setState(() {
-      _shipper = p;
       _updatedAt = updatedAt;
       _live = true;
     });
-    _updateRoute();
-    // Chỉ cập nhật marker shipper; không fit lại để tránh giật bản đồ.
+    // Trượt mượt marker tới điểm mới (không fit lại để tránh giật bản đồ).
+    _moveShipperTo(LatLng(lat, lng));
   }
 
   /// Gọi Goong Direction shipper → nhà; throttle 5s để tiết kiệm quota.
@@ -164,6 +270,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   void dispose() {
     _pollTimer?.cancel();
     _hub.disconnect();
+    _moveCtrl.dispose();
     super.dispose();
   }
 
@@ -193,8 +300,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   Widget _mapView() {
-    final s = _shipper;
+    final s = _animatedShipper; // vị trí nội suy (mượt) cho marker xe
     final d = _dest;
+    // Đường vẽ lấy từ CÙNG biến s như marker → co lại đúng frame xe di chuyển.
+    final visible = _visibleRoute(s);
     return Stack(
       children: [
         Positioned.fill(
@@ -214,11 +323,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 urlTemplate: GoongConfig.osmTileUrl,
                 userAgentPackageName: 'com.techstore.tech_void',
               ),
-              if (_route.isNotEmpty)
+              if (visible.length >= 2)
                 PolylineLayer(
                   polylines: [
                     Polyline(
-                      points: _route,
+                      points: visible,
                       strokeWidth: 4,
                       color: AppColors.accent,
                     ),

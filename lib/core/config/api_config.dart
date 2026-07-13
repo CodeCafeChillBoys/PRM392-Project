@@ -36,8 +36,10 @@ class ApiConfig {
     return 'http://localhost:5173';
   }
 
-  /// Default network timeout for requests.
-  static const Duration timeout = Duration(seconds: 20);
+  /// Default network timeout for requests. BE localhost trả lời ~60-150ms nên
+  /// 12s là dư; ngắn hơn 20s để lỗi mạng ảo emulator surface nhanh (đỡ "xoay lâu")
+  /// và giới hạn tổng thời gian khi ApiClient.get auto-retry.
+  static const Duration timeout = Duration(seconds: 12);
 
   // ----------------------------------------------------------------------
   // Auth — mirrors "Luồng BE / Register" (email-link OR email-OTP verify).
