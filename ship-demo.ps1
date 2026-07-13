@@ -10,14 +10,17 @@
 # TUY CHON:
 #     -OrderId <ma>   : ep chon 1 don (ma ngan nhu tren app hoac GUID). Phai la don STAFF dang chay!
 #     -FromStore      : bat dau tu KHO thay vi vi tri hien tai (khi muon chay lai tu dau)
-#     -DelaySec <s>   : giay moi diem (mac dinh 1.2)
-#     -SubPerStep <n> : so diem chen giua moi doan cho muot (mac dinh 2)
+#     -DelaySec <s>   : giay moi diem (mac dinh 2.0 - khop nhip Staff gui 2s)
+#     -SubPerStep <n> : so diem chen giua moi doan cho muot (mac dinh 3)
 
 param(
   [string]$OrderId = "",
   [switch]$FromStore,
-  [double]$DelaySec = 1.2,
-  [int]$SubPerStep = 2
+  # 2.0s = khop nhip may Staff gui vi tri (StaffOrders _gpsInterval = 2s) -> may
+  # Khach nhan deu 2s/diem, animation FE (2000ms) truot lien mach khong khung.
+  [double]$DelaySec = 2.0,
+  # 3 diem chen giua moi doan -> chang thang ngan hon, xe bam cua muot hon.
+  [int]$SubPerStep = 3
 )
 
 $adb = "C:\Users\Kangnahyun\AppData\Local\Android\Sdk\platform-tools\adb.exe"

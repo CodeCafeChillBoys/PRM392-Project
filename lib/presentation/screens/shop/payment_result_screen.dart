@@ -22,6 +22,17 @@ class PaymentResultScreen extends StatelessWidget {
   final double totalAmount;
   final String paymentMethod;
 
+  /// COD = trả khi nhận hàng (khách chưa thanh toán online).
+  bool get _isCod => paymentMethod.toUpperCase() == 'COD';
+
+  /// Mã đơn rút gọn cho UUID dài: `#6703755e…16660` (8 đầu + 5 cuối).
+  /// Mã ngắn (mock "TV249xx") giữ nguyên.
+  String get _shortOrderId {
+    final id = orderId.trim();
+    if (id.length <= 16) return '#$id';
+    return '#${id.substring(0, 8)}…${id.substring(id.length - 5)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final appNav = context.read<AppNav>();
@@ -92,10 +103,13 @@ class PaymentResultScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      // Status Headers
+                      // Status Headers — COD: khách chưa trả tiền nên dùng
+                      // "Đặt hàng thành công"; VNPay/cổng đã trả thì "Thanh toán".
                       Text(
                         success
-                            ? 'Thanh toán thành công!'
+                            ? (_isCod
+                                ? 'Đặt hàng thành công!'
+                                : 'Thanh toán thành công!')
                             : 'Thanh toán thất bại',
                         style: AppText.h1(
                           success ? AppColors.success500 : AppColors.danger500,
@@ -105,7 +119,9 @@ class PaymentResultScreen extends StatelessWidget {
                       const SizedBox(height: 10),
                       Text(
                         success
-                            ? 'Cảm ơn bạn đã tin tưởng mua sắm tại TECH_VOID. Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.'
+                            ? (_isCod
+                                ? 'Cảm ơn bạn đã tin tưởng mua sắm tại TECH_VOID. Đơn hàng của bạn đã được tiếp nhận — bạn thanh toán khi nhận hàng.'
+                                : 'Cảm ơn bạn đã tin tưởng mua sắm tại TECH_VOID. Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.')
                             : 'Giao dịch của bạn đã bị từ chối hoặc gặp sự cố. Vui lòng kiểm tra lại phương thức thanh toán.',
                         style: AppText.body(AppColors.textSecondary),
                         textAlign: TextAlign.center,
@@ -131,7 +147,7 @@ class PaymentResultScreen extends StatelessWidget {
                             const SizedBox(height: 6),
                             _buildDetailRow(
                               'Mã đơn hàng',
-                              '#$orderId',
+                              _shortOrderId,
                               isMonospace: true,
                             ),
                             const SizedBox(height: 12),
@@ -194,24 +210,30 @@ class PaymentResultScreen extends StatelessWidget {
     Color valueColor = AppColors.textPrimary,
   }) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: AppText.body(AppColors.textSecondary).copyWith(fontSize: 14),
         ),
-        Text(
-          value,
-          style: isMonospace
-              ? AppText.mono(
-                  size: 14,
-                  color: valueColor,
-                  weight: isBold ? FontWeight.bold : FontWeight.normal,
-                )
-              : AppText.body(valueColor).copyWith(
-                  fontSize: 14,
-                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                ),
+        const SizedBox(width: 12),
+        // Value co giãn + canh phải; mã đơn dài (UUID) tự xuống dòng thay vì tràn.
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            softWrap: true,
+            style: isMonospace
+                ? AppText.mono(
+                    size: 14,
+                    color: valueColor,
+                    weight: isBold ? FontWeight.bold : FontWeight.normal,
+                  )
+                : AppText.body(valueColor).copyWith(
+                    fontSize: 14,
+                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                  ),
+          ),
         ),
       ],
     );

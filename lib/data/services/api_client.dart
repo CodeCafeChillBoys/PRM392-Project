@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -38,11 +40,27 @@ class ApiClient {
         if (authToken != null) 'Authorization': 'Bearer $authToken',
       };
 
+  /// GET có auto-retry cho lỗi KẾT NỐI thoáng qua (mạng ảo emulator hay bị
+  /// "Connection reset by peer" / timeout dù BE khoẻ). CHỈ retry lỗi kết nối,
+  /// KHÔNG retry lỗi API (4xx/5xx — do `_decode` ném ra). GET idempotent nên
+  /// thử lại an toàn, không gây tác dụng phụ (khác POST tạo đơn/thanh toán).
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? query}) async {
-    final res = await _client
-        .get(ApiConfig.uri(endpoint, query), headers: _headers)
-        .timeout(ApiConfig.timeout);
-    return _decode(res);
+    final uri = ApiConfig.uri(endpoint, query);
+    const maxTries = 3;
+    for (var attempt = 1;; attempt++) {
+      try {
+        final res =
+            await _client.get(uri, headers: _headers).timeout(ApiConfig.timeout);
+        return _decode(res);
+      } on Exception catch (e) {
+        final transient = e is TimeoutException ||
+            e is SocketException ||
+            e is http.ClientException;
+        if (!transient || attempt >= maxTries) rethrow;
+        // Chờ ngắn tăng dần rồi thử lại (250ms, 500ms).
+        await Future.delayed(Duration(milliseconds: 250 * attempt));
+      }
+    }
   }
 
   Future<dynamic> post(String endpoint, {Object? body}) async {

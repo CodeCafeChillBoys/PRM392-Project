@@ -38,7 +38,7 @@ dependencies:
   signalr_netcore: ^1.4.4
   # Staff chụp ảnh giao hàng (confirm-delivery) + upload ảnh sản phẩm.
   image_picker: ^1.2.3
-  app_links: ^7.2.0
+  app_links: ^7.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
