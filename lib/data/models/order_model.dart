@@ -9,6 +9,8 @@ class OrderModel {
     required this.paymentMethod,
     required this.paymentStatus,
     required this.orderDate,
+    required this.shippingFee,
+    required this.staffId,
     this.itemCount,
   });
 
@@ -20,6 +22,12 @@ class OrderModel {
   final String paymentMethod;
   final String paymentStatus; // Pending / Paid / Failed
   final String orderDate;
+
+  /// Phí ship của đơn — đơn cũ (trước migration BE) chưa có cột này → 0.
+  final double shippingFee;
+
+  /// Mã nhân viên (shipper) được gán giao đơn — rỗng nếu chưa gán.
+  final String staffId;
 
   /// Số sản phẩm trong đơn — chỉ có khi BE trả về; null thì UI ẩn dòng này.
   final int? itemCount;
@@ -33,6 +41,8 @@ class OrderModel {
         paymentMethod: json['paymentMethod'] as String? ?? '',
         paymentStatus: json['paymentStatus'] as String? ?? '',
         orderDate: '${json['orderDate'] ?? ''}',
+        shippingFee: (json['shippingFee'] as num?)?.toDouble() ?? 0,
+        staffId: '${json['staffId'] ?? ''}',
         itemCount: _parseItemCount(json),
       );
 

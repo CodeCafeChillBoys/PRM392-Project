@@ -114,6 +114,11 @@ class ApiConfig {
   static String markNotificationRead(String id) => '/api/notifications/$id/read';
   static const String markAllNotificationsRead = '/api/notifications/read-all';
 
+  // ----------------------------------------------------------------------
+  // Chat AI — "Trợ lý TechStore" (Gemini phía BE, không lưu history).
+  // ----------------------------------------------------------------------
+  static const String chat = '/api/Chat';
+
   /// Build an absolute URL from one of the endpoint constants above.
   static Uri uri(String endpoint, [Map<String, dynamic>? query]) {
     final base = Uri.parse('$baseUrl$endpoint');

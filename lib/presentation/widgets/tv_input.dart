@@ -14,6 +14,7 @@ class TvInput extends StatelessWidget {
     this.controller,
     this.onChanged,
     this.onSubmitted,
+    this.onEditingComplete,
     this.hintText = '',
     this.leading,
     this.trailing,
@@ -30,6 +31,7 @@ class TvInput extends StatelessWidget {
   final TextEditingController? controller;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+  final VoidCallback? onEditingComplete;
   final String hintText;
   final Widget? leading;
   final Widget? trailing;
@@ -74,6 +76,7 @@ class TvInput extends StatelessWidget {
               controller: controller,
               onChanged: onChanged,
               onSubmitted: onSubmitted,
+              onEditingComplete: onEditingComplete,
               obscureText: obscureText,
               keyboardType: keyboardType,
               textInputAction: textInputAction,
