@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:open_mail_launcher/open_mail_launcher.dart';
 import 'package:android_intent_plus/android_intent.dart';
 
@@ -89,6 +90,7 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Huy hiệu mail "thở" — tín hiệu đang chờ bạn bấm link.
                           Container(
                             width: 96,
                             height: 96,
@@ -106,7 +108,14 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                               size: 42,
                               color: AppColors.textAccent,
                             ),
-                          ),
+                          )
+                              .animate(onPlay: (c) => c.repeat(reverse: true))
+                              .scaleXY(
+                                begin: 1,
+                                end: 1.05,
+                                duration: const Duration(milliseconds: 1300),
+                                curve: Curves.easeInOut,
+                              ),
                           const SizedBox(height: 24),
                           Text(
                             'Kiểm tra email của bạn',

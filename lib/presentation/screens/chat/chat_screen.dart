@@ -19,7 +19,11 @@ class _ChatEntry {
 /// full-screen từ icon bot trên app bar `ProductListScreen`. BE không lưu
 /// lịch sử hội thoại nên mỗi tin nhắn được gửi độc lập.
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  const ChatScreen({super.key, this.seedQuestion});
+
+  /// Câu hỏi mồi — mở chat từ nút "Chat hỗ trợ" ở trang sản phẩm sẽ hỏi sẵn
+  /// về đúng sản phẩm đó (hỗ trợ theo ngữ cảnh, khách không phải gõ lại).
+  final String? seedQuestion;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -49,6 +53,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       fromUser: false,
       at: DateTime.now(),
     ));
+    // Mở từ trang sản phẩm → tự gửi câu hỏi mồi sau khi màn dựng xong.
+    final seed = widget.seedQuestion?.trim();
+    if (seed != null && seed.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _send(seed));
+    }
   }
 
   @override

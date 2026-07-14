@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/services/auth_service.dart';
 import '../../widgets/widgets.dart';
@@ -145,7 +147,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ),
-                ],
+                ]
+                    // Form vào màn theo nhịp — cùng ngữ pháp entrance toàn app.
+                    .animate(interval: AppEffects.staggerStep)
+                    .fadeIn(
+                        duration: AppEffects.durEnter,
+                        curve: AppEffects.easeStandard)
+                    .moveY(
+                      begin: AppEffects.entranceRise,
+                      end: 0,
+                      duration: AppEffects.durEnter,
+                      curve: AppEffects.easeStandard,
+                    ),
               ),
             ),
           ),

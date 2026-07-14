@@ -12,6 +12,7 @@ import '../../../data/models/product.dart';
 import '../../state/app_nav.dart';
 import '../../state/cart_controller.dart';
 import '../../widgets/widgets.dart';
+import '../chat/chat_screen.dart';
 
 /// Product detail — VOID LUXE editorial: hero parallax trên nền glow gold,
 /// eyebrow bronze, tên sản phẩm cỡ display, nội dung vào màn theo cascade,
@@ -288,9 +289,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 icon: const TvIcon('message-circle', size: 20),
                 variant: TvIconButtonVariant.elevated,
                 size: TvIconButtonSize.lg,
-                tooltip: 'Chat hỗ trợ',
-                onPressed: () =>
-                    TvToast.show(context, 'Chat hỗ trợ đang được phát triển'),
+                tooltip: 'Hỏi trợ lý AI về sản phẩm này',
+                // Mở trợ lý AI (Gemini) với câu hỏi mồi về đúng sản phẩm đang xem.
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ChatScreen(
+                      seedQuestion: 'Tư vấn giúp mình về ${widget.product.name} '
+                          '(${widget.product.brand}) — sản phẩm này phù hợp với ai?',
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

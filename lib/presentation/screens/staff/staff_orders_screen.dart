@@ -7,7 +7,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/config/goong_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
@@ -514,10 +513,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
                 const InteractionOptions(flags: InteractiveFlag.none),
           ),
           children: [
-            TileLayer(
-              urlTemplate: GoongConfig.osmTileUrl,
-              userAgentPackageName: 'com.techstore.tech_void',
-            ),
+            const TvMapTiles(),
             if (pos != null)
               MarkerLayer(
                 markers: [

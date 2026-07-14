@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
@@ -76,7 +77,17 @@ class MethodScreen extends StatelessWidget {
                       OtpScreen(email: email, verifyToken: verifyToken),
                     ),
                   ),
-                ],
+                ]
+                    .animate(interval: AppEffects.staggerStep)
+                    .fadeIn(
+                        duration: AppEffects.durEnter,
+                        curve: AppEffects.easeStandard)
+                    .moveY(
+                      begin: AppEffects.entranceRise,
+                      end: 0,
+                      duration: AppEffects.durEnter,
+                      curve: AppEffects.easeStandard,
+                    ),
               ),
             ),
           ),

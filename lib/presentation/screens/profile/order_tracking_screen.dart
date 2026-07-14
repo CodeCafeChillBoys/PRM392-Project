@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../../core/config/goong_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/order_model.dart';
@@ -319,10 +318,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
               ),
             ),
             children: [
-              TileLayer(
-                urlTemplate: GoongConfig.osmTileUrl,
-                userAgentPackageName: 'com.techstore.tech_void',
-              ),
+              const TvMapTiles(),
               if (visible.length >= 2)
                 PolylineLayer(
                   polylines: [

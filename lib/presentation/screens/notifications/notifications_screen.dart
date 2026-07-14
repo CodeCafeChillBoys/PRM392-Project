@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart' hide ShimmerEffect;
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../data/models/app_notification.dart';
 import '../../../data/services/notification_service.dart';
 import '../../state/app_nav.dart';
@@ -104,6 +109,82 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  /// Thông báo "ma" cho skeleton.
+  static const _ghost = AppNotification(
+    id: 'ghost',
+    iconName: 'bell',
+    tone: NotificationTone.neutral,
+    unread: false,
+    title: 'Đang tải thông báo',
+    body: 'Nội dung thông báo đang được tải về từ máy chủ.',
+    time: 'vừa xong',
+  );
+
+  Widget _skeleton() => Skeletonizer(
+        effect: ShimmerEffect(
+          baseColor: AppColors.skeletonBase,
+          highlightColor: AppColors.skeletonHighlight,
+        ),
+        child: ListView.separated(
+          padding: EdgeInsets.fromLTRB(
+              AppSpacing.gutter, 58, AppSpacing.gutter, 24),
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 5,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (_, _) => const TvNotificationItem(notification: _ghost),
+        ),
+      );
+
+  /// Empty state theo từng tab (trước đây tab rỗng chỉ là khoảng trắng).
+  Widget _empty() {
+    final promo = _tab == 'promo';
+    return ListView(
+      children: [
+        const SizedBox(height: 60),
+        Center(
+          child: Container(
+            width: 76,
+            height: 76,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.accentSoft,
+              border: Border.all(color: AppColors.accentSoftLine),
+            ),
+            child: TvIcon(promo ? 'ticket-percent' : 'package',
+                size: 30, color: AppColors.textAccent),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Center(
+          child: Text(
+            promo ? 'Chưa có khuyến mãi' : 'Chưa có thông báo đơn hàng',
+            style: AppText.h2().copyWith(fontSize: 17),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              promo
+                  ? 'Ưu đãi và mã giảm giá mới sẽ xuất hiện ở đây.'
+                  : 'Cập nhật về đơn hàng của bạn sẽ hiện ở đây.',
+              textAlign: TextAlign.center,
+              style: AppText.sm(AppColors.textTertiary),
+            ),
+          ),
+        ),
+      ]
+          .animate(interval: AppEffects.staggerStep)
+          .fadeIn(duration: AppEffects.durEnter)
+          .moveY(
+              begin: AppEffects.entranceRise,
+              end: 0,
+              curve: AppEffects.easeStandard),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartCount = context.watch<CartController>().count;
@@ -139,10 +220,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           Expanded(
             child: _loading
-                ? Center(
-                    child: CircularProgressIndicator(color: AppColors.accent))
+                ? _skeleton()
                 : Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    padding: EdgeInsets.fromLTRB(
+                        AppSpacing.gutter, 8, AppSpacing.gutter, 24),
                     child: Column(
                       children: [
                         TvTabs(
@@ -156,15 +237,34 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                         const SizedBox(height: 16),
                         Expanded(
-                          child: ListView.separated(
-                            padding: EdgeInsets.zero,
-                            itemCount: list.length,
-                            separatorBuilder: (_, _) => const SizedBox(height: 10),
-                            itemBuilder: (context, i) => TvNotificationItem(
-                              notification: list[i],
-                              onTap: () => _markAsRead(list[i]),
-                            ),
-                          ),
+                          child: list.isEmpty
+                              ? _empty()
+                              : ListView.separated(
+                                  // Key theo tab → đổi tab là stagger chạy lại.
+                                  key: ValueKey(_tab),
+                                  padding: EdgeInsets.zero,
+                                  itemCount: list.length,
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(height: 10),
+                                  itemBuilder: (context, i) =>
+                                      TvNotificationItem(
+                                    notification: list[i],
+                                    onTap: () => _markAsRead(list[i]),
+                                  )
+                                          .animate(
+                                            delay: AppEffects.staggerStep *
+                                                i.clamp(0, 6),
+                                          )
+                                          .fadeIn(
+                                              duration: AppEffects.durEnter,
+                                              curve: AppEffects.easeStandard)
+                                          .moveY(
+                                            begin: AppEffects.entranceRise,
+                                            end: 0,
+                                            duration: AppEffects.durEnter,
+                                            curve: AppEffects.easeStandard,
+                                          ),
+                                ),
                         ),
                       ],
                     ),

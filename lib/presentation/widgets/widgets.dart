@@ -19,6 +19,7 @@ export 'tv_icon.dart';
 export 'tv_icon_button.dart';
 export 'tv_input.dart';
 export 'tv_logo.dart';
+export 'tv_map_tiles.dart';
 export 'tv_notification_item.dart';
 export 'tv_option_row.dart';
 export 'tv_price.dart';

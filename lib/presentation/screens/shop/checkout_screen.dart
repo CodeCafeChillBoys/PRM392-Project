@@ -6,7 +6,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/config/goong_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -404,10 +403,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           children: [
-            TileLayer(
-              urlTemplate: GoongConfig.osmTileUrl,
-              userAgentPackageName: 'com.techstore.tech_void',
-            ),
+            const TvMapTiles(),
             if (route.isNotEmpty)
               PolylineLayer(
                 polylines: [
