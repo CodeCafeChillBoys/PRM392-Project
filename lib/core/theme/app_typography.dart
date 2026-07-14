@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// TECH_VOID typography — "VOID LUXE".
+/// TECH_VOID typography — dual theme (VOID LUXE dark / VOID PAPER light).
 ///
 ///  * Display = Archivo Expanded (variable font bundle, wdth 125) — lockup,
 ///    titles, eyebrows. Grotesque hiện đại, hỗ trợ tiếng Việt đầy đủ.
 ///  * Body/UI = Be Vietnam Pro (bundled statics — no FOUT, đủ dấu tiếng Việt).
 ///  * Mono   = JetBrains Mono — spec values, SKUs, OTP, qty ("tech data" voice).
 ///
-/// Luxury = size contrast hơn weight contrast: ưu tiên w500/600 cỡ lớn,
-/// w700 chỉ dành cho display/CTA/price.
+/// Màu mặc định của mỗi style đọc từ AppColors TẠI THỜI ĐIỂM GỌI (theme-aware)
+/// nên tham số màu là nullable — truyền màu = override, bỏ trống = theo theme.
 class AppText {
   AppText._();
 
@@ -22,13 +22,13 @@ class AppText {
   static FontVariation _wght(FontWeight w) =>
       FontVariation('wght', w.value.toDouble());
 
-  /// Archivo Expanded — giọng display chính của VOID LUXE.
+  /// Archivo Expanded — giọng display chính.
   static TextStyle _archivoX({
     required double size,
     required FontWeight weight,
     double? height,
     double letterSpacing = 0,
-    Color color = AppColors.textPrimary,
+    Color? color,
     List<Shadow>? shadows,
   }) =>
       TextStyle(
@@ -38,7 +38,7 @@ class AppText {
         fontWeight: weight,
         height: height,
         letterSpacing: letterSpacing,
-        color: color,
+        color: color ?? AppColors.textPrimary,
         shadows: shadows,
       );
 
@@ -48,7 +48,7 @@ class AppText {
     required FontWeight weight,
     double? height,
     double letterSpacing = 0,
-    Color color = AppColors.textPrimary,
+    Color? color,
   }) =>
       TextStyle(
         fontFamily: _archivoFamily,
@@ -57,15 +57,13 @@ class AppText {
         fontWeight: weight,
         height: height,
         letterSpacing: letterSpacing,
-        color: color,
+        color: color ?? AppColors.textPrimary,
       );
 
   // ---- Display scale ----
 
-  /// Hero lockup (login, khoảnh khắc lớn). Nếu dấu tiếng Việt chồng bị cắt,
-  /// nâng height 1.02 -> 1.1.
-  static TextStyle displayXL([Color color = AppColors.textPrimary]) =>
-      _archivoX(
+  /// Hero lockup (login, khoảnh khắc lớn).
+  static TextStyle displayXL([Color? color]) => _archivoX(
         size: 40,
         weight: FontWeight.w700,
         height: 1.1,
@@ -73,7 +71,7 @@ class AppText {
         color: color,
       );
 
-  static TextStyle display([Color color = AppColors.textPrimary]) => _archivoX(
+  static TextStyle display([Color? color]) => _archivoX(
         size: 34,
         weight: FontWeight.w700,
         height: 1.08,
@@ -81,7 +79,7 @@ class AppText {
         color: color,
       );
 
-  static TextStyle h1([Color color = AppColors.textPrimary]) => _archivoX(
+  static TextStyle h1([Color? color]) => _archivoX(
         size: 26,
         weight: FontWeight.w600,
         height: 1.15,
@@ -89,120 +87,113 @@ class AppText {
         color: color,
       );
 
-  static TextStyle h2([Color color = AppColors.textPrimary]) => _archivoX(
+  static TextStyle h2([Color? color]) => _archivoX(
         size: 20,
         weight: FontWeight.w600,
         height: 1.2,
         color: color,
       );
 
-  static TextStyle h3([Color color = AppColors.textPrimary]) =>
-      GoogleFonts.beVietnamPro(
+  static TextStyle h3([Color? color]) => GoogleFonts.beVietnamPro(
         fontSize: 17,
         fontWeight: FontWeight.w700,
         height: 1.3,
-        color: color,
+        color: color ?? AppColors.textPrimary,
       );
 
   // ---- Body scale (Be Vietnam Pro — bundled, đủ dấu) ----
 
-  static TextStyle body([Color color = AppColors.textPrimary]) =>
-      GoogleFonts.beVietnamPro(
+  static TextStyle body([Color? color]) => GoogleFonts.beVietnamPro(
         fontSize: 15,
         fontWeight: FontWeight.w400,
         height: 1.5,
-        color: color,
+        color: color ?? AppColors.textPrimary,
       );
 
-  static TextStyle bodyStrong([Color color = AppColors.textPrimary]) =>
-      GoogleFonts.beVietnamPro(
+  static TextStyle bodyStrong([Color? color]) => GoogleFonts.beVietnamPro(
         fontSize: 15,
         fontWeight: FontWeight.w600,
         height: 1.5,
-        color: color,
+        color: color ?? AppColors.textPrimary,
       );
 
-  static TextStyle sm([Color color = AppColors.textSecondary]) =>
-      GoogleFonts.beVietnamPro(
+  static TextStyle sm([Color? color]) => GoogleFonts.beVietnamPro(
         fontSize: 13,
         fontWeight: FontWeight.w400,
         height: 1.5,
-        color: color,
+        color: color ?? AppColors.textSecondary,
       );
 
-  static TextStyle xs([Color color = AppColors.textSecondary]) =>
-      GoogleFonts.beVietnamPro(
+  static TextStyle xs([Color? color]) => GoogleFonts.beVietnamPro(
         fontSize: 11,
         fontWeight: FontWeight.w400,
         height: 1.4,
-        color: color,
+        color: color ?? AppColors.textSecondary,
       );
 
   /// UPPERCASE eyebrow label, tracking rộng kiểu luxury (0.16em).
-  /// (apply `.toUpperCase()` to text).
-  static TextStyle label([Color color = AppColors.textSecondary]) => _archivo(
+  static TextStyle label([Color? color]) => _archivo(
         size: 11,
         weight: FontWeight.w600,
         letterSpacing: 1.8, // 0.16em
         height: 1.2,
-        color: color,
+        color: color ?? AppColors.textSecondary,
       );
 
-  /// Price emphasis — Archivo Expanded, gold, chữ số tabular thẳng cột.
-  static TextStyle price([Color color = AppColors.textAccent]) => _archivoX(
+  /// Price emphasis — Archivo Expanded, accent theme-aware, tabular figures.
+  static TextStyle price([Color? color]) => _archivoX(
         size: 20,
         weight: FontWeight.w600,
         letterSpacing: 0,
-        color: color,
+        color: color ?? AppColors.textAccent,
       ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 
   /// Hero price (product detail, grand total).
-  static TextStyle priceXL([Color color = AppColors.textAccent]) => _archivoX(
+  static TextStyle priceXL([Color? color]) => _archivoX(
         size: 28,
         weight: FontWeight.w600,
         letterSpacing: -0.2,
-        color: color,
+        color: color ?? AppColors.textAccent,
       ).copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 
   /// Monospace token — spec values, SKUs, qty, OTP digits.
   static TextStyle mono({
     double size = 14,
     FontWeight weight = FontWeight.w500,
-    Color color = AppColors.textPrimary,
+    Color? color,
   }) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: weight,
-        color: color,
+        color: color ?? AppColors.textPrimary,
       );
 
-  /// Uppercase CTA button label.
-  static TextStyle button(
-          {double size = 15, Color color = AppColors.textOnAccent}) =>
-      _archivo(
+  /// Uppercase CTA button label (mặc định = chữ trên fill đậm theo theme).
+  static TextStyle button({double size = 15, Color? color}) => _archivo(
         size: size,
         weight: FontWeight.w700,
         letterSpacing: size * 0.08,
-        color: color,
+        color: color ?? AppColors.textOnAccent,
       );
 
   /// The TECH_VOID wordmark — cyan signal + glow là DNA sống sót duy nhất
-  /// của thời neon. KHÔNG dùng [AppColors.accent] ở đây (accent giờ là gold).
-  static TextStyle wordmark(
-          {double size = 20, Color color = AppColors.signal}) =>
-      _archivoX(
+  /// của thời neon. Light mode: cyan đậm hơn, glow dịu gần tắt.
+  static TextStyle wordmark({double size = 20, Color? color}) => _archivoX(
         size: size,
         weight: FontWeight.w700,
         height: 1,
         letterSpacing: size * 0.04,
-        color: color,
-        shadows: const [Shadow(color: Color(0x7300F0FF), blurRadius: 14)],
+        color: color ?? AppColors.signal,
+        shadows: AppColors.isLight
+            ? const [Shadow(color: Color(0x26028E9C), blurRadius: 10)]
+            : const [Shadow(color: Color(0x7300F0FF), blurRadius: 14)],
       );
 
-  /// Base text theme for [ThemeData], so any stray default text uses the body
-  /// family with the right color on the dark canvas.
+  /// Base text theme for [ThemeData] — theo brightness của theme đang active.
   static TextTheme textTheme() => GoogleFonts.beVietnamProTextTheme(
-        ThemeData.dark().textTheme,
+        AppColors.isLight
+            ? ThemeData.light().textTheme
+            : ThemeData.dark().textTheme,
       ).apply(
         bodyColor: AppColors.textPrimary,
         displayColor: AppColors.textPrimary,

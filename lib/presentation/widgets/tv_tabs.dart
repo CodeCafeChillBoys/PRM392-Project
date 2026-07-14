@@ -51,7 +51,7 @@ class TvTabs extends StatelessWidget {
     ];
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
       ),
       child: Row(

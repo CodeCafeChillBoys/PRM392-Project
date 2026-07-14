@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../state/app_nav.dart';
 import '../state/cart_controller.dart';
+import '../state/theme_controller.dart';
 import '../widgets/widgets.dart';
 import 'profile/profile_screen.dart';
 import 'shop/cart_screen.dart';
@@ -48,6 +49,8 @@ class _RootShellState extends State<RootShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch theme để toàn shell (tabs đang hiển thị) vẽ lại khi đổi light/dark.
+    context.watch<ThemeController>();
     final index = context.watch<AppNav>().tabIndex;
     return Scaffold(
       backgroundColor: AppColors.bgBase,

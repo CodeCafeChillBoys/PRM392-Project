@@ -9,16 +9,18 @@ class DotGridBackground extends StatelessWidget {
   const DotGridBackground({
     super.key,
     required this.child,
-    this.baseColor = AppColors.bgBase,
+    this.baseColor,
   });
 
   final Widget child;
-  final Color baseColor;
+
+  /// null = nền theo theme (AppColors.bgBase).
+  final Color? baseColor;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(color: baseColor),
+      decoration: BoxDecoration(color: baseColor ?? AppColors.bgBase),
       child: CustomPaint(
         painter: const DotGridPainter(),
         child: child,

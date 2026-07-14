@@ -137,7 +137,7 @@ class PaymentResultScreen extends StatelessWidget {
                               'Chi tiết giao dịch'.toUpperCase(),
                               style: AppText.label(AppColors.textAccent),
                             ),
-                            const Padding(
+                            Padding(
                               padding: EdgeInsets.symmetric(vertical: 10.0),
                               child: Divider(
                                 color: AppColors.borderSubtle,
@@ -207,8 +207,9 @@ class PaymentResultScreen extends StatelessWidget {
     String value, {
     bool isMonospace = false,
     bool isBold = false,
-    Color valueColor = AppColors.textPrimary,
+    Color? valueColor,
   }) {
+    valueColor ??= AppColors.textPrimary;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

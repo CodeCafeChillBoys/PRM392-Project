@@ -53,6 +53,8 @@ dependencies:
   # Staff chụp ảnh giao hàng (confirm-delivery) + upload ảnh sản phẩm.
   image_picker: ^1.2.3
   app_links: ^7.0.0
+  # Lưu lựa chọn theme light/dark (VOID PAPER / VOID LUXE).
+  shared_preferences: ^2.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

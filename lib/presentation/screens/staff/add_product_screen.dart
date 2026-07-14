@@ -407,14 +407,14 @@ class _AddProductScreenState extends State<AddProductScreen> {
               ),
             ),
             if (_loadingCategories)
-              const SizedBox(
+              SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: AppColors.accent),
               )
             else
-              const TvIcon('chevron-down', color: AppColors.textTertiary),
+              TvIcon('chevron-down', color: AppColors.textTertiary),
           ],
         ),
       ),
@@ -434,7 +434,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
       content = Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const TvIcon('image', size: 32, color: AppColors.textTertiary),
+          TvIcon('image', size: 32, color: AppColors.textTertiary),
           const SizedBox(height: 8),
           Text('Bấm để chọn ảnh từ máy',
               style: AppText.xs(AppColors.textTertiary)),

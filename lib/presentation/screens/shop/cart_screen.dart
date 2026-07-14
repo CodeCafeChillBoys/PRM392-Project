@@ -51,9 +51,9 @@ class _CartSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Skeletonizer(
-      effect: const ShimmerEffect(
-        baseColor: AppColors.ink800,
-        highlightColor: AppColors.ink700,
+      effect: ShimmerEffect(
+        baseColor: AppColors.skeletonBase,
+        highlightColor: AppColors.skeletonHighlight,
       ),
       child: ListView.separated(
         padding: EdgeInsets.fromLTRB(
@@ -105,7 +105,7 @@ class _EmptyCart extends StatelessWidget {
                 color: AppColors.bgElevated,
                 border: Border.all(color: AppColors.borderDefault),
               ),
-              child: const TvIcon('shopping-cart',
+              child: TvIcon('shopping-cart',
                   size: 34, color: AppColors.textTertiary),
             ),
             const SizedBox(height: 16),
@@ -254,7 +254,7 @@ class _CartLine extends StatelessWidget {
                         scale: 0.85,
                         haptic: PressHaptic.medium,
                         onTap: () => cart.remove(item.id),
-                        child: const Padding(
+                        child: Padding(
                           padding: EdgeInsets.all(2),
                           child: TvIcon('trash-2',
                               size: 18, color: AppColors.textTertiary),
@@ -329,7 +329,7 @@ class _CheckoutBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgBase,
-        border: const Border(top: BorderSide(color: AppColors.borderSubtle)),
+        border: Border(top: BorderSide(color: AppColors.borderSubtle)),
         boxShadow: AppEffects.shadowLg,
       ),
       child: SafeArea(

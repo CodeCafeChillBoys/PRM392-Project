@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/config/goong_config.dart';
 import '../../../core/theme/app_colors.dart';
@@ -15,6 +16,7 @@ import '../../../data/models/order_status.dart';
 import '../../../data/services/api_client.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/order_service.dart';
+import '../../state/theme_controller.dart';
 import '../../widgets/widgets.dart';
 import '../auth/login_screen.dart';
 
@@ -239,12 +241,12 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
                 style: AppText.h3().copyWith(fontSize: 15)),
             const SizedBox(height: 6),
             ListTile(
-              leading: const TvIcon('camera', color: AppColors.textAccent),
+              leading: TvIcon('camera', color: AppColors.textAccent),
               title: Text('Chụp ảnh', style: AppText.body()),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
             ListTile(
-              leading: const TvIcon('image', color: AppColors.textAccent),
+              leading: TvIcon('image', color: AppColors.textAccent),
               title: Text('Chọn từ thư viện', style: AppText.body()),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
@@ -282,8 +284,15 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
           mode: TvAppBarMode.page,
           title: 'Quản lý giao hàng',
           actions: [
+            // Toggle theme light/dark cho khu staff (khách toggle ở Cá nhân).
             TvIconButton(
-              icon: const TvIcon('log-out', color: AppColors.textAccent),
+              icon: TvIcon(AppColors.isLight ? 'moon' : 'sun',
+                  color: AppColors.textAccent),
+              tooltip: 'Đổi giao diện',
+              onPressed: () => context.read<ThemeController>().toggle(),
+            ),
+            TvIconButton(
+              icon: TvIcon('log-out', color: AppColors.textAccent),
               tooltip: 'Đăng xuất',
               onPressed: _logout,
             ),
@@ -306,7 +315,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
 
   Widget _list() {
     if (_loading) {
-      return const Center(
+      return Center(
           child: CircularProgressIndicator(color: AppColors.textAccent));
     }
     final items = _visible;
@@ -329,7 +338,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     return ListView(
       children: [
         const SizedBox(height: 120),
-        const Center(
+        Center(
             child: TvIcon('inbox', size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(

@@ -13,12 +13,14 @@ class TvLogo extends StatelessWidget {
     super.key,
     this.size = TvLogoSize.md,
     this.glyph = true,
-    this.color = AppColors.signal,
+    this.color,
   });
 
   final TvLogoSize size;
   final bool glyph;
-  final Color color;
+
+  /// null = cyan signal theo theme.
+  final Color? color;
 
   double get _fs => switch (size) {
         TvLogoSize.sm => 16,
@@ -29,6 +31,7 @@ class TvLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fs = _fs;
+    final color = this.color ?? AppColors.signal;
     final wordmark = AppText.wordmark(size: fs, color: color);
     return Row(
       mainAxisSize: MainAxisSize.min,

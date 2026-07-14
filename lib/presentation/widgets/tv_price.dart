@@ -16,13 +16,15 @@ class TvPrice extends StatelessWidget {
     required this.value,
     this.original,
     this.size = TvPriceSize.md,
-    this.color = AppColors.textAccent,
+    this.color,
   });
 
   final num value;
   final num? original;
   final TvPriceSize size;
-  final Color color;
+
+  /// null = màu giá accent theo theme.
+  final Color? color;
 
   double get _fs => switch (size) {
         TvPriceSize.sm => 15,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../state/theme_controller.dart';
 import '../../widgets/widgets.dart';
 import 'staff_orders_screen.dart';
 import 'staff_products_screen.dart';
@@ -28,6 +30,8 @@ class _StaffShellState extends State<StaffShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch theme để shell staff vẽ lại khi đổi light/dark.
+    context.watch<ThemeController>();
     return Scaffold(
       backgroundColor: AppColors.bgBase,
       body: IndexedStack(

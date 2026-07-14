@@ -119,7 +119,7 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
           title: 'Doanh thu',
           actions: [
             TvIconButton(
-              icon: const TvIcon('log-out', color: AppColors.textAccent),
+              icon: TvIcon('log-out', color: AppColors.textAccent),
               tooltip: 'Đăng xuất',
               onPressed: _logout,
             ),
@@ -144,7 +144,7 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
 
   Widget _body() {
     if (_loading) {
-      return const Center(
+      return Center(
           child: CircularProgressIndicator(color: AppColors.textAccent));
     }
     final orders = _visible;
@@ -260,7 +260,7 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
         children: [
           Row(
             children: [
-              const TvIcon('wallet', size: 18, color: AppColors.textAccent),
+              TvIcon('wallet', size: 18, color: AppColors.textAccent),
               const SizedBox(width: 8),
               Text('Thu nhập của tôi', style: AppText.h3().copyWith(fontSize: 15)),
             ],
@@ -327,7 +327,7 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
     return Column(
       children: [
         const SizedBox(height: 40),
-        const Center(
+        Center(
             child: TvIcon('inbox', size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(

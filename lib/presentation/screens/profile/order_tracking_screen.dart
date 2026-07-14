@@ -362,7 +362,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
         ),
         Positioned(left: 12, right: 12, bottom: 12, child: _statusCard()),
         if (_loading)
-          const Positioned.fill(
+          Positioned.fill(
             child: ColoredBox(
               color: Color(0x66000000),
               child: Center(
@@ -393,7 +393,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
         children: [
           Row(
             children: [
-              const TvIcon('map-pin', size: 16, color: AppColors.textAccent),
+              TvIcon('map-pin', size: 16, color: AppColors.textAccent),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(widget.order.shippingAddress,

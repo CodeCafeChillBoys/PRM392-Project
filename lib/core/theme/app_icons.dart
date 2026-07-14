@@ -52,6 +52,8 @@ class AppIcons {
     // shipping / payment
     'truck': LucideIcons.truck,
     'zap': LucideIcons.zap,
+    'sun': LucideIcons.sun, // toggle theme sáng
+    'moon': LucideIcons.moon, // toggle theme tối
     'clock': LucideIcons.clock,
     'credit-card': LucideIcons.creditCard,
     'qr-code': LucideIcons.qrCode,

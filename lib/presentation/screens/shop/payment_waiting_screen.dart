@@ -139,7 +139,7 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(
+                SizedBox(
                   width: 56,
                   height: 56,
                   child: CircularProgressIndicator(color: AppColors.textAccent),

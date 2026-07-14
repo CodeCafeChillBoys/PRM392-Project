@@ -139,7 +139,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           Expanded(
             child: _loading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(color: AppColors.accent))
                 : Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

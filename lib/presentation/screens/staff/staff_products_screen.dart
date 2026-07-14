@@ -115,12 +115,12 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
           title: 'Quản lý sản phẩm',
           actions: [
             TvIconButton(
-              icon: const TvIcon('plus', color: AppColors.textAccent),
+              icon: TvIcon('plus', color: AppColors.textAccent),
               tooltip: 'Thêm sản phẩm',
               onPressed: _openAdd,
             ),
             TvIconButton(
-              icon: const TvIcon('log-out', color: AppColors.textAccent),
+              icon: TvIcon('log-out', color: AppColors.textAccent),
               tooltip: 'Đăng xuất',
               onPressed: _logout,
             ),
@@ -160,7 +160,7 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
 
   Widget _list() {
     if (_loading) {
-      return const Center(
+      return Center(
           child: CircularProgressIndicator(color: AppColors.textAccent));
     }
     final items = _visible;
@@ -184,7 +184,7 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
     return ListView(
       children: [
         const SizedBox(height: 120),
-        const Center(
+        Center(
             child: TvIcon('package', size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(
@@ -211,7 +211,7 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
                 width: 56,
                 height: 56,
                 child: ColoredBox(
-                  color: Colors.black,
+                  color: AppColors.ink900,
                   child: ProductImage(url: p.imageUrl, dimmed: p.isSoldOut),
                 ),
               ),

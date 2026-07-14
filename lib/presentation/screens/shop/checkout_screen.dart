@@ -242,7 +242,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const TvIcon(
+                    TvIcon(
                       'lock',
                       size: 12,
                       color: AppColors.textTertiary,
@@ -305,7 +305,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           hintText: 'Nhập địa chỉ nhận hàng...',
           onChanged: _onAddressChanged,
           trailing: _searching
-              ? const SizedBox(
+              ? SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
@@ -320,7 +320,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              const SizedBox(
+              SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
@@ -352,7 +352,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           for (var i = 0; i < _suggestions.length; i++) ...[
             if (i > 0)
-              const Divider(height: 1, color: AppColors.borderSubtle),
+              Divider(height: 1, color: AppColors.borderSubtle),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => _selectPlace(_suggestions[i]),
@@ -361,7 +361,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 child: Row(
                   children: [
-                    const TvIcon('map-pin',
+                    TvIcon('map-pin',
                         size: 16, color: AppColors.textTertiary),
                     const SizedBox(width: 10),
                     Expanded(
@@ -514,7 +514,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 12),
           TvSummaryRow(label: 'Tiền hàng', value: formatVnd(widget.total)),
           TvSummaryRow(label: 'Phí vận chuyển', value: feeText),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 14),
             child: Divider(height: 1, color: AppColors.borderSubtle),
           ),

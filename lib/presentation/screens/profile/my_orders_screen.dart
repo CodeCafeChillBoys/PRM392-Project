@@ -78,7 +78,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       return _centerText('Bạn cần đăng nhập để xem đơn hàng.');
     }
     if (_loading) {
-      return const Center(
+      return Center(
           child: CircularProgressIndicator(color: AppColors.textAccent));
     }
     return RefreshIndicator(
@@ -99,7 +99,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   Widget _emptyList() => ListView(
         children: [
           const SizedBox(height: 120),
-          const Center(
+          Center(
               child:
                   TvIcon('package', size: 44, color: AppColors.textTertiary)),
           const SizedBox(height: 12),

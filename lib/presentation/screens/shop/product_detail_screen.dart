@@ -66,7 +66,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           TvAppBar(
             mode: TvAppBarMode.brand,
             leading: TvIconButton(
-              icon: const TvIcon('arrow-left',
+              icon: TvIcon('arrow-left',
                   size: 22, color: AppColors.textPrimary),
               onPressed: () => Navigator.pop(context),
               tooltip: 'Quay lại',
@@ -112,7 +112,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       const SizedBox(height: 12),
       TvPrice(value: _p.price, size: TvPriceSize.lg),
       const SizedBox(height: 20),
-      const Divider(color: AppColors.borderSubtle, height: 1),
+      Divider(color: AppColors.borderSubtle, height: 1),
       const SizedBox(height: 16),
       _buildStockRow(soldOut),
       const SizedBox(height: 24),
@@ -169,7 +169,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget _buildHero(bool soldOut) {
     final lowStock = _p.isLowStock;
     final hero = Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.ink900,
         gradient: AppColors.heroGlow,
       ),
@@ -275,7 +275,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgBase,
-        border: const Border(top: BorderSide(color: AppColors.borderSubtle)),
+        border: Border(top: BorderSide(color: AppColors.borderSubtle)),
         boxShadow: AppEffects.shadowMd,
       ),
       child: SafeArea(

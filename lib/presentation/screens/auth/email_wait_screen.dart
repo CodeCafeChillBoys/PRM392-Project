@@ -101,7 +101,7 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                               ),
                               boxShadow: AppEffects.glowAccentMd,
                             ),
-                            child: const TvIcon(
+                            child: TvIcon(
                               'mail-open',
                               size: 42,
                               color: AppColors.textAccent,

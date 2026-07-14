@@ -156,7 +156,7 @@ class _MethodCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const TvIcon(
+            TvIcon(
               'chevron-right',
               size: 20,
               color: AppColors.textTertiary,

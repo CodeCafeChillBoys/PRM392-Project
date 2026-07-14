@@ -48,10 +48,10 @@ class TvAppBar extends StatelessWidget {
               color: AppEffects.kGlassEnabled
                   ? AppEffects.glassFill
                   : AppEffects.glassFallbackFill,
-              border: const Border(
+              border: Border(
                   bottom: BorderSide(color: AppColors.borderSubtle)),
             )
-          : const BoxDecoration(
+          : BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -70,7 +70,7 @@ class TvAppBar extends StatelessWidget {
               children: [
                 if (mode == TvAppBarMode.page && onBack != null)
                   TvIconButton(
-                    icon: const TvIcon('arrow-left',
+                    icon: TvIcon('arrow-left',
                         size: 22, color: AppColors.textPrimary),
                     onPressed: onBack,
                     tooltip: 'Quay lại',

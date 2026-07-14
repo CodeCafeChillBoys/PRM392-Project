@@ -182,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
       const SizedBox(height: 20),
       Row(
         children: [
-          const Expanded(child: Divider(color: AppColors.borderSubtle)),
+          Expanded(child: Divider(color: AppColors.borderSubtle)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
@@ -190,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
               style: AppText.label().copyWith(color: AppColors.textTertiary),
             ),
           ),
-          const Expanded(child: Divider(color: AppColors.borderSubtle)),
+          Expanded(child: Divider(color: AppColors.borderSubtle)),
         ],
       ),
       const SizedBox(height: 20),
@@ -229,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Hero glow gold "thở" chậm (opacity 0.55 <-> 1.0, chu kỳ 4s) — một
           // controller lặp duy nhất, rẻ về hiệu năng.
           Positioned.fill(
-            child: const DecoratedBox(
+            child: DecoratedBox(
               decoration: BoxDecoration(gradient: AppColors.heroGlow),
             )
                 .animate(onPlay: (c) => c.repeat(reverse: true))

@@ -39,7 +39,7 @@ class TvBottomNav extends StatelessWidget {
         color: AppEffects.kGlassEnabled
             ? AppEffects.glassFill
             : AppEffects.glassFallbackFill,
-        border: const Border(top: BorderSide(color: AppColors.borderSubtle)),
+        border: Border(top: BorderSide(color: AppColors.borderSubtle)),
       ),
       child: SafeArea(
         top: false,

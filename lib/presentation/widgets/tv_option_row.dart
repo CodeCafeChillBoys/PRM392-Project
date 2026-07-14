@@ -124,7 +124,7 @@ class _Radio extends StatelessWidget {
         boxShadow: selected ? AppEffects.glowAccentSm : null,
       ),
       child: selected
-          ? const SizedBox(
+          ? SizedBox(
               width: 8,
               height: 8,
               child: DecoratedBox(

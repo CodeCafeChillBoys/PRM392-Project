@@ -107,9 +107,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
   /// Skeleton grid 6 card ma — shimmer trung tính ink800→ink700 (không gold).
   Widget _buildSkeleton() {
     return Skeletonizer(
-      effect: const ShimmerEffect(
-        baseColor: AppColors.ink800,
-        highlightColor: AppColors.ink700,
+      effect: ShimmerEffect(
+        baseColor: AppColors.skeletonBase,
+        highlightColor: AppColors.skeletonHighlight,
       ),
       child: GridView.builder(
         padding: EdgeInsets.fromLTRB(AppSpacing.gutter, 16, AppSpacing.gutter,
