@@ -71,7 +71,7 @@ class TvButton extends StatelessWidget {
           null,
           AppColors.textOnAccent,
           null,
-          AppEffects.glowCyanSm
+          AppEffects.glowAccentSm
         ),
       TvButtonVariant.secondary => (
           Colors.transparent,

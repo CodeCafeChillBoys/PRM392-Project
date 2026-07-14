@@ -101,7 +101,7 @@ class _TabButton extends StatelessWidget {
             decoration: BoxDecoration(
               color: selected ? AppColors.accent : Colors.transparent,
               borderRadius: BorderRadius.circular(2),
-              boxShadow: selected ? AppEffects.glowCyanSm : null,
+              boxShadow: selected ? AppEffects.glowAccentSm : null,
             ),
           ),
         ],

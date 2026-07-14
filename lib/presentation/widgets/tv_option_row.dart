@@ -43,7 +43,7 @@ class TvOptionRow extends StatelessWidget {
             color: selected ? AppColors.accent : AppColors.borderSubtle,
             width: selected ? 1.5 : 1,
           ),
-          boxShadow: selected ? AppEffects.glowCyanSm : null,
+          boxShadow: selected ? AppEffects.glowAccentSm : null,
         ),
         child: Row(
           children: [
@@ -121,7 +121,7 @@ class _Radio extends StatelessWidget {
         border: selected
             ? null
             : Border.all(color: AppColors.borderStrong, width: 2),
-        boxShadow: selected ? AppEffects.glowCyanSm : null,
+        boxShadow: selected ? AppEffects.glowAccentSm : null,
       ),
       child: selected
           ? const SizedBox(

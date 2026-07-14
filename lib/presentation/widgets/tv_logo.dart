@@ -41,7 +41,7 @@ class TvLogo extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border.all(color: color, width: 1.5),
               borderRadius: BorderRadius.circular(4),
-              boxShadow: AppEffects.glowCyanSm,
+              boxShadow: AppEffects.glowAccentSm,
             ),
             child: Icon(Icons.grid_view_rounded, size: fs * 0.62, color: color),
           ),

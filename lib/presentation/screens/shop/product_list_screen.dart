@@ -195,7 +195,7 @@ class _CategoryChip extends StatelessWidget {
             color: selected ? AppColors.accent : AppColors.borderDefault,
             width: selected ? 1.5 : 1,
           ),
-          boxShadow: selected ? AppEffects.glowCyanSm : null,
+          boxShadow: selected ? AppEffects.glowAccentSm : null,
         ),
         child: Text(
           label,

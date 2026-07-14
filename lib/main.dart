@@ -153,7 +153,7 @@ class _TechVoidAppState extends State<TechVoidApp> {
         // Keep the layout phone-shaped (max 430px) and centered on wide screens
         // (web/desktop), matching the design's mobile canvas.
         builder: (context, child) => ColoredBox(
-          color: const Color(0xFF060608),
+          color: const Color(0xFF030303),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(

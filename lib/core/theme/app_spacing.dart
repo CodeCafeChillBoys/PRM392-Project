@@ -15,8 +15,8 @@ class AppSpacing {
   static const double s12 = 48;
   static const double s16 = 64;
 
-  /// Screen gutter (16px).
-  static const double gutter = 16;
+  /// Screen gutter (VOID LUXE: 20px — khoảng thở rộng hơn cho luxury).
+  static const double gutter = 20;
 
   // Control heights
   static const double controlSm = 36;
@@ -34,7 +34,7 @@ class AppRadii {
   static const double xs = 6;
   static const double sm = 8;
   static const double md = 12; // default card / input
-  static const double lg = 16; // product cards, sheets
-  static const double xl = 20;
+  static const double lg = 20; // product cards, sheets (VOID LUXE: 16 -> 20)
+  static const double xl = 24;
   static const double pill = 999;
 }

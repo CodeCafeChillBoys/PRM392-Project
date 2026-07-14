@@ -82,7 +82,7 @@ class _NavButton extends StatelessWidget {
               decoration: BoxDecoration(
                 color: active ? AppColors.accentSoft : Colors.transparent,
                 borderRadius: BorderRadius.circular(999),
-                boxShadow: active ? AppEffects.glowCyanSm : null,
+                boxShadow: active ? AppEffects.glowAccentSm : null,
               ),
               child: TvIcon(item.iconName, size: 20, color: color),
             ),

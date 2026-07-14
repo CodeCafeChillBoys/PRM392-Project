@@ -51,7 +51,7 @@ class TvIconButton extends StatelessWidget {
           AppColors.accent,
           AppColors.textOnAccent,
           null,
-          AppEffects.glowCyanMd
+          AppEffects.glowAccentMd
         ),
       TvIconButtonVariant.elevated => (
           AppColors.bgElevated,

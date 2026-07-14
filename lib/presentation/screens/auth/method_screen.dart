@@ -115,7 +115,7 @@ class _MethodCard extends StatelessWidget {
             color: primary ? AppColors.accent : AppColors.borderSubtle,
             width: primary ? 1.5 : 1,
           ),
-          boxShadow: primary ? AppEffects.glowCyanSm : AppEffects.shadowSm,
+          boxShadow: primary ? AppEffects.glowAccentSm : AppEffects.shadowSm,
         ),
         child: Row(
           children: [
@@ -126,7 +126,7 @@ class _MethodCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: primary ? AppColors.accent : AppColors.bgOverlay,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: primary ? AppEffects.glowCyanSm : null,
+                boxShadow: primary ? AppEffects.glowAccentSm : null,
               ),
               child: TvIcon(
                 iconName,

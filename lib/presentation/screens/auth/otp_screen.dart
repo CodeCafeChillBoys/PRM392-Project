@@ -185,7 +185,7 @@ class _OtpScreenState extends State<OtpScreen> {
               color: hasValue ? AppColors.accent : AppColors.borderDefault,
               width: hasValue ? 1.5 : 1,
             ),
-            boxShadow: hasValue ? AppEffects.glowCyanSm : null,
+            boxShadow: hasValue ? AppEffects.glowAccentSm : null,
           ),
           child: TextField(
             controller: _controllers[index],

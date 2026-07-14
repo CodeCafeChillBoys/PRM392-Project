@@ -184,7 +184,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 color: i == 0 ? AppColors.accent : AppColors.borderDefault,
                 width: i == 0 ? 1.5 : 1,
               ),
-              boxShadow: i == 0 ? AppEffects.glowCyanSm : null,
+              boxShadow: i == 0 ? AppEffects.glowAccentSm : null,
             ),
             clipBehavior: Clip.antiAlias,
             child: ProductImage(url: _p.heroImageUrl),

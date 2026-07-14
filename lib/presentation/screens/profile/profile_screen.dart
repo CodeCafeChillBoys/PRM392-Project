@@ -75,7 +75,7 @@ class ProfileScreen extends StatelessWidget {
             shape: BoxShape.circle,
             color: AppColors.accentSoft,
             border: Border.all(color: AppColors.accentSoftLine),
-            boxShadow: AppEffects.glowCyanSm,
+            boxShadow: AppEffects.glowAccentSm,
           ),
           child: const TvIcon('user', size: 34, color: AppColors.textAccent),
         ),

@@ -99,7 +99,7 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                               border: Border.all(
                                 color: AppColors.accentSoftLine,
                               ),
-                              boxShadow: AppEffects.glowCyanMd,
+                              boxShadow: AppEffects.glowAccentMd,
                             ),
                             child: const TvIcon(
                               'mail-open',
