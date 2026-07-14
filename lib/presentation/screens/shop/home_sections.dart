@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../data/models/product.dart';
 import '../../widgets/widgets.dart';
 
@@ -406,7 +407,7 @@ class _FlashSaleStripState extends State<FlashSaleStrip> {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 208,
+          height: 218,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
@@ -503,10 +504,24 @@ class _FlashCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
-                  TvPrice(
-                    value: product.price,
-                    original: original,
-                    size: TvPriceSize.sm,
+                  // Giá VND dài — xếp 2 dòng để không tràn thẻ 138px:
+                  // giá bán (gold) trên, giá gạch nhỏ dưới.
+                  Text(
+                    formatVnd(product.price),
+                    style: AppText.price().copyWith(fontSize: 15),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    formatVnd(original),
+                    style: AppText.xs(AppColors.textTertiary).copyWith(
+                      fontSize: 10.5,
+                      decoration: TextDecoration.lineThrough,
+                      decorationColor: AppColors.textTertiary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
