@@ -19,7 +19,9 @@ class AppColors {
   AppColors._();
 
   // ===== THEME SWITCH =====
-  static bool _isLight = false;
+  // MẶC ĐỊNH = LIGHT (VOID PAPER) — vibe shopping tươi sáng; dark là lựa chọn
+  // trong Cá nhân. Phải khớp default của ThemeController._isLight.
+  static bool _isLight = true;
 
   /// Theme hiện tại (ThemeController là nơi duy nhất nên gọi [configure]).
   static bool get isLight => _isLight;

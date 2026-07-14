@@ -32,11 +32,13 @@ void main() async {
     debugPrint('Firebase initialization failed: $e');
     debugPrint('Please configure Firebase or add google-services.json if you want to use Firebase features.');
   }
+  // Mặc định LIGHT (VOID PAPER) → icon status bar tối trên nền giấy sáng.
+  // ThemeController tự cập nhật lại khi người dùng đổi theme/khôi phục pref.
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
     ),
   );
   runApp(const TechVoidApp());

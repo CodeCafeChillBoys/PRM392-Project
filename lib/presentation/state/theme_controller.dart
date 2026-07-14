@@ -17,7 +17,8 @@ class ThemeController extends ChangeNotifier {
 
   static const _prefKey = 'void_theme_is_light';
 
-  bool _isLight = false;
+  // MẶC ĐỊNH = LIGHT (VOID PAPER) — khớp AppColors._isLight.
+  bool _isLight = true;
   bool get isLight => _isLight;
 
   Future<void> _load() async {
@@ -28,7 +29,7 @@ class ThemeController extends ChangeNotifier {
         _apply(saved);
       }
     } catch (_) {
-      // Không đọc được prefs → giữ dark mặc định.
+      // Không đọc được prefs → giữ light mặc định.
     }
   }
 
