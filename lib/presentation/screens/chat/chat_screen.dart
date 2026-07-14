@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/services/chat_service.dart';
 import '../../widgets/widgets.dart';
@@ -126,6 +128,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             mode: TvAppBarMode.page,
             title: 'Trợ lý TechStore',
             onBack: () => Navigator.of(context).pop(),
+            // Badge AI cyan — một trong các "signal survivor" của VOID LUXE.
+            leading: const Padding(
+              padding: EdgeInsets.only(left: 6, right: 2),
+              child: TvBadge('AI', variant: TvBadgeVariant.glass),
+            ),
           ),
           Expanded(child: _buildList()),
           if (_showSuggestions) _buildSuggestions(),
@@ -149,12 +156,28 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           );
         }
         final m = _messages[i];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: TvChatBubble(
-            from: m.fromUser ? ChatFrom.user : ChatFrom.agent,
-            message: m.text,
-            time: _fmtTime(m.at),
+        // Key ổn định theo index để entrance chỉ chạy 1 lần cho bubble MỚI
+        // (không replay toàn bộ lịch sử mỗi lần setState).
+        return KeyedSubtree(
+          key: ValueKey('msg-$i'),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: TvChatBubble(
+              from: m.fromUser ? ChatFrom.user : ChatFrom.agent,
+              message: m.text,
+              time: _fmtTime(m.at),
+            )
+                .animate()
+                .fadeIn(
+                  duration: const Duration(milliseconds: 250),
+                  curve: AppEffects.easeStandard,
+                )
+                .moveY(begin: 12, end: 0, curve: AppEffects.easeStandard)
+                .scale(
+                  begin: const Offset(0.97, 0.97),
+                  end: const Offset(1, 1),
+                  curve: AppEffects.easeEmphasized,
+                ),
           ),
         );
       },
@@ -167,10 +190,21 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: [
+        children: <Widget>[
           for (final s in _suggestions)
             _SuggestionChip(label: s, onTap: () => _send(s)),
-        ],
+        ]
+            .animate(interval: AppEffects.staggerStep)
+            .fadeIn(
+              duration: AppEffects.durEnter,
+              curve: AppEffects.easeStandard,
+            )
+            .moveY(
+              begin: 12,
+              end: 0,
+              duration: AppEffects.durEnter,
+              curve: AppEffects.easeStandard,
+            ),
       ),
     );
   }
@@ -217,8 +251,9 @@ class _SuggestionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return PressableScale(
+      scale: 0.95,
+      haptic: PressHaptic.selection,
       onTap: onTap,
       child: Container(
         height: 34,
