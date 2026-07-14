@@ -79,23 +79,29 @@ class LocalNotificationService {
       debugPrint('Yêu cầu quyền Firebase Messaging thất bại: $e');
     }
 
-    // Xin quyền cho Local Notifications
-    final androidPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
-    if (androidPlugin != null) {
-      await androidPlugin.requestNotificationsPermission();
-    }
+    // Xin quyền cho Local Notifications. Bọc try/catch vì platform plugin
+    // không tồn tại trong môi trường test/desktop (LateInitializationError)
+    // — quyền thông báo là phụ trợ, không được làm chết luồng khởi động.
+    try {
+      final androidPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        await androidPlugin.requestNotificationsPermission();
+      }
 
-    final iosPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
-    if (iosPlugin != null) {
-      await iosPlugin.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      final iosPlugin = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>();
+      if (iosPlugin != null) {
+        await iosPlugin.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+    } catch (e) {
+      debugPrint('Yêu cầu quyền Local Notifications thất bại: $e');
     }
   }
 
