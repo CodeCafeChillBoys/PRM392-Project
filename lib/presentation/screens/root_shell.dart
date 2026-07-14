@@ -28,11 +28,15 @@ class RootShell extends StatefulWidget {
 
 class _RootShellState extends State<RootShell> {
   // Label tiếng Việt — đồng bộ ngôn ngữ với toàn app (hết lai tiếng Anh).
-  static const _navItems = [
-    TvNavItem(label: 'Khám phá', iconName: 'compass'),
-    TvNavItem(label: 'Tìm kiếm', iconName: 'search'),
-    TvNavItem(label: 'Giỏ hàng', iconName: 'shopping-bag'),
-    TvNavItem(label: 'Cá nhân', iconName: 'user'),
+  static final _navItems = [
+    const TvNavItem(label: 'Khám phá', iconName: 'compass'),
+    const TvNavItem(label: 'Tìm kiếm', iconName: 'search'),
+    // Icon giỏ = đích của hiệu ứng bay vào giỏ (bottom nav chỉ có 1 trong shell).
+    TvNavItem(
+        label: 'Giỏ hàng',
+        iconName: 'shopping-bag',
+        iconKey: FlyToCart.cartIconKey),
+    const TvNavItem(label: 'Cá nhân', iconName: 'user'),
   ];
 
   @override

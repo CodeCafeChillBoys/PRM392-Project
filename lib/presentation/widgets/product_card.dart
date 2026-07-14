@@ -5,6 +5,7 @@ import '../../core/theme/app_effects.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../data/models/product.dart';
+import 'fly_to_cart.dart';
 import 'pressable.dart';
 import 'product_image.dart';
 import 'tv_badge.dart';
@@ -16,7 +17,7 @@ import 'tv_price.dart';
 /// Nút (+) ghost tinh tế thay tile accent chói thời neon. Cả card có
 /// press-scale + haptic.
 /// Mirrors `components/data/ProductCard.jsx`.
-class ProductCard extends StatelessWidget {
+class ProductCard extends StatefulWidget {
   const ProductCard({
     super.key,
     required this.product,
@@ -29,7 +30,27 @@ class ProductCard extends StatelessWidget {
   final VoidCallback? onAdd;
 
   @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  /// Điểm XUẤT PHÁT của hiệu ứng bay vào giỏ (ô ảnh của chính card này).
+  final _imageKey = GlobalKey();
+
+  void _handleAdd() {
+    FlyToCart.launch(
+      context: context,
+      sourceKey: _imageKey,
+      imageUrl: widget.product.imageUrl,
+    );
+    widget.onAdd?.call();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
+    final onTap = widget.onTap;
+    final onAdd = widget.onAdd;
     final soldOut = product.isSoldOut;
     return PressableScale(
       onTap: onTap,
@@ -49,6 +70,7 @@ class ProductCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               AspectRatio(
+                key: _imageKey, // nguồn của hiệu ứng bay vào giỏ
                 aspectRatio: 1,
                 child: Stack(
                   fit: StackFit.expand,
@@ -108,7 +130,9 @@ class ProductCard extends StatelessWidget {
                         child: TvIconButton(
                           variant: TvIconButtonVariant.elevated,
                           enabled: !soldOut,
-                          onPressed: soldOut ? null : onAdd,
+                          // Bay vào giỏ rồi mới thêm thật (hiệu ứng không chặn).
+                          onPressed:
+                              soldOut || onAdd == null ? null : _handleAdd,
                           tooltip: 'Thêm vào giỏ',
                           icon: const Icon(Icons.add,
                               size: 20, color: AppColors.gold400),

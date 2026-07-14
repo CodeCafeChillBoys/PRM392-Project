@@ -140,8 +140,16 @@ class _ProductListScreenState extends State<ProductListScreen> {
         _query.trim().isEmpty &&
         _category == 'Tất cả';
 
-    return CustomScrollView(
-      slivers: [
+    // Pull-to-refresh: dùng RefreshIndicator chuẩn (tin cậy trên mọi physics),
+    // nhuộm theo brand thay vì tự viết indicator.
+    return RefreshIndicator(
+      onRefresh: () => context.read<CatalogController>().load(),
+      color: AppColors.textAccent,
+      backgroundColor: AppColors.bgSurface,
+      child: CustomScrollView(
+        // Luôn cho phép kéo dù nội dung ngắn hơn màn.
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
         SliverToBoxAdapter(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +338,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
               ),
             ),
           ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
@@ -386,19 +387,31 @@ class _FlashSaleStripState extends State<FlashSaleStrip> {
                       .copyWith(fontSize: 13)),
               const SizedBox(width: 10),
               // Đồng hồ đếm ngược tới 0h — pill đỏ dịu.
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.dangerSoft,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  _fmt(_left),
-                  style: AppText.mono(size: 11, color: AppColors.sale500)
-                      .copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
+              // Dưới 10 phút cuối: nhấp nháy nhẹ để tạo cảm giác gấp gáp.
+              Builder(builder: (context) {
+                final urgent = _left.inMinutes < 10;
+                final pill = Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.dangerSoft,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _fmt(_left),
+                    style: AppText.mono(size: 11, color: AppColors.sale500)
+                        .copyWith(fontWeight: FontWeight.w700),
+                  ),
+                );
+                if (!urgent) return pill;
+                return pill
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .fadeIn(
+                      duration: const Duration(milliseconds: 620),
+                      begin: 0.45,
+                      curve: Curves.easeInOut,
+                    );
+              }),
               const Spacer(),
               Text('Kết thúc hôm nay',
                   style: AppText.xs(AppColors.textTertiary)),

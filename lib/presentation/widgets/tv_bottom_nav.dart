@@ -11,9 +11,15 @@ import 'tv_icon.dart';
 
 /// One entry in the [TvBottomNav].
 class TvNavItem {
-  const TvNavItem({required this.label, required this.iconName});
+  const TvNavItem({required this.label, required this.iconName, this.iconKey});
   final String label;
   final String iconName;
+
+  /// Key gắn vào ô icon — dùng làm ĐÍCH cho hiệu ứng bay vào giỏ
+  /// ([FlyToCart.cartIconKey]). Bottom nav chỉ tồn tại 1 lần trong shell nên
+  /// đây là chỗ an toàn để gắn GlobalKey (app bar bị dựng nhiều lần trong
+  /// IndexedStack → trùng key).
+  final GlobalKey? iconKey;
 }
 
 /// Fixed bottom tab bar — VOID LUXE glass: BackdropFilter blur nội dung cuộn
@@ -97,6 +103,7 @@ class _NavButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
+              key: item.iconKey,
               duration: AppEffects.durBase,
               curve: AppEffects.easeStandard,
               width: 40,

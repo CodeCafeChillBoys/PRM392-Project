@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_effects.dart';
@@ -112,7 +113,16 @@ class TvIconButton extends StatelessWidget {
               style: AppText.mono(
                   size: 10, weight: FontWeight.w700, color: Colors.white),
             ),
-          ),
+          )
+              // Badge NẢY mỗi khi con số đổi (thêm/bớt giỏ) — key theo giá trị
+              // để Animate dựng lại và chạy lần nữa.
+              .animate(key: ValueKey('badge-$badge'))
+              .scaleXY(
+                begin: 0.4,
+                end: 1,
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.elasticOut,
+              ),
         ),
       ],
     );
