@@ -13,6 +13,7 @@ import 'presentation/state/catalog_controller.dart';
 import 'presentation/state/theme_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'data/services/local_notification_service.dart';
+import 'data/services/recently_viewed_service.dart';
 import 'presentation/screens/shop/payment_result_screen.dart';
 
 void main() async {
@@ -24,6 +25,9 @@ void main() async {
   } catch (e) {
     debugPrint('Local Notification initialization failed: $e');
   }
+
+  // Nạp danh sách "vừa xem" (local) trước khi dựng Home.
+  await RecentlyViewedService.instance.load();
 
   // Light status-bar icons on the near-black canvas.
   try {

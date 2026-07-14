@@ -320,6 +320,250 @@ class CategoryTilesRow extends StatelessWidget {
   }
 }
 
+// ─────────────────────────── Trust strip ────────────────────────────────────
+
+/// Dải cam kết — 3 lý do nên mua ở đây. Tĩnh, gọn, tăng độ tin cậy (chuẩn
+/// e-commerce): hairline chia ô, icon + chữ nhỏ, không chiếm chỗ.
+class TrustStrip extends StatelessWidget {
+  const TrustStrip({super.key});
+
+  static const _items = [
+    ('shield-check', 'Chính hãng', '100% authentic'),
+    ('package-check', 'Bảo hành 24T', 'Đổi mới 1-1'),
+    ('truck', 'Freeship', 'Nội thành HCM'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.bgSurface,
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < _items.length; i++) ...[
+            Expanded(
+              child: Column(
+                children: [
+                  TvIcon(_items[i].$1, size: 18, color: AppColors.textAccent),
+                  const SizedBox(height: 7),
+                  Text(_items[i].$2,
+                      style: AppText.xs(AppColors.textPrimary)
+                          .copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 1),
+                  Text(_items[i].$3,
+                      style: AppText.xs(AppColors.textTertiary)
+                          .copyWith(fontSize: 9.5)),
+                ],
+              ),
+            ),
+            if (i != _items.length - 1)
+              Container(width: 1, height: 34, color: AppColors.borderSubtle),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────── VOID PICKS (editorial) ─────────────────────────
+
+/// Khoảnh khắc tạp chí của Home: 1 sản phẩm được "biên tập" — ảnh lớn tràn
+/// viền, eyebrow, tên cỡ display, một câu dẫn. Đây là chỗ thở giữa các dải
+/// dày đặc, và là thứ khiến Home không giống template.
+class VoidPicksSection extends StatelessWidget {
+  const VoidPicksSection({super.key, required this.product, required this.onOpen});
+
+  final Product product;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+      child: PressableScale(
+        onTap: onOpen,
+        scale: 0.99,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.bgSurface,
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+            border: Border.all(color: AppColors.borderSubtle),
+            boxShadow: AppEffects.shadowSm,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Ảnh lớn tràn viền — nhân vật chính.
+              AspectRatio(
+                aspectRatio: 16 / 10,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ColoredBox(
+                      color: AppColors.ink900,
+                      child: ProductImage(url: product.imageUrl),
+                    ),
+                    // Nhãn góc — dấu "biên tập viên chọn".
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgBase.withValues(alpha: 0.72),
+                          borderRadius: BorderRadius.circular(6),
+                          border:
+                              Border.all(color: AppColors.accentSoftLine),
+                        ),
+                        child: Text('VOID PICKS',
+                            style: AppText.label(AppColors.textAccent)
+                                .copyWith(fontSize: 9.5)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${product.brand.toUpperCase()} · ${product.categoryName.toUpperCase()}',
+                      style: AppText.label(AppColors.textTertiary)
+                          .copyWith(fontSize: 9.5),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      product.name,
+                      style: AppText.h1().copyWith(fontSize: 22, height: 1.15),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Lựa chọn của đội ngũ TECH_VOID tuần này — hiệu năng và '
+                      'thiết kế đáng để nâng cấp.',
+                      style: AppText.sm(AppColors.textSecondary)
+                          .copyWith(height: 1.5),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(child: TvPrice(value: product.price)),
+                        Row(
+                          children: [
+                            Text('Xem chi tiết',
+                                style: AppText.label(AppColors.textAccent)
+                                    .copyWith(fontSize: 11)),
+                            const SizedBox(width: 4),
+                            TvIcon('arrow-right',
+                                size: 15, color: AppColors.textAccent),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────── Vừa xem ────────────────────────────────────────
+
+/// Dải "Vừa xem" — chỉ hiện khi khách đã xem ít nhất 1 sản phẩm. Thẻ nhỏ gọn
+/// hơn flash sale (chỉ ảnh + tên) vì đây là lối tắt quay lại, không phải chào hàng.
+class RecentlyViewedStrip extends StatelessWidget {
+  const RecentlyViewedStrip({
+    super.key,
+    required this.products,
+    required this.onOpen,
+  });
+
+  final List<Product> products;
+  final ValueChanged<Product> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    if (products.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+          child: Row(
+            children: [
+              TvIcon('clock', size: 15, color: AppColors.textTertiary),
+              const SizedBox(width: 8),
+              Text('VỪA XEM',
+                  style: AppText.label(AppColors.textPrimary)
+                      .copyWith(fontSize: 13)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 122,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+            itemCount: products.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
+            itemBuilder: (context, i) {
+              final p = products[i];
+              return PressableScale(
+                onTap: () => onOpen(p),
+                child: SizedBox(
+                  width: 86,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 86,
+                        height: 86,
+                        decoration: BoxDecoration(
+                          color: AppColors.ink900,
+                          borderRadius: BorderRadius.circular(AppRadii.md),
+                          border: Border.all(color: AppColors.borderSubtle),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: ProductImage(
+                            url: p.imageUrl, dimmed: p.isSoldOut),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        p.name,
+                        style: AppText.xs(AppColors.textSecondary)
+                            .copyWith(fontSize: 10.5, height: 1.25),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 // ─────────────────────────── Flash sale strip ───────────────────────────────
 
 class FlashSaleStrip extends StatefulWidget {

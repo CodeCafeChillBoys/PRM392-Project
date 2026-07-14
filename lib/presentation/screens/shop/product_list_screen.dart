@@ -10,6 +10,8 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/product.dart';
+import '../../../data/services/api_client.dart';
+import '../../../data/services/recently_viewed_service.dart';
 import '../../state/app_nav.dart';
 import '../../state/cart_controller.dart';
 import '../../state/catalog_controller.dart';
@@ -62,6 +64,50 @@ class _ProductListScreenState extends State<ProductListScreen> {
   void _addToCart(Product product) {
     context.read<CartController>().add(product);
     TvToast.show(context, 'Đã thêm ${product.name} vào giỏ');
+  }
+
+  /// Lời chào theo giờ máy — Home "sống" hơn tiêu đề tĩnh, và gọi tên khách
+  /// nếu đã đăng nhập (lấy tên đầu cho gọn).
+  String _greeting() {
+    final h = DateTime.now().hour;
+    final part = h < 11
+        ? 'Chào buổi sáng'
+        : h < 14
+            ? 'Chào buổi trưa'
+            : h < 18
+                ? 'Chào buổi chiều'
+                : 'Chào buổi tối';
+    final name = apiClient.userName?.trim();
+    if (name == null || name.isEmpty) return part;
+    final first = name.split(' ').last; // người Việt gọi theo tên cuối
+    return '$part,\n$first';
+  }
+
+  void _openDetail(Product p) => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
+      );
+
+  /// Sản phẩm "vừa xem" — id lấy từ local, DỮ LIỆU lấy từ catalog hiện tại nên
+  /// giá/tồn kho luôn mới; id không còn trong catalog thì tự rụng.
+  List<Product> _recentlyViewed(CatalogController catalog) {
+    final ids = RecentlyViewedService.instance.ids;
+    if (ids.isEmpty || catalog.products.isEmpty) return const [];
+    final byId = {for (final p in catalog.products) p.id: p};
+    return [
+      for (final id in ids)
+        if (byId[id] != null) byId[id]!,
+    ].take(8).toList();
+  }
+
+  /// VOID PICKS — "biên tập viên chọn". Chọn tất định theo NGÀY (không Random)
+  /// để mỗi ngày đổi một món mà mở lại app trong ngày vẫn thấy y nguyên.
+  Product? _pick(CatalogController catalog) {
+    final inStock =
+        catalog.products.where((p) => !p.isSoldOut).toList(growable: false);
+    if (inStock.isEmpty) return null;
+    final now = DateTime.now();
+    final dayIndex = now.year * 1000 + now.month * 40 + now.day;
+    return inStock[dayIndex % inStock.length];
   }
 
   @override
@@ -162,7 +208,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.autofocusSearch ? 'Tìm kiếm' : 'Khám phá',
+                      widget.autofocusSearch ? 'Tìm kiếm' : _greeting(),
                       style: AppText.display(),
                     ),
                     const SizedBox(height: 6),
@@ -229,11 +275,25 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 const SizedBox(height: 20),
                 FlashSaleStrip(
                   products: catalog.products,
-                  onOpen: (p) => Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (_) => ProductDetailScreen(product: p)),
-                  ),
+                  onOpen: _openDetail,
                 ),
+                // "Vừa xem" — chỉ hiện khi khách đã xem sản phẩm nào đó.
+                if (_recentlyViewed(catalog).isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  RecentlyViewedStrip(
+                    products: _recentlyViewed(catalog),
+                    onOpen: _openDetail,
+                  ),
+                ],
+                if (_pick(catalog) != null) ...[
+                  const SizedBox(height: 26),
+                  VoidPicksSection(
+                    product: _pick(catalog)!,
+                    onOpen: () => _openDetail(_pick(catalog)!),
+                  ),
+                ],
+                const SizedBox(height: 22),
+                const TrustStrip(),
                 const SizedBox(height: 26),
                 Padding(
                   padding:

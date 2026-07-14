@@ -9,6 +9,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/product.dart';
+import '../../../data/services/recently_viewed_service.dart';
 import '../../state/app_nav.dart';
 import '../../state/cart_controller.dart';
 import '../../widgets/widgets.dart';
@@ -34,6 +35,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final _scroll = ScrollController();
 
   Product get _p => widget.product;
+
+  @override
+  void initState() {
+    super.initState();
+    // Ghi nhận "vừa xem" (local) để Home gợi lại — không chặn UI.
+    RecentlyViewedService.instance.add(_p.id);
+  }
 
   @override
   void dispose() {
