@@ -16,6 +16,7 @@ import '../../state/catalog_controller.dart';
 import '../../widgets/widgets.dart';
 import '../chat/chat_screen.dart';
 import '../notifications/notifications_screen.dart';
+import 'home_sections.dart';
 import 'product_detail_screen.dart';
 
 /// Product list — VOID LUXE editorial: header "Khám phá" cỡ display, search,
@@ -133,6 +134,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final bottomInset = AppSpacing.bottomNavHeight +
         MediaQuery.of(context).padding.bottom +
         24;
+    // Chế độ "khám phá" thuần (không search/filter, không phải tab Tìm kiếm)
+    // → hiện các tầng merchandising: banner, category tiles, flash sale.
+    final merchMode = !widget.autofocusSearch &&
+        _query.trim().isEmpty &&
+        _category == 'Tất cả';
 
     return CustomScrollView(
       slivers: [
@@ -195,6 +201,57 @@ class _ProductListScreenState extends State<ProductListScreen> {
             ],
           ),
         ),
+        // ── Merchandising layers (chỉ ở chế độ khám phá) ──────────────────
+        if (merchMode) ...[
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                HomeBannerCarousel(
+                  onOpenAi: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ChatScreen()),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                CategoryTilesRow(
+                  categories:
+                      categories.where((c) => c != 'Tất cả').toList(),
+                  onSelect: (c) => setState(() => _category = c),
+                ),
+                const SizedBox(height: 20),
+                FlashSaleStrip(
+                  products: catalog.products,
+                  onOpen: (p) => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => ProductDetailScreen(product: p)),
+                  ),
+                ),
+                const SizedBox(height: 26),
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+                  child: Text(
+                    'TẤT CẢ SẢN PHẨM',
+                    style: AppText.label(AppColors.textPrimary)
+                        .copyWith(fontSize: 13),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+            )
+                .animate()
+                .fadeIn(
+                  duration: AppEffects.durEnter,
+                  curve: AppEffects.easeStandard,
+                )
+                .moveY(
+                  begin: AppEffects.entranceRise,
+                  end: 0,
+                  duration: AppEffects.durEnter,
+                  curve: AppEffects.easeStandard,
+                ),
+          ),
+        ],
         if (list.isEmpty)
           SliverToBoxAdapter(
             child: Padding(

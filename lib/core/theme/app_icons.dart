@@ -54,6 +54,15 @@ class AppIcons {
     'zap': LucideIcons.zap,
     'sun': LucideIcons.sun, // toggle theme sáng
     'moon': LucideIcons.moon, // toggle theme tối
+    // Category tiles (Home merchandising)
+    'cpu': LucideIcons.cpu,
+    'laptop': LucideIcons.laptop,
+    'smartphone': LucideIcons.smartphone,
+    'headphones': LucideIcons.headphones,
+    'monitor': LucideIcons.monitor,
+    'mouse': LucideIcons.mouse,
+    'keyboard': LucideIcons.keyboard,
+    'gamepad': LucideIcons.gamepad2,
     'clock': LucideIcons.clock,
     'credit-card': LucideIcons.creditCard,
     'qr-code': LucideIcons.qrCode,
