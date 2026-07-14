@@ -1,6 +1,9 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_effects.dart';
 import '../../core/theme/app_typography.dart';
 import 'tv_icon.dart';
 import 'tv_icon_button.dart';
@@ -9,8 +12,12 @@ enum TvAppBarMode { brand, page }
 
 /// Top app bar — `brand` mode (logo + actions) or `page` mode (back + title +
 /// actions). Designed to be the first child of a screen's column (it handles
-/// its own status-bar inset via [SafeArea]). Mirrors
-/// `components/navigation/AppBar.jsx`.
+/// its own status-bar inset via [SafeArea]).
+///
+/// VOID LUXE: bật [glass] khi bar nằm ĐÈ trên nội dung cuộn (Stack/Sliver) —
+/// BackdropFilter blur phía sau; mặc định giữ nền gradient đặc như cũ.
+/// Title dùng warm-white (gold để dành cho CTA/giá theo luật fill).
+/// Mirrors `components/navigation/AppBar.jsx`.
 class TvAppBar extends StatelessWidget {
   const TvAppBar({
     super.key,
@@ -20,6 +27,7 @@ class TvAppBar extends StatelessWidget {
     this.onBack,
     this.leading,
     this.actions = const [],
+    this.glass = false,
   });
 
   final TvAppBarMode mode;
@@ -29,17 +37,29 @@ class TvAppBar extends StatelessWidget {
   final Widget? leading;
   final List<Widget> actions;
 
+  /// Nền kính mờ (chỉ có tác dụng thị giác khi bar nằm đè trên nội dung cuộn).
+  final bool glass;
+
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.ink900, AppColors.bgBase],
-        ),
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
-      ),
+    final bar = DecoratedBox(
+      decoration: glass
+          ? BoxDecoration(
+              color: AppEffects.kGlassEnabled
+                  ? AppEffects.glassFill
+                  : AppEffects.glassFallbackFill,
+              border: const Border(
+                  bottom: BorderSide(color: AppColors.borderSubtle)),
+            )
+          : const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.ink900, AppColors.bgBase],
+              ),
+              border:
+                  Border(bottom: BorderSide(color: AppColors.borderSubtle)),
+            ),
       child: SafeArea(
         bottom: false,
         child: SizedBox(
@@ -50,7 +70,8 @@ class TvAppBar extends StatelessWidget {
               children: [
                 if (mode == TvAppBarMode.page && onBack != null)
                   TvIconButton(
-                    icon: const TvIcon('arrow-left', size: 22, color: AppColors.textAccent),
+                    icon: const TvIcon('arrow-left',
+                        size: 22, color: AppColors.textPrimary),
                     onPressed: onBack,
                     tooltip: 'Quay lại',
                   ),
@@ -60,9 +81,9 @@ class TvAppBar extends StatelessWidget {
                 else
                   Text(
                     title,
-                    style: AppText.h2(AppColors.textAccent).copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20,
+                    style: AppText.h2().copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 19,
                     ),
                   ),
                 const Spacer(),
@@ -74,6 +95,17 @@ class TvAppBar extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+
+    if (!glass || !AppEffects.kGlassEnabled) return bar;
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: AppEffects.glassSigma,
+          sigmaY: AppEffects.glassSigma,
+        ),
+        child: bar,
       ),
     );
   }

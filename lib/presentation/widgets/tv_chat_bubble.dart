@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_effects.dart';
 import '../../core/theme/app_typography.dart';
 
 enum ChatFrom { agent, user }
@@ -35,13 +34,15 @@ class TvChatBubble extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            // VOID LUXE: user bubble = goldSoft wash + hairline gold (tiết chế
+            // thay gradient full + glow thời neon); agent = surface + hairline.
             decoration: BoxDecoration(
-              gradient: outbound ? AppColors.gradientCta : null,
-              color: outbound ? null : AppColors.bgElevated,
-              border: outbound
-                  ? null
-                  : Border.all(color: AppColors.borderSubtle),
-              boxShadow: outbound ? AppEffects.glowCta : null,
+              color: outbound ? AppColors.goldSoft : AppColors.bgElevated,
+              border: Border.all(
+                color: outbound
+                    ? AppColors.goldSoftLine
+                    : AppColors.borderSubtle,
+              ),
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),
@@ -51,9 +52,7 @@ class TvChatBubble extends StatelessWidget {
             ),
             child: Text(
               message,
-              style: AppText.body(
-                outbound ? AppColors.textOnAccent : AppColors.textPrimary,
-              ).copyWith(height: 1.45),
+              style: AppText.body(AppColors.textPrimary).copyWith(height: 1.45),
             ),
           ),
         ),

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
 
 enum TvPriceSize { sm, md, lg, xl }
 
-/// Formatted VND price — accent cyan by default, optional struck-through
-/// original. Mirrors `components/core/Price.jsx`.
+/// Formatted VND price — VOID LUXE: Archivo Expanded gold, tabular figures
+/// (delegate về [AppText.price] thay vì tự khai báo style trùng lặp).
+/// Optional struck-through original. Mirrors `components/core/Price.jsx`.
 class TvPrice extends StatelessWidget {
   const TvPrice({
     super.key,
@@ -39,11 +41,9 @@ class TvPrice extends StatelessWidget {
       children: [
         Text(
           formatVnd(value),
-          style: GoogleFonts.beVietnamPro(
+          style: AppText.price(color).copyWith(
             fontSize: fs,
-            fontWeight: FontWeight.w700,
             letterSpacing: -fs * 0.01,
-            color: color,
           ),
         ),
         if (original != null) ...[

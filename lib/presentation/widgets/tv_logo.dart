@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_effects.dart';
 import '../../core/theme/app_typography.dart';
 
 enum TvLogoSize { sm, md, lg }
 
-/// The TECH_VOID wordmark — squared technical type, cyan, with a bracket glyph
-/// and a cyan glow. Mirrors `components/core/Logo.jsx`.
+/// The TECH_VOID wordmark — cyan SIGNAL + glow, DNA neon sống sót duy nhất
+/// trong VOID LUXE (accent app giờ là gold nên KHÔNG dùng AppColors.accent
+/// ở đây). Mirrors `components/core/Logo.jsx`.
 class TvLogo extends StatelessWidget {
   const TvLogo({
     super.key,
     this.size = TvLogoSize.md,
     this.glyph = true,
-    this.color = AppColors.accent,
+    this.color = AppColors.signal,
   });
 
   final TvLogoSize size;
@@ -41,7 +41,10 @@ class TvLogo extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border.all(color: color, width: 1.5),
               borderRadius: BorderRadius.circular(4),
-              boxShadow: AppEffects.glowAccentSm,
+              // Glow cyan theo mau glyph (khong dung glowAccent — gio la gold).
+              boxShadow: const [
+                BoxShadow(color: Color(0x4D00F0FF), blurRadius: 12),
+              ],
             ),
             child: Icon(Icons.grid_view_rounded, size: fs * 0.62, color: color),
           ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_effects.dart';
 import '../../core/theme/app_typography.dart';
 
 enum SummaryTone { normal, accent, success, danger, muted }
@@ -52,8 +51,10 @@ class TvSummaryRow extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             value,
+            // Grand total: priceXL gold KHÔNG glow — sự tiết chế chính là
+            // tín hiệu luxury (glow neon đã nghỉ hưu ở đây).
             style: emphasis
-                ? AppText.price().copyWith(fontSize: 26, shadows: AppEffects.textGlowCyan)
+                ? AppText.priceXL()
                 : AppText.body(_valueColor)
                     .copyWith(fontWeight: FontWeight.w700, fontSize: 14),
           ),

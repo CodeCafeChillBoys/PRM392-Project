@@ -26,11 +26,12 @@ class RootShell extends StatefulWidget {
 }
 
 class _RootShellState extends State<RootShell> {
+  // Label tiếng Việt — đồng bộ ngôn ngữ với toàn app (hết lai tiếng Anh).
   static const _navItems = [
-    TvNavItem(label: 'Explore', iconName: 'compass'),
-    TvNavItem(label: 'Search', iconName: 'search'),
-    TvNavItem(label: 'Cart', iconName: 'shopping-bag'),
-    TvNavItem(label: 'Profile', iconName: 'user'),
+    TvNavItem(label: 'Khám phá', iconName: 'compass'),
+    TvNavItem(label: 'Tìm kiếm', iconName: 'search'),
+    TvNavItem(label: 'Giỏ hàng', iconName: 'shopping-bag'),
+    TvNavItem(label: 'Cá nhân', iconName: 'user'),
   ];
 
   @override
@@ -50,6 +51,8 @@ class _RootShellState extends State<RootShell> {
     final index = context.watch<AppNav>().tabIndex;
     return Scaffold(
       backgroundColor: AppColors.bgBase,
+      // extendBody để nội dung cuộn lộ sau bottom nav glass (BackdropFilter).
+      extendBody: true,
       body: DotGridBackground(
         child: IndexedStack(
           index: index,
