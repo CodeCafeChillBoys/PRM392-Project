@@ -58,6 +58,9 @@ class _RootShellState extends State<RootShell> {
       extendBody: true,
       body: DotGridBackground(
         child: IndexedStack(
+          // Key theo theme: các tab là const instance nên sẽ không tự rebuild
+          // khi đổi light/dark — đổi key để remount với palette mới.
+          key: ValueKey('tabs-${AppColors.isLight}'),
           index: index,
           children: const [
             ProductListScreen(),

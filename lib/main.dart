@@ -131,7 +131,12 @@ class _TechVoidAppState extends State<TechVoidApp> {
         navigatorKey: _navigatorKey,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.current(),
-        home: const LoginScreen(),
+        // Key theo theme: LoginScreen là const nên không tự rebuild khi
+        // ThemeController notify (vd pref light nạp xong sau khi màn đã dựng).
+        home: KeyedSubtree(
+          key: ValueKey('home-${AppColors.isLight}'),
+          child: const LoginScreen(),
+        ),
         onGenerateRoute: (settings) {
           final name = settings.name;
           if (name == null) return null;

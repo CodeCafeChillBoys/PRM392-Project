@@ -35,6 +35,9 @@ class _StaffShellState extends State<StaffShell> {
     return Scaffold(
       backgroundColor: AppColors.bgBase,
       body: IndexedStack(
+        // Key theo theme — remount tab const khi đổi light/dark.
+        // (Đổi theme sẽ reset timer GPS đang chạy; staff bấm lại "Xem & Chạy".)
+        key: ValueKey('staff-tabs-${AppColors.isLight}'),
         index: _index,
         children: const [
           StaffOrdersScreen(),
