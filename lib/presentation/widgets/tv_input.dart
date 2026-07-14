@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_effects.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 
 enum TvInputSize { md, lg }
 
 /// Text / search input on a dark surface, with an optional leading icon and
 /// trailing slot. Set [dashed] for the cart voucher field's dashed outline.
+///
+/// VOID LUXE: có focus state thật — border chuyển gold, focus ring toả nhẹ,
+/// icon dẫn chuyển màu (AnimatedContainer 200ms).
 /// Mirrors `components/forms/Input.jsx`.
-class TvInput extends StatelessWidget {
+class TvInput extends StatefulWidget {
   const TvInput({
     super.key,
     this.controller,
@@ -47,63 +52,102 @@ class TvInput extends StatelessWidget {
   final int maxLines;
 
   @override
-  Widget build(BuildContext context) {
-    final height = size == TvInputSize.lg ? 52.0 : 44.0;
-    final multiline = maxLines > 1;
+  State<TvInput> createState() => _TvInputState();
+}
 
-    Widget field = Container(
+class _TvInputState extends State<TvInput> {
+  final FocusNode _focusNode = FocusNode();
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (mounted) setState(() => _focused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final height = widget.size == TvInputSize.lg ? 52.0 : 44.0;
+    final multiline = widget.maxLines > 1;
+
+    Widget field = AnimatedContainer(
+      duration: AppEffects.durBase,
+      curve: AppEffects.easeStandard,
       height: multiline ? null : height,
-      padding: EdgeInsets.symmetric(
-          horizontal: 14, vertical: multiline ? 10 : 0),
+      padding:
+          EdgeInsets.symmetric(horizontal: 14, vertical: multiline ? 10 : 0),
       decoration: BoxDecoration(
-        color: fillColor ?? (dashed ? Colors.transparent : AppColors.bgElevated),
-        borderRadius: BorderRadius.circular(12),
-        border: dashed ? null : Border.all(color: AppColors.borderDefault),
+        color: widget.fillColor ??
+            (widget.dashed ? Colors.transparent : AppColors.bgElevated),
+        borderRadius: BorderRadius.circular(AppRadii.md),
+        border: widget.dashed
+            ? null
+            : Border.all(
+                color:
+                    _focused ? AppColors.borderAccent : AppColors.borderDefault,
+              ),
+        boxShadow: _focused && !widget.dashed ? AppEffects.focusRing : null,
       ),
       child: Row(
         crossAxisAlignment:
             multiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
-          if (leading != null) ...[
-            IconTheme.merge(
-              data: const IconThemeData(color: AppColors.textTertiary, size: 18),
-              child: leading!,
+          if (widget.leading != null) ...[
+            AnimatedSwitcher(
+              duration: AppEffects.durBase,
+              child: IconTheme.merge(
+                key: ValueKey(_focused),
+                data: IconThemeData(
+                  color:
+                      _focused ? AppColors.gold400 : AppColors.textTertiary,
+                  size: 18,
+                ),
+                child: widget.leading!,
+              ),
             ),
             const SizedBox(width: 10),
           ],
           Expanded(
             child: TextField(
-              controller: controller,
-              onChanged: onChanged,
-              onSubmitted: onSubmitted,
-              onEditingComplete: onEditingComplete,
-              obscureText: obscureText,
-              keyboardType: keyboardType,
-              textInputAction: textInputAction,
-              autofocus: autofocus,
+              controller: widget.controller,
+              focusNode: _focusNode,
+              onChanged: widget.onChanged,
+              onSubmitted: widget.onSubmitted,
+              onEditingComplete: widget.onEditingComplete,
+              obscureText: widget.obscureText,
+              keyboardType: widget.keyboardType,
+              textInputAction: widget.textInputAction,
+              autofocus: widget.autofocus,
               cursorColor: AppColors.accent,
               style: AppText.body(),
-              maxLines: maxLines,
-              textAlignVertical: multiline
-                  ? TextAlignVertical.top
-                  : TextAlignVertical.center,
+              maxLines: widget.maxLines,
+              textAlignVertical:
+                  multiline ? TextAlignVertical.top : TextAlignVertical.center,
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
-                hintText: hintText,
+                hintText: widget.hintText,
                 hintStyle: AppText.body(AppColors.textTertiary),
               ),
             ),
           ),
-          if (trailing != null) ...[
+          if (widget.trailing != null) ...[
             const SizedBox(width: 10),
-            trailing!,
+            widget.trailing!,
           ],
         ],
       ),
     );
 
-    if (dashed) {
+    if (widget.dashed) {
       field = CustomPaint(
         foregroundPainter: _DashedRRectPainter(color: AppColors.borderDefault),
         child: field,
