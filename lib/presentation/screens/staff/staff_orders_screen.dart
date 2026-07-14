@@ -1,13 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart' hide ShimmerEffect;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/order_model.dart';
@@ -312,10 +316,37 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     );
   }
 
+  /// Đơn "ma" cho skeleton.
+  static final _ghost = OrderModel(
+    id: 'ghost0000',
+    customerName: 'Đang tải',
+    shippingAddress: 'Đang tải địa chỉ giao hàng của đơn này',
+    totalAmount: 12000000,
+    status: 'Pending',
+    paymentMethod: 'COD',
+    paymentStatus: 'Pending',
+    orderDate: DateTime.now().toIso8601String(),
+    shippingFee: 15000,
+    staffId: '',
+    itemCount: 1,
+  );
+
   Widget _list() {
     if (_loading) {
-      return Center(
-          child: CircularProgressIndicator(color: AppColors.textAccent));
+      return Skeletonizer(
+        effect: ShimmerEffect(
+          baseColor: AppColors.skeletonBase,
+          highlightColor: AppColors.skeletonHighlight,
+        ),
+        child: ListView.separated(
+          padding: EdgeInsets.fromLTRB(
+              AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 4,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (_, _) => _orderCard(_ghost),
+        ),
+      );
     }
     final items = _visible;
     return RefreshIndicator(
@@ -325,10 +356,23 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
       child: items.isEmpty
           ? _empty()
           : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+              // Key theo tab → đổi bộ lọc là stagger chạy lại.
+              key: ValueKey(_tab),
+              padding: EdgeInsets.fromLTRB(
+                  AppSpacing.gutter, 14, AppSpacing.gutter, 24),
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (_, i) => _orderCard(items[i]),
+              itemBuilder: (_, i) => _orderCard(items[i])
+                  .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
+                  .fadeIn(
+                      duration: AppEffects.durEnter,
+                      curve: AppEffects.easeStandard)
+                  .moveY(
+                    begin: AppEffects.entranceRise,
+                    end: 0,
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  ),
             ),
     );
   }

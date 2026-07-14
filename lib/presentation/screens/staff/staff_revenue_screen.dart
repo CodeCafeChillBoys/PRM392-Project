@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart' hide ShimmerEffect;
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/order_model.dart';
@@ -144,8 +148,35 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
 
   Widget _body() {
     if (_loading) {
-      return Center(
-          child: CircularProgressIndicator(color: AppColors.textAccent));
+      // Skeleton dashboard: bóng của chính bố cục thẻ tổng + lưới 2x2.
+      return Skeletonizer(
+        effect: ShimmerEffect(
+          baseColor: AppColors.skeletonBase,
+          highlightColor: AppColors.skeletonHighlight,
+        ),
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+              AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            _totalCard(12500000, 8),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: _statCard('VNPay đã thu', 8000000)),
+              const SizedBox(width: 10),
+              Expanded(child: _statCard('COD đã thu', 4500000)),
+            ]),
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(child: _statCard('COD chờ thu', 1200000, warn: true)),
+              const SizedBox(width: 10),
+              Expanded(child: _statCard('Shop nhận từ ship', 90000)),
+            ]),
+            const SizedBox(height: 12),
+            _myIncomeCard(60000, 4),
+          ],
+        ),
+      );
     }
     final orders = _visible;
     final counted = orders.where(_isCounted).toList();
@@ -176,9 +207,18 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
       color: AppColors.textAccent,
       backgroundColor: AppColors.bgSurface,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+        // Key theo bộ lọc thời gian → đổi tab là các thẻ vào lại theo nhịp.
+        key: ValueKey(_range),
+        padding: EdgeInsets.fromLTRB(
+            AppSpacing.gutter, 14, AppSpacing.gutter, 24),
         children: [
-          _totalCard(vnpaySum + codSum, counted.length),
+          _totalCard(vnpaySum + codSum, counted.length)
+              .animate()
+              .fadeIn(duration: AppEffects.durEnter)
+              .moveY(
+                  begin: AppEffects.entranceRise,
+                  end: 0,
+                  curve: AppEffects.easeStandard),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -186,7 +226,13 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
               const SizedBox(width: 10),
               Expanded(child: _statCard('COD đã thu', codSum)),
             ],
-          ),
+          )
+              .animate(delay: AppEffects.staggerStep)
+              .fadeIn(duration: AppEffects.durEnter)
+              .moveY(
+                  begin: AppEffects.entranceRise,
+                  end: 0,
+                  curve: AppEffects.easeStandard),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -195,9 +241,21 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
               const SizedBox(width: 10),
               Expanded(child: _statCard('Shop nhận từ ship', shopShipShare)),
             ],
-          ),
+          )
+              .animate(delay: AppEffects.staggerStep * 2)
+              .fadeIn(duration: AppEffects.durEnter)
+              .moveY(
+                  begin: AppEffects.entranceRise,
+                  end: 0,
+                  curve: AppEffects.easeStandard),
           const SizedBox(height: 12),
-          _myIncomeCard(myCommission, myDelivered.length),
+          _myIncomeCard(myCommission, myDelivered.length)
+              .animate(delay: AppEffects.staggerStep * 3)
+              .fadeIn(duration: AppEffects.durEnter)
+              .moveY(
+                  begin: AppEffects.entranceRise,
+                  end: 0,
+                  curve: AppEffects.easeStandard),
           const SizedBox(height: 22),
           const TvSectionHeader(
               icon: TvIcon('bar-chart'), title: 'Đơn được tính'),
