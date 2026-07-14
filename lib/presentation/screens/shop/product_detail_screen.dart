@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
+import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/product.dart';
 import '../../state/app_nav.dart';
 import '../../state/cart_controller.dart';
 import '../../widgets/widgets.dart';
 
-/// Product detail — hero, brand/category, price, stock + quantity, description
-/// tabs, sticky add-to-cart CTA (`GET /api/Products/{id}`).
-/// Mirrors `ProductDetailScreen.jsx`.
+/// Product detail — VOID LUXE editorial: hero parallax trên nền glow gold,
+/// eyebrow bronze, tên sản phẩm cỡ display, nội dung vào màn theo cascade,
+/// tab Đánh giá có empty state thật, CTA morph ✓ khi thêm giỏ.
+/// (`GET /api/Products/{id}`). Mirrors `ProductDetailScreen.jsx`.
 class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key, required this.product});
 
@@ -24,14 +29,26 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _qty = 1;
   String _tab = 'desc';
+  bool _added = false;
+  final _scroll = ScrollController();
 
   Product get _p => widget.product;
 
-  void _addToCart() {
-    final cart = context.read<CartController>();
-    final appNav = context.read<AppNav>();
-    cart.add(_p, quantity: _qty);
-    appNav.goToCart();
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addToCart() async {
+    if (_added) return;
+    HapticFeedback.mediumImpact();
+    setState(() => _added = true); // CTA morph sang trạng thái ✓
+    context.read<CartController>().add(_p, quantity: _qty);
+    // Cho người dùng thấy khoảnh khắc ✓ rồi mới rời màn.
+    await Future.delayed(const Duration(milliseconds: 550));
+    if (!mounted) return;
+    context.read<AppNav>().goToCart();
     TvToast.show(context, 'Đã thêm ${_p.name} vào giỏ');
     Navigator.of(context).pop();
   }
@@ -49,7 +66,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           TvAppBar(
             mode: TvAppBarMode.brand,
             leading: TvIconButton(
-              icon: const TvIcon('arrow-left', size: 22, color: AppColors.textAccent),
+              icon: const TvIcon('arrow-left',
+                  size: 22, color: AppColors.textPrimary),
               onPressed: () => Navigator.pop(context),
               tooltip: 'Quay lại',
             ),
@@ -77,75 +95,83 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Widget _buildBody(bool soldOut) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHero(soldOut),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 14),
-                _buildThumbnails(),
-                const SizedBox(height: 18),
-                Text(
-                  '${_p.brand} · ${_p.categoryName}'.toUpperCase(),
-                  style: AppText.label(AppColors.textTertiary)
-                      .copyWith(fontSize: 12),
-                ),
-                const SizedBox(height: 6),
-                Text(_p.name, style: AppText.h1().copyWith(fontSize: 27)),
-                const SizedBox(height: 8),
-                TvPrice(value: _p.price, size: TvPriceSize.lg),
-                const SizedBox(height: 18),
-                _buildStockRow(soldOut),
-                const SizedBox(height: 22),
-                TvTabs(
-                  value: _tab,
-                  onChanged: (v) => setState(() => _tab = v),
-                  tabs: const [
-                    TvTab('desc', 'Mô tả'),
-                    TvTab('reviews', 'Đánh giá'),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                if (_tab == 'desc')
-                  Text(
-                    _p.description,
-                    style: AppText.body(AppColors.textSecondary)
-                        .copyWith(fontSize: 14.5, height: 1.65),
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 4),
-                    child: Text(
-                      'Chưa có đánh giá cho sản phẩm này. Hãy là người đầu tiên!',
-                      style: AppText.body(AppColors.textSecondary)
-                          .copyWith(fontSize: 14),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
+    // Nội dung editorial vào màn theo cascade (eyebrow → tên → giá → specs).
+    final content = <Widget>[
+      const SizedBox(height: 22),
+      Text(
+        '${_p.brand} · ${_p.categoryName}'.toUpperCase(),
+        style: AppText.label(AppColors.gold700).copyWith(fontSize: 12),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        _p.name,
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
+        style: AppText.display().copyWith(fontSize: 30),
+      ),
+      const SizedBox(height: 12),
+      TvPrice(value: _p.price, size: TvPriceSize.lg),
+      const SizedBox(height: 20),
+      const Divider(color: AppColors.borderSubtle, height: 1),
+      const SizedBox(height: 16),
+      _buildStockRow(soldOut),
+      const SizedBox(height: 24),
+      TvTabs(
+        value: _tab,
+        onChanged: (v) => setState(() => _tab = v),
+        tabs: const [
+          TvTab('desc', 'Mô tả'),
+          TvTab('reviews', 'Đánh giá'),
         ],
       ),
+      const SizedBox(height: 16),
+      if (_tab == 'desc')
+        Text(
+          _p.description,
+          style: AppText.body(AppColors.textSecondary)
+              .copyWith(fontSize: 14.5, height: 1.65),
+        )
+      else
+        _buildReviewsEmpty(),
+      const SizedBox(height: 24),
+    ];
+
+    return CustomScrollView(
+      controller: _scroll,
+      slivers: [
+        SliverToBoxAdapter(child: _buildHero(soldOut)),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: content
+                  .animate(interval: AppEffects.staggerStep)
+                  .fadeIn(
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  )
+                  .moveY(
+                    begin: AppEffects.entranceRise,
+                    end: 0,
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
+  /// Hero ảnh full-bleed trên glow gold — PARALLAX: ảnh trôi chậm 0.45× tốc độ
+  /// cuộn (scroll-linked), tạo chiều sâu kiểu trang sản phẩm Apple.
   Widget _buildHero(bool soldOut) {
     final lowStock = _p.isLowStock;
-    return Container(
+    final hero = Container(
       decoration: const BoxDecoration(
-        color: Colors.black,
-        gradient: RadialGradient(
-          center: Alignment(0, -0.2),
-          radius: 0.8,
-          colors: [Color(0x1F00F0FF), Colors.transparent],
-          stops: [0, 0.7],
-        ),
+        color: AppColors.ink900,
+        gradient: AppColors.heroGlow,
       ),
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Stack(
@@ -160,38 +186,53 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: soldOut
                 ? const TvBadge('Hết hàng', variant: TvBadgeVariant.neutral)
                 : lowStock
+                    // Variant warning mới — glass giờ chỉ dành badge AI cyan.
                     ? TvBadge('Sắp hết · còn ${_p.stockQuantity}',
-                        variant: TvBadgeVariant.glass)
-                    : const TvBadge('Còn hàng', variant: TvBadgeVariant.glass),
+                        variant: TvBadgeVariant.warning)
+                    : const TvBadge('Còn hàng',
+                        variant: TvBadgeVariant.success),
           ),
         ],
       ),
     );
+
+    return ClipRect(
+      child: AnimatedBuilder(
+        animation: _scroll,
+        builder: (context, child) {
+          final offset = _scroll.hasClients ? _scroll.offset : 0.0;
+          return Transform.translate(
+            offset: Offset(0, offset * 0.45),
+            child: child,
+          );
+        },
+        child: hero,
+      ),
+    );
   }
 
-  Widget _buildThumbnails() {
-    return Row(
-      children: [
-        for (var i = 0; i < 3; i++) ...[
-          if (i > 0) const SizedBox(width: 10),
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: i == 0 ? AppColors.accent : AppColors.borderDefault,
-                width: i == 0 ? 1.5 : 1,
-              ),
-              boxShadow: i == 0 ? AppEffects.glowAccentSm : null,
+  /// Empty state thật cho tab Đánh giá (thay string cứng "hãy là người đầu
+  /// tiên" trơ trọi) — trung thực và có chủ đích.
+  Widget _buildReviewsEmpty() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(AppIcons.get('star'),
+                size: 36, color: AppColors.textTertiary),
+            const SizedBox(height: 12),
+            Text('Chưa có đánh giá', style: AppText.h2().copyWith(fontSize: 18)),
+            const SizedBox(height: 6),
+            Text(
+              'Sản phẩm này đang chờ cảm nhận đầu tiên từ bạn.',
+              textAlign: TextAlign.center,
+              style: AppText.sm(AppColors.textTertiary),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: ProductImage(url: _p.heroImageUrl),
-          ),
-        ],
-      ],
-    );
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: AppEffects.durEnter);
   }
 
   Widget _buildStockRow(bool soldOut) {
@@ -232,18 +273,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Widget _buildStickyCta(bool soldOut) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.transparent, AppColors.bgBase],
-          stops: [0, 0.3],
-        ),
+      decoration: BoxDecoration(
+        color: AppColors.bgBase,
+        border: const Border(top: BorderSide(color: AppColors.borderSubtle)),
+        boxShadow: AppEffects.shadowMd,
       ),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          padding: EdgeInsets.fromLTRB(AppSpacing.gutter, 12, AppSpacing.gutter, 12),
           child: Row(
             children: [
               TvIconButton(
@@ -256,12 +294,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: TvButton(
-                  label: soldOut ? 'Hết hàng' : 'Thêm vào giỏ',
-                  size: TvButtonSize.lg,
-                  fullWidth: true,
-                  leadingIcon: soldOut ? null : const TvIcon('shopping-cart', size: 18),
-                  onPressed: soldOut ? null : _addToCart,
+                // CTA morph: Thêm vào giỏ -> ✓ Đã thêm (AnimatedSwitcher).
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 250),
+                  switchInCurve: AppEffects.easeEmphasized,
+                  transitionBuilder: (child, anim) => FadeTransition(
+                    opacity: anim,
+                    child: ScaleTransition(scale: anim, child: child),
+                  ),
+                  child: TvButton(
+                    key: ValueKey(_added),
+                    label: soldOut
+                        ? 'Hết hàng'
+                        : (_added ? 'Đã thêm vào giỏ' : 'Thêm vào giỏ'),
+                    size: TvButtonSize.lg,
+                    fullWidth: true,
+                    variant: _added
+                        ? TvButtonVariant.accent
+                        : TvButtonVariant.gradient,
+                    leadingIcon: soldOut
+                        ? null
+                        : TvIcon(_added ? 'check' : 'shopping-cart', size: 18),
+                    onPressed: soldOut || _added ? null : _addToCart,
+                  ),
                 ),
               ),
             ],
