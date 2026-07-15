@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/order_model.dart';
 import '../../../data/services/goong_service.dart';
@@ -262,6 +264,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
     //    mạng yếu. Poll REST định kỳ để xe vẫn cập nhật dù realtime gián đoạn.
     _pollTimer =
         Timer.periodic(const Duration(seconds: 5), (_) => _pollLocation());
+    // Poll ngay 1 nhịp: đơn ĐÃ giao từ trước thì pin sáng đèn ngay khi mở màn,
+    // không phải đợi 5s tick đầu tiên.
+    _pollLocation();
   }
 
   /// Lấy vị trí shipper mới nhất qua REST (dự phòng khi SignalR không đẩy kịp)
@@ -276,6 +281,13 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
         _hub.disconnect();
         setState(() => _delivered = true);
         _syncGhost(); // dừng xe preview nếu đang chạy
+        // Spotlight về ĐIỂM NHẬN: camera dồn về nhà khách (pin sáng đèn).
+        final dest = _dest;
+        if (dest != null) {
+          try {
+            _mapController.move(dest, 15);
+          } catch (_) {/* map chưa gắn xong */}
+        }
         return;
       }
       final p = await _service.fetchShipperLocation(widget.order.id);
@@ -418,7 +430,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
                   ],
                 ),
               // Live: tuyến còn lại phía trước xe thật (trim theo frame).
-              if (visible.length >= 2)
+              // Đã giao → ẩn (hành trình kết thúc, spotlight về pin nhận).
+              if (!_delivered && visible.length >= 2)
                 PolylineLayer(
                   polylines: [
                     Polyline(
@@ -430,18 +443,24 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
                 ),
               MarkerLayer(
                 markers: [
+                  // Kho: sau khi giao xong thì MỜ đi — điểm xuất phát đã hoàn
+                  // thành vai trò, nhường spotlight cho điểm nhận.
                   Marker(
                     point: _store,
                     width: 40,
                     height: 40,
-                    child: _pin('package', AppColors.textSecondary),
+                    child: AnimatedOpacity(
+                      duration: AppEffects.durSlow,
+                      opacity: _delivered ? 0.3 : 1,
+                      child: _pin('package', AppColors.textSecondary),
+                    ),
                   ),
                   if (d != null)
                     Marker(
                       point: d,
-                      width: 40,
-                      height: 40,
-                      child: _pin('map-pin', AppColors.accent),
+                      width: _delivered ? 72 : 40,
+                      height: _delivered ? 72 : 40,
+                      child: _delivered ? _deliveredPin(context) : _pin('map-pin', AppColors.accent),
                     ),
                   // Ghost: xe mờ 55% + chip "XEM TRƯỚC" — không thể nhầm với xe thật.
                   if (ghost != null)
@@ -479,7 +498,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
                         ],
                       ),
                     ),
-                  if (s != null)
+                  // Xe thật — ẩn sau khi giao xong (hành trình đã kết thúc).
+                  if (s != null && !_delivered)
                     Marker(
                       point: s,
                       width: 48,
@@ -536,5 +556,60 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
         alignment: Alignment.center,
         child: TvIcon(icon, size: 20, color: color),
       );
+
+  /// Pin "SÁNG ĐÈN" tại nhà khách khi ĐÃ GIAO: lõi success phát sáng + quầng
+  /// pulse lan toả lặp — spotlight của bản đồ dồn về điểm nhận hàng
+  /// (đối lập với pin kho bị mờ đi). Tôn trọng reduce-motion (quầng đứng yên).
+  Widget _deliveredPin(BuildContext context) {
+    final halo = DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.success500.withValues(alpha: 0.22),
+      ),
+      child: const SizedBox.expand(),
+    );
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: 72,
+          height: 72,
+          child: AppEffects.motionScale(context) > 0
+              ? halo
+                  .animate(onPlay: (c) => c.repeat())
+                  .scaleXY(
+                    begin: 0.4,
+                    end: 1,
+                    duration: const Duration(milliseconds: 1500),
+                    curve: Curves.easeOut,
+                  )
+                  .fadeOut(
+                    duration: const Duration(milliseconds: 1500),
+                    curve: Curves.easeOut,
+                  )
+              : Opacity(opacity: 0.3, child: halo),
+        ),
+        // Lõi pin phát sáng.
+        Container(
+          width: 44,
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.bgBase,
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.success500, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.success500.withValues(alpha: 0.45),
+                blurRadius: 18,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: TvIcon('package-check', size: 20, color: AppColors.success500),
+        ),
+      ],
+    );
+  }
 
 }
