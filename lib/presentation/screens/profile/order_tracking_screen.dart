@@ -11,6 +11,7 @@ import '../../../data/services/goong_service.dart';
 import '../../../data/services/order_service.dart';
 import '../../../data/services/tracking_hub_client.dart';
 import '../../widgets/widgets.dart';
+import 'tracking_panel.dart';
 
 /// Màn KHÁCH theo dõi shipper realtime cho 1 đơn đang giao.
 /// Lấy vị trí lần đầu qua REST, sau đó nghe SignalR `ReceiveLocation` để marker
@@ -25,7 +26,7 @@ class OrderTrackingScreen extends StatefulWidget {
 }
 
 class _OrderTrackingScreenState extends State<OrderTrackingScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final _service = OrderService();
   final _goong = GoongService();
   final _hub = TrackingHubClient();
@@ -46,6 +47,23 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
   bool _initialFitDone = false;
   bool _delivered = false; // đơn đã giao xong → ngừng theo dõi
   String? _error;
+
+  // ── Ghost preview: xe "xem trước" chạy lặp kho→nhà TRONG LÚC ĐỢI shipper ──
+  late final AnimationController _ghostCtrl;
+
+  /// Bảng chiều dài tích luỹ của _route (mét) — rebuild khi _route đổi,
+  /// KHÔNG tính lại mỗi frame.
+  List<double> _cum = const [0];
+  double _routeLen = 0;
+
+  // ── ETA từ Goong Direction (duration của tuyến còn lại) ──
+  int? _durationSec;
+  DateTime? _routeFetchedAt;
+
+  int? get _etaMinutes =>
+      _durationSec == null ? null : (_durationSec! / 60).ceil().clamp(1, 999);
+  DateTime? get _etaArrival =>
+      _routeFetchedAt?.add(Duration(seconds: _durationSec ?? 0));
 
   /// Toạ độ kho — khớp BE `Goong:StoreLatitude/Longitude` và checkout.
   static const LatLng _store = LatLng(10.841122, 106.809935);
@@ -111,6 +129,55 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
     return dedup.length >= 2 ? dedup : const [];
   }
 
+  // ── Ghost preview: toán vị trí + vòng đời ─────────────────────────────────
+
+  /// Rebuild bảng chiều dài tích luỹ khi _route đổi (không chạy mỗi frame).
+  void _rebuildCum() {
+    final c = <double>[0];
+    for (var i = 0; i < _route.length - 1; i++) {
+      c.add(c.last + _dist.as(LengthUnit.Meter, _route[i], _route[i + 1]));
+    }
+    _cum = c;
+    _routeLen = c.last;
+  }
+
+  /// Vị trí xe ghost trên tuyến theo tiến độ vòng lặp: t → mét → lerp segment.
+  LatLng? get _ghostPos {
+    if (!_ghostCtrl.isAnimating || _route.length < 2 || _routeLen <= 0) {
+      return null;
+    }
+    final target = _ghostCtrl.value * _routeLen;
+    var i = 1;
+    while (i < _cum.length - 1 && _cum[i] < target) {
+      i++;
+    }
+    final segLen = _cum[i] - _cum[i - 1];
+    final t = segLen <= 0 ? 0.0 : (target - _cum[i - 1]) / segLen;
+    final a = _route[i - 1], b = _route[i];
+    return LatLng(
+      a.latitude + (b.latitude - a.latitude) * t,
+      a.longitude + (b.longitude - a.longitude) * t,
+    );
+  }
+
+  /// Ghost chỉ chạy khi: chưa giao xong + CHƯA có GPS thật + có tuyến +
+  /// người dùng không bật giảm-chuyển-động.
+  bool get _ghostShouldRun =>
+      !_delivered &&
+      _shipper == null &&
+      _route.length >= 2 &&
+      MediaQuery.maybeDisableAnimationsOf(context) != true;
+
+  /// Điểm đồng bộ DUY NHẤT (idempotent) — gọi sau mọi thay đổi trạng thái.
+  void _syncGhost() {
+    if (!mounted) return;
+    if (_ghostShouldRun) {
+      if (!_ghostCtrl.isAnimating) _ghostCtrl.repeat();
+    } else if (_ghostCtrl.isAnimating) {
+      _ghostCtrl.stop();
+    }
+  }
+
   /// Nhận vị trí shipper mới → cho marker TRƯỢT mượt tới đó (thay vì teleport).
   /// Bắt đầu chặng mới từ vị trí đang hiển thị nên nếu điểm mới tới khi chặng
   /// cũ chưa xong vẫn liền mạch, không giật ngược.
@@ -128,6 +195,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
       _animFrom = start;
       _animTo = target;
     });
+    _syncGhost(); // GPS thật đã về → ghost preview tắt ngay lập tức
     _moveCtrl.forward(from: 0);
     _updateRoute();
   }
@@ -142,6 +210,15 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
       duration: const Duration(milliseconds: 2000),
     )..addListener(() {
         if (mounted) setState(() {}); // redraw marker mỗi frame khi tween chạy
+      });
+    // Ghost preview: 14s một vòng kho→nhà; chỉ chạy khi _syncGhost cho phép.
+    // Tại mọi thời điểm chỉ 1 trong 2 controller hoạt động (ghost lúc đợi,
+    // _moveCtrl lúc live) → chi phí frame không đổi so với trước.
+    _ghostCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 14),
+    )..addListener(() {
+        if (mounted) setState(() {});
       });
     _init();
   }
@@ -198,6 +275,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
         _pollTimer?.cancel();
         _hub.disconnect();
         setState(() => _delivered = true);
+        _syncGhost(); // dừng xe preview nếu đang chạy
         return;
       }
       final p = await _service.fetchShipperLocation(widget.order.id);
@@ -224,11 +302,13 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
     _moveShipperTo(LatLng(lat, lng));
   }
 
-  /// Gọi Goong Direction shipper → nhà; throttle 5s để tiết kiệm quota.
+  /// Gọi Goong Direction → nhà; throttle 5s để tiết kiệm quota.
+  /// Origin = vị trí shipper, hoặc KHO khi chưa có shipper (tuyến "xem trước"
+  /// cho ghost + ETA toàn tuyến trong lúc khách đợi).
   Future<void> _updateRoute({bool force = false}) async {
-    final shipper = _shipper;
+    final origin = _shipper ?? _store;
     final dest = _dest;
-    if (shipper == null || dest == null) return;
+    if (dest == null) return;
 
     final now = DateTime.now();
     if (!force &&
@@ -238,9 +318,15 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
     }
     _lastRouteAt = now;
 
-    final route = await _goong.directionRoute(shipper, dest);
+    final result = await _goong.directionRouteDetailed(origin, dest);
     if (!mounted) return;
-    setState(() => _route = route);
+    setState(() {
+      _route = result.points;
+      _durationSec = result.durationSeconds;
+      _routeFetchedAt = DateTime.now();
+    });
+    _rebuildCum();
+    _syncGhost();
   }
 
   /// Canh khung bản đồ lần đầu để thấy shipper + nhà khách + cửa hàng.
@@ -258,7 +344,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
         _mapController.fitCamera(
           CameraFit.coordinates(
             coordinates: pts,
-            padding: const EdgeInsets.all(48),
+            // Đáy chừa nhiều hơn: panel liquid-glass che ~24% dưới màn.
+            padding: const EdgeInsets.fromLTRB(48, 48, 48, 170),
           ),
         );
       } catch (_) {/* map chưa gắn xong */}
@@ -270,16 +357,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
     _pollTimer?.cancel();
     _hub.disconnect();
     _moveCtrl.dispose();
+    _ghostCtrl.dispose();
     super.dispose();
   }
 
   String _shortId(String id) => id.length >= 8 ? id.substring(0, 8) : id;
-
-  String _fmtTime(String iso) {
-    final t = DateTime.tryParse(iso)?.toLocal();
-    if (t == null) return '';
-    return '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:${t.second.toString().padLeft(2, '0')}';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,6 +385,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
     final d = _dest;
     // Đường vẽ lấy từ CÙNG biến s như marker → co lại đúng frame xe di chuyển.
     final visible = _visibleRoute(s);
+    final waiting = _shipper == null && !_delivered;
+    // Xe ghost xem-trước chỉ tồn tại lúc đợi (GPS thật về là biến mất).
+    final ghost = waiting ? _ghostPos : null;
+
     return Stack(
       children: [
         Positioned.fill(
@@ -319,6 +405,19 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
             ),
             children: [
               const TvMapTiles(),
+              // Lúc đợi: toàn tuyến kho→nhà nét ĐỨT mờ (xem trước lộ trình).
+              if (waiting && _route.length >= 2)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _route,
+                      strokeWidth: 3,
+                      color: AppColors.accent.withValues(alpha: 0.45),
+                      pattern: StrokePattern.dashed(segments: const [10, 8]),
+                    ),
+                  ],
+                ),
+              // Live: tuyến còn lại phía trước xe thật (trim theo frame).
               if (visible.length >= 2)
                 PolylineLayer(
                   polylines: [
@@ -344,6 +443,42 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
                       height: 40,
                       child: _pin('map-pin', AppColors.accent),
                     ),
+                  // Ghost: xe mờ 55% + chip "XEM TRƯỚC" — không thể nhầm với xe thật.
+                  if (ghost != null)
+                    Marker(
+                      point: ghost,
+                      width: 78,
+                      height: 74,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Opacity(
+                            opacity: 0.55,
+                            child: SizedBox(
+                              width: 44,
+                              height: 44,
+                              child: _pin('truck', AppColors.accent),
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.accentSoft,
+                              borderRadius: BorderRadius.circular(999),
+                              border:
+                                  Border.all(color: AppColors.accentSoftLine),
+                            ),
+                            child: Text(
+                              'XEM TRƯỚC',
+                              style: AppText.label(AppColors.textAccent)
+                                  .copyWith(fontSize: 7.5, letterSpacing: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   if (s != null)
                     Marker(
                       point: s,
@@ -356,7 +491,29 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
             ],
           ),
         ),
-        Positioned(left: 12, right: 12, bottom: 12, child: _statusCard()),
+        // Panel liquid-glass kéo được: thông tin tài xế/ETA/timeline/sản phẩm.
+        Positioned.fill(
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.24,
+            minChildSize: 0.18,
+            maxChildSize: 0.82,
+            snap: true,
+            snapSizes: const [0.24, 0.55],
+            builder: (context, scrollCtrl) => LiquidGlassPanel(
+              child: TrackingPanel(
+                order: widget.order,
+                scrollController: scrollCtrl,
+                waiting: waiting,
+                live: _live,
+                delivered: _delivered,
+                error: _error,
+                updatedAtIso: _updatedAt,
+                etaMinutes: _etaMinutes,
+                etaArrival: _etaArrival,
+              ),
+            ),
+          ),
+        ),
         if (_loading)
           Positioned.fill(
             child: ColoredBox(
@@ -380,56 +537,4 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
         child: TvIcon(icon, size: 20, color: color),
       );
 
-  Widget _statusCard() {
-    final (String icon, String text, Color color) = _statusInfo();
-    return TvCard(
-      padding: 14,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              TvIcon('map-pin', size: 16, color: AppColors.textAccent),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(widget.order.shippingAddress,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.sm()),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              TvIcon(icon, size: 14, color: color),
-              const SizedBox(width: 6),
-              Expanded(child: Text(text, style: AppText.xs(color))),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  (String, String, Color) _statusInfo() {
-    if (_delivered) {
-      return ('package-check', 'Đơn đã giao thành công 🎉', AppColors.success500);
-    }
-    if (_error != null) {
-      return ('x-circle', _error!, AppColors.danger500);
-    }
-    if (_shipper == null) {
-      return (
-        'clock',
-        'Shipper chưa bắt đầu di chuyển. Màn hình sẽ tự cập nhật.',
-        AppColors.textSecondary
-      );
-    }
-    if (_live) {
-      final when = _updatedAt != null ? ' · cập nhật ${_fmtTime(_updatedAt!)}' : '';
-      return ('zap', 'Đang theo dõi realtime$when', AppColors.success500);
-    }
-    return ('clock', 'Đang kết nối...', AppColors.textSecondary);
-  }
 }

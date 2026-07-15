@@ -80,7 +80,9 @@ class GoongService {
   }
 
   /// Tuyến đường từ [origin] → [dest] (Goong Direction, vehicle=bike).
-  Future<List<LatLng>> directionRoute(LatLng origin, LatLng dest) async {
+  /// Tuyến đường + thời lượng/quãng đường (leg đầu) — dùng cho màn theo dõi
+  /// đơn để hiện ETA thật. [directionRoute] là wrapper giữ API cũ.
+  Future<RouteResult> directionRouteDetailed(LatLng origin, LatLng dest) async {
     try {
       final uri = Uri.parse('${GoongConfig.restBase}/Direction').replace(
         queryParameters: {
@@ -91,16 +93,47 @@ class GoongService {
         },
       );
       final res = await _client.get(uri).timeout(const Duration(seconds: 15));
-      if (res.statusCode != 200) return const [];
+      if (res.statusCode != 200) return RouteResult.empty;
       final json = jsonDecode(res.body) as Map<String, dynamic>;
       final routes = json['routes'] as List?;
-      if (routes == null || routes.isEmpty) return const [];
-      final points = (routes.first as Map<String, dynamic>)['overview_polyline']
-          ?['points'] as String?;
-      if (points == null || points.isEmpty) return const [];
-      return decodePolyline(points);
+      if (routes == null || routes.isEmpty) return RouteResult.empty;
+      final route0 = routes.first as Map<String, dynamic>;
+      final points = route0['overview_polyline']?['points'] as String?;
+      final legs = route0['legs'] as List?;
+      final leg0 = (legs != null && legs.isNotEmpty)
+          ? legs.first as Map<String, dynamic>
+          : null;
+      return RouteResult(
+        points: (points == null || points.isEmpty)
+            ? const []
+            : decodePolyline(points),
+        durationSeconds:
+            ((leg0?['duration'] as Map?)?['value'] as num?)?.toInt(),
+        distanceMeters:
+            ((leg0?['distance'] as Map?)?['value'] as num?)?.toInt(),
+      );
     } catch (_) {
-      return const [];
+      return RouteResult.empty;
     }
   }
+
+  Future<List<LatLng>> directionRoute(LatLng origin, LatLng dest) async =>
+      (await directionRouteDetailed(origin, dest)).points;
+}
+
+/// Kết quả Goong Direction: polyline + thời lượng/quãng đường tuyến.
+class RouteResult {
+  const RouteResult({
+    required this.points,
+    this.durationSeconds,
+    this.distanceMeters,
+  });
+
+  final List<LatLng> points;
+
+  /// Thời lượng tuyến (giây) — null nếu Goong không trả legs.
+  final int? durationSeconds;
+  final int? distanceMeters;
+
+  static const empty = RouteResult(points: []);
 }
