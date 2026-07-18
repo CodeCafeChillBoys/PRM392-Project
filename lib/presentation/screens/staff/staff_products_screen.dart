@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart' hide ShimmerEffect;
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/product.dart';
@@ -115,12 +118,12 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
           title: 'Quản lý sản phẩm',
           actions: [
             TvIconButton(
-              icon: const TvIcon('plus', color: AppColors.textAccent),
+              icon: TvIcon('plus', color: AppColors.textAccent),
               tooltip: 'Thêm sản phẩm',
               onPressed: _openAdd,
             ),
             TvIconButton(
-              icon: const TvIcon('log-out', color: AppColors.textAccent),
+              icon: TvIcon('log-out', color: AppColors.textAccent),
               tooltip: 'Đăng xuất',
               onPressed: _logout,
             ),
@@ -158,10 +161,34 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
     );
   }
 
+  /// Sản phẩm "ma" cho skeleton.
+  static const _ghost = Product(
+    id: 'ghost',
+    name: 'Sản phẩm đang tải về',
+    brand: 'TECHVOID',
+    categoryName: 'Đang tải',
+    price: 12000000,
+    stockQuantity: 5,
+    imageUrl: '',
+    description: '',
+  );
+
   Widget _list() {
     if (_loading) {
-      return const Center(
-          child: CircularProgressIndicator(color: AppColors.textAccent));
+      return Skeletonizer(
+        effect: ShimmerEffect(
+          baseColor: AppColors.skeletonBase,
+          highlightColor: AppColors.skeletonHighlight,
+        ),
+        child: ListView.separated(
+          padding: EdgeInsets.fromLTRB(
+              AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 6,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (_, _) => _productCard(_ghost),
+        ),
+      );
     }
     final items = _visible;
     return RefreshIndicator(
@@ -171,10 +198,22 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
       child: items.isEmpty
           ? _empty()
           : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+              key: ValueKey('$_category|$_query'),
+              padding: EdgeInsets.fromLTRB(
+                  AppSpacing.gutter, 14, AppSpacing.gutter, 24),
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (_, i) => _productCard(items[i]),
+              itemBuilder: (_, i) => _productCard(items[i])
+                  .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
+                  .fadeIn(
+                      duration: AppEffects.durEnter,
+                      curve: AppEffects.easeStandard)
+                  .moveY(
+                    begin: AppEffects.entranceRise,
+                    end: 0,
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  ),
             ),
     );
   }
@@ -184,7 +223,7 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
     return ListView(
       children: [
         const SizedBox(height: 120),
-        const Center(
+        Center(
             child: TvIcon('package', size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(
@@ -211,7 +250,7 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
                 width: 56,
                 height: 56,
                 child: ColoredBox(
-                  color: Colors.black,
+                  color: AppColors.ink900,
                   child: ProductImage(url: p.imageUrl, dimmed: p.isSoldOut),
                 ),
               ),
@@ -281,7 +320,7 @@ class _CategoryChip extends StatelessWidget {
             color: selected ? AppColors.accent : AppColors.borderDefault,
             width: selected ? 1.5 : 1,
           ),
-          boxShadow: selected ? AppEffects.glowCyanSm : null,
+          boxShadow: selected ? AppEffects.glowAccentSm : null,
         ),
         child: Text(
           label,

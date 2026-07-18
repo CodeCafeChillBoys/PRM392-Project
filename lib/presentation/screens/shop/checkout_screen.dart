@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/config/goong_config.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/place_suggestion.dart';
@@ -16,7 +18,6 @@ import '../../../data/services/goong_service.dart';
 import '../../../data/services/mock_data.dart';
 import '../../../data/services/order_service.dart';
 import '../../../data/services/shipping_service.dart';
-import '../../state/app_nav.dart';
 import '../../state/cart_controller.dart';
 import '../../widgets/widgets.dart';
 import 'payment_result_screen.dart';
@@ -215,14 +216,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-              children: [
+              padding: EdgeInsets.fromLTRB(
+                  AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+              // Các section vào màn theo stagger — logic Goong/map giữ nguyên.
+              children: <Widget>[
                 _addressSection(),
-                const SizedBox(height: 22),
+                const SizedBox(height: 26),
                 _paymentSection(),
-                const SizedBox(height: 22),
+                const SizedBox(height: 26),
                 _invoiceCard(),
-                const SizedBox(height: 22),
+                const SizedBox(height: 26),
                 TvButton(
                   label: isVNPay ? 'Thanh toán qua VNPay' : 'Xác nhận đặt hàng',
                   size: TvButtonSize.lg,
@@ -233,23 +236,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       : null,
                   onPressed: _confirm,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
+                // Trust line — giọng "tech data" JetBrains Mono.
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const TvIcon(
-                      'shield-check',
-                      size: 13,
+                    TvIcon(
+                      'lock',
+                      size: 12,
                       color: AppColors.textTertiary,
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Thanh toán an toàn với mã hóa AES-256',
-                      style: AppText.xs(AppColors.textTertiary),
+                      'AES-256 ENCRYPTED CHECKOUT',
+                      style: AppText.mono(
+                        size: 10.5,
+                        color: AppColors.textTertiary,
+                      ).copyWith(letterSpacing: 1.2),
                     ),
                   ],
                 ),
-              ],
+              ]
+                  .animate(interval: AppEffects.staggerStep)
+                  .fadeIn(
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  )
+                  .moveY(
+                    begin: AppEffects.entranceRise,
+                    end: 0,
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  ),
             ),
           ),
         ],
@@ -286,7 +304,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           hintText: 'Nhập địa chỉ nhận hàng...',
           onChanged: _onAddressChanged,
           trailing: _searching
-              ? const SizedBox(
+              ? SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
@@ -301,7 +319,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              const SizedBox(
+              SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
@@ -333,7 +351,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         children: [
           for (var i = 0; i < _suggestions.length; i++) ...[
             if (i > 0)
-              const Divider(height: 1, color: AppColors.borderSubtle),
+              Divider(height: 1, color: AppColors.borderSubtle),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => _selectPlace(_suggestions[i]),
@@ -342,7 +360,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 child: Row(
                   children: [
-                    const TvIcon('map-pin',
+                    TvIcon('map-pin',
                         size: 16, color: AppColors.textTertiary),
                     const SizedBox(width: 10),
                     Expanded(
@@ -365,8 +383,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _mapPreview() {
     final route = _quote?.decodedRoute() ?? const <LatLng>[];
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: SizedBox(
         height: 190,
         child: FlutterMap(
@@ -381,10 +403,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           children: [
-            TileLayer(
-              urlTemplate: GoongConfig.osmTileUrl,
-              userAgentPackageName: 'com.techstore.tech_void',
-            ),
+            const TvMapTiles(),
             if (route.isNotEmpty)
               PolylineLayer(
                 polylines: [
@@ -435,18 +454,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _infoChip(String icon, String text) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: AppColors.bgElevated,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.borderDefault),
+          color: AppColors.goldSoft,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: AppColors.goldSoftLine),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             TvIcon(icon, size: 14, color: AppColors.textAccent),
             const SizedBox(width: 6),
-            Text(text, style: AppText.sm()),
+            Text(text, style: AppText.sm(AppColors.textPrimary)),
           ],
         ),
       );
@@ -491,7 +510,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 12),
           TvSummaryRow(label: 'Tiền hàng', value: formatVnd(widget.total)),
           TvSummaryRow(label: 'Phí vận chuyển', value: feeText),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 14),
             child: Divider(height: 1, color: AppColors.borderSubtle),
           ),

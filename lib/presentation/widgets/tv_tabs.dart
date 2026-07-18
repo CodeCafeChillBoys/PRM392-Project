@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_effects.dart';
@@ -12,7 +13,10 @@ class TvTab {
 }
 
 /// Underline tabs (product detail "Mô tả / Đánh giá", notifications
-/// "KHUYẾN MÃI / ĐƠN HÀNG"). The active tab is cyan with a glowing underline.
+/// "KHUYẾN MÃI / ĐƠN HÀNG").
+///
+/// VOID LUXE: underline gold "vẽ vào" từ giữa (scaleX, easeEmphasized),
+/// label crossfade màu/đậm, haptic selection khi chuyển tab.
 /// Mirrors `components/navigation/Tabs.jsx`.
 class TvTabs extends StatelessWidget {
   const TvTabs({
@@ -38,12 +42,16 @@ class TvTabs extends StatelessWidget {
         _TabButton(
           tab: t,
           selected: t.value == value,
-          onTap: () => onChanged?.call(t.value),
+          onTap: () {
+            if (t.value == value) return;
+            HapticFeedback.selectionClick();
+            onChanged?.call(t.value);
+          },
         ),
     ];
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
       ),
       child: Row(
@@ -79,33 +87,42 @@ class _TabButton extends StatelessWidget {
       onTap: onTap,
       child: IntrinsicWidth(
         child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 10, bottom: 10),
-            child: Text(
-              tab.label,
-              textAlign: TextAlign.center,
-              style: AppText.body(
-                selected ? AppColors.textAccent : AppColors.textSecondary,
-              ).copyWith(
-                fontSize: 14,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                letterSpacing: isUpper ? 1.12 : 0,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10),
+              child: AnimatedDefaultTextStyle(
+                duration: AppEffects.durBase,
+                curve: AppEffects.easeStandard,
+                style: AppText.body(
+                  selected ? AppColors.textAccent : AppColors.textSecondary,
+                ).copyWith(
+                  fontSize: 14,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  letterSpacing: isUpper ? 1.12 : 0,
+                ),
+                child: Text(tab.label, textAlign: TextAlign.center),
               ),
             ),
-          ),
-          Container(
-            height: 2,
-            decoration: BoxDecoration(
-              color: selected ? AppColors.accent : Colors.transparent,
-              borderRadius: BorderRadius.circular(2),
-              boxShadow: selected ? AppEffects.glowCyanSm : null,
+            // Underline "vẽ vào" từ giữa khi chọn — nảy nhẹ easeEmphasized.
+            AnimatedScale(
+              scale: selected ? 1 : 0,
+              alignment: Alignment.center,
+              duration: AppEffects.durSlow,
+              curve: AppEffects.easeEmphasized,
+              child: Container(
+                height: 2,
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(2),
+                  boxShadow: AppEffects.glowAccentSm,
+                ),
+              ),
             ),
-          ),
-        ],
-      )),
+          ],
+        ),
+      ),
     );
   }
 }

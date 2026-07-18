@@ -1,13 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart' hide ShimmerEffect;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
-import '../../../core/config/goong_config.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
+import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/order_model.dart';
@@ -15,6 +19,7 @@ import '../../../data/models/order_status.dart';
 import '../../../data/services/api_client.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/order_service.dart';
+import '../../state/theme_controller.dart';
 import '../../widgets/widgets.dart';
 import '../auth/login_screen.dart';
 
@@ -239,12 +244,12 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
                 style: AppText.h3().copyWith(fontSize: 15)),
             const SizedBox(height: 6),
             ListTile(
-              leading: const TvIcon('camera', color: AppColors.textAccent),
+              leading: TvIcon('camera', color: AppColors.textAccent),
               title: Text('Chụp ảnh', style: AppText.body()),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
             ListTile(
-              leading: const TvIcon('image', color: AppColors.textAccent),
+              leading: TvIcon('image', color: AppColors.textAccent),
               title: Text('Chọn từ thư viện', style: AppText.body()),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
@@ -282,8 +287,15 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
           mode: TvAppBarMode.page,
           title: 'Quản lý giao hàng',
           actions: [
+            // Toggle theme light/dark cho khu staff (khách toggle ở Cá nhân).
             TvIconButton(
-              icon: const TvIcon('log-out', color: AppColors.textAccent),
+              icon: TvIcon(AppColors.isLight ? 'moon' : 'sun',
+                  color: AppColors.textAccent),
+              tooltip: 'Đổi giao diện',
+              onPressed: () => context.read<ThemeController>().toggle(),
+            ),
+            TvIconButton(
+              icon: TvIcon('log-out', color: AppColors.textAccent),
               tooltip: 'Đăng xuất',
               onPressed: _logout,
             ),
@@ -304,10 +316,37 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     );
   }
 
+  /// Đơn "ma" cho skeleton.
+  static final _ghost = OrderModel(
+    id: 'ghost0000',
+    customerName: 'Đang tải',
+    shippingAddress: 'Đang tải địa chỉ giao hàng của đơn này',
+    totalAmount: 12000000,
+    status: 'Pending',
+    paymentMethod: 'COD',
+    paymentStatus: 'Pending',
+    orderDate: DateTime.now().toIso8601String(),
+    shippingFee: 15000,
+    staffId: '',
+    itemCount: 1,
+  );
+
   Widget _list() {
     if (_loading) {
-      return const Center(
-          child: CircularProgressIndicator(color: AppColors.textAccent));
+      return Skeletonizer(
+        effect: ShimmerEffect(
+          baseColor: AppColors.skeletonBase,
+          highlightColor: AppColors.skeletonHighlight,
+        ),
+        child: ListView.separated(
+          padding: EdgeInsets.fromLTRB(
+              AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 4,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (_, _) => _orderCard(_ghost),
+        ),
+      );
     }
     final items = _visible;
     return RefreshIndicator(
@@ -317,10 +356,23 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
       child: items.isEmpty
           ? _empty()
           : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+              // Key theo tab → đổi bộ lọc là stagger chạy lại.
+              key: ValueKey(_tab),
+              padding: EdgeInsets.fromLTRB(
+                  AppSpacing.gutter, 14, AppSpacing.gutter, 24),
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (_, i) => _orderCard(items[i]),
+              itemBuilder: (_, i) => _orderCard(items[i])
+                  .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
+                  .fadeIn(
+                      duration: AppEffects.durEnter,
+                      curve: AppEffects.easeStandard)
+                  .moveY(
+                    begin: AppEffects.entranceRise,
+                    end: 0,
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  ),
             ),
     );
   }
@@ -329,7 +381,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     return ListView(
       children: [
         const SizedBox(height: 120),
-        const Center(
+        Center(
             child: TvIcon('inbox', size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(
@@ -505,10 +557,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
                 const InteractionOptions(flags: InteractiveFlag.none),
           ),
           children: [
-            TileLayer(
-              urlTemplate: GoongConfig.osmTileUrl,
-              userAgentPackageName: 'com.techstore.tech_void',
-            ),
+            const TvMapTiles(),
             if (pos != null)
               MarkerLayer(
                 markers: [

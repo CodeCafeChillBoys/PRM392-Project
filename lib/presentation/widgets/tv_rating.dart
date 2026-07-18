@@ -24,7 +24,7 @@ class TvRating extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.star_rounded, color: AppColors.gold500, size: size + 3),
+        Icon(Icons.star_rounded, color: AppColors.star500, size: size + 3),
         const SizedBox(width: 4),
         Text(
           '$value${showScale ? '/$scale' : ''}',

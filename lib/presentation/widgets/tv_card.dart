@@ -32,7 +32,7 @@ class TvCard extends StatelessWidget {
         border: Border.all(
           color: accent ? AppColors.accentSoftLine : AppColors.borderSubtle,
         ),
-        boxShadow: glow ? AppEffects.glowCyanSm : AppEffects.shadowSm,
+        boxShadow: glow ? AppEffects.glowAccentSm : AppEffects.shadowSm,
       ),
       child: child,
     );

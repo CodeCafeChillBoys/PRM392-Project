@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/services/api_client.dart';
 import '../../../data/services/auth_service.dart';
+import '../../state/theme_controller.dart';
 import '../../widgets/widgets.dart';
 import '../auth/login_screen.dart';
 import 'my_orders_screen.dart';
@@ -51,6 +53,8 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
+              _themeTile(context),
+              const SizedBox(height: 12),
               _menuTile(
                 icon: 'log-out',
                 label: 'Đăng xuất',
@@ -75,9 +79,9 @@ class ProfileScreen extends StatelessWidget {
             shape: BoxShape.circle,
             color: AppColors.accentSoft,
             border: Border.all(color: AppColors.accentSoftLine),
-            boxShadow: AppEffects.glowCyanSm,
+            boxShadow: AppEffects.glowAccentSm,
           ),
-          child: const TvIcon('user', size: 34, color: AppColors.textAccent),
+          child: TvIcon('user', size: 34, color: AppColors.textAccent),
         ),
         const SizedBox(height: 14),
         Text(name, style: AppText.h2()),
@@ -88,6 +92,72 @@ class ProfileScreen extends StatelessWidget {
                   AppText.body(AppColors.textSecondary).copyWith(fontSize: 13)),
         ],
       ],
+    );
+  }
+
+  /// Tile chuyển giao diện Sáng/Tối — VOID PAPER (light) / VOID LUXE (dark).
+  Widget _themeTile(BuildContext context) {
+    final theme = context.watch<ThemeController>();
+    final isLight = theme.isLight;
+    return PressableScale(
+      onTap: theme.toggle,
+      haptic: PressHaptic.selection,
+      child: TvCard(
+        padding: 16,
+        child: Row(
+          children: [
+            TvIcon(isLight ? 'sun' : 'moon',
+                size: 20, color: AppColors.textAccent),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Giao diện ${isLight ? 'Sáng' : 'Tối'}',
+                    style: AppText.body().copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isLight ? 'VOID PAPER · chạm để về Tối' : 'VOID LUXE · chạm để sang Sáng',
+                    style: AppText.xs(AppColors.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+            // Công tắc mini theo phong cách app: pill + chấm trượt.
+            AnimatedContainer(
+              duration: AppEffects.durBase,
+              curve: AppEffects.easeStandard,
+              width: 44,
+              height: 26,
+              padding: const EdgeInsets.all(3),
+              alignment:
+                  isLight ? Alignment.centerRight : Alignment.centerLeft,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: isLight ? AppColors.accentSoft : AppColors.bgOverlay,
+                border: Border.all(
+                  color: isLight
+                      ? AppColors.accentSoftLine
+                      : AppColors.borderDefault,
+                ),
+              ),
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isLight ? AppColors.accent : AppColors.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -117,7 +187,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             if (!danger)
-              const TvIcon('chevron-right',
+              TvIcon('chevron-right',
                   size: 20, color: AppColors.textTertiary),
           ],
         ),

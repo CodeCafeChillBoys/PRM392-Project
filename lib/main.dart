@@ -10,8 +10,10 @@ import 'presentation/screens/auth/login_screen.dart';
 import 'presentation/state/app_nav.dart';
 import 'presentation/state/cart_controller.dart';
 import 'presentation/state/catalog_controller.dart';
+import 'presentation/state/theme_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'data/services/local_notification_service.dart';
+import 'data/services/recently_viewed_service.dart';
 import 'presentation/screens/shop/payment_result_screen.dart';
 
 void main() async {
@@ -24,6 +26,9 @@ void main() async {
     debugPrint('Local Notification initialization failed: $e');
   }
 
+  // Nạp danh sách "vừa xem" (local) trước khi dựng Home.
+  await RecentlyViewedService.instance.load();
+
   // Light status-bar icons on the near-black canvas.
   try {
     await Firebase.initializeApp();
@@ -31,11 +36,13 @@ void main() async {
     debugPrint('Firebase initialization failed: $e');
     debugPrint('Please configure Firebase or add google-services.json if you want to use Firebase features.');
   }
+  // Mặc định LIGHT (VOID PAPER) → icon status bar tối trên nền giấy sáng.
+  // ThemeController tự cập nhật lại khi người dùng đổi theme/khôi phục pref.
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.light,
     ),
   );
   runApp(const TechVoidApp());
@@ -119,13 +126,23 @@ class _TechVoidAppState extends State<TechVoidApp> {
         ChangeNotifierProvider(create: (_) => CartController()),
         ChangeNotifierProvider(create: (_) => CatalogController()),
         ChangeNotifierProvider(create: (_) => AppNav()),
+        ChangeNotifierProvider(create: (_) => ThemeController()),
       ],
-      child: MaterialApp(
+      // Watch ThemeController để MaterialApp (theme, letterbox) rebuild khi
+      // đổi VOID LUXE (dark) ↔ VOID PAPER (light).
+      child: Builder(builder: (context) {
+        context.watch<ThemeController>();
+        return MaterialApp(
         title: 'TECH_VOID',
         navigatorKey: _navigatorKey,
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark(),
-        home: const LoginScreen(),
+        theme: AppTheme.current(),
+        // Key theo theme: LoginScreen là const nên không tự rebuild khi
+        // ThemeController notify (vd pref light nạp xong sau khi màn đã dựng).
+        home: KeyedSubtree(
+          key: ValueKey('home-${AppColors.isLight}'),
+          child: const LoginScreen(),
+        ),
         onGenerateRoute: (settings) {
           final name = settings.name;
           if (name == null) return null;
@@ -153,7 +170,10 @@ class _TechVoidAppState extends State<TechVoidApp> {
         // Keep the layout phone-shaped (max 430px) and centered on wide screens
         // (web/desktop), matching the design's mobile canvas.
         builder: (context, child) => ColoredBox(
-          color: const Color(0xFF060608),
+          // Letterbox theo theme: void-black (dark) / giấy sẫm nhẹ (light).
+          color: AppColors.isLight
+              ? const Color(0xFFEDE8DF)
+              : const Color(0xFF030303),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(
@@ -166,7 +186,8 @@ class _TechVoidAppState extends State<TechVoidApp> {
             ),
           ),
         ),
-      ),
+        );
+      }),
     );
   }
 }

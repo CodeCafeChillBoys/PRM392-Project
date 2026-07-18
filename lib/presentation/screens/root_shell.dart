@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../state/app_nav.dart';
 import '../state/cart_controller.dart';
+import '../state/theme_controller.dart';
 import '../widgets/widgets.dart';
 import 'profile/profile_screen.dart';
 import 'shop/cart_screen.dart';
@@ -26,11 +27,16 @@ class RootShell extends StatefulWidget {
 }
 
 class _RootShellState extends State<RootShell> {
-  static const _navItems = [
-    TvNavItem(label: 'Explore', iconName: 'compass'),
-    TvNavItem(label: 'Search', iconName: 'search'),
-    TvNavItem(label: 'Cart', iconName: 'shopping-bag'),
-    TvNavItem(label: 'Profile', iconName: 'user'),
+  // Label tiếng Việt — đồng bộ ngôn ngữ với toàn app (hết lai tiếng Anh).
+  static final _navItems = [
+    const TvNavItem(label: 'Khám phá', iconName: 'compass'),
+    const TvNavItem(label: 'Tìm kiếm', iconName: 'search'),
+    // Icon giỏ = đích của hiệu ứng bay vào giỏ (bottom nav chỉ có 1 trong shell).
+    TvNavItem(
+        label: 'Giỏ hàng',
+        iconName: 'shopping-bag',
+        iconKey: FlyToCart.cartIconKey),
+    const TvNavItem(label: 'Cá nhân', iconName: 'user'),
   ];
 
   @override
@@ -47,11 +53,18 @@ class _RootShellState extends State<RootShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch theme để toàn shell (tabs đang hiển thị) vẽ lại khi đổi light/dark.
+    context.watch<ThemeController>();
     final index = context.watch<AppNav>().tabIndex;
     return Scaffold(
       backgroundColor: AppColors.bgBase,
+      // extendBody để nội dung cuộn lộ sau bottom nav glass (BackdropFilter).
+      extendBody: true,
       body: DotGridBackground(
         child: IndexedStack(
+          // Key theo theme: các tab là const instance nên sẽ không tự rebuild
+          // khi đổi light/dark — đổi key để remount với palette mới.
+          key: ValueKey('tabs-${AppColors.isLight}'),
           index: index,
           children: const [
             ProductListScreen(),

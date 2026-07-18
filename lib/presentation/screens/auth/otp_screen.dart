@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
@@ -122,7 +123,9 @@ class _OtpScreenState extends State<OtpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 12),
-                  Text('Nhập mã OTP', style: AppText.h1()),
+                  Text('Nhập mã OTP', style: AppText.h1()).animate().fadeIn(
+                      duration: AppEffects.durEnter,
+                      curve: AppEffects.easeStandard),
                   const SizedBox(height: 8),
                   Text.rich(
                     TextSpan(
@@ -142,14 +145,37 @@ class _OtpScreenState extends State<OtpScreen> {
                         ),
                       ],
                     ),
-                  ),
+                  )
+                      .animate(delay: AppEffects.staggerStep)
+                      .fadeIn(duration: AppEffects.durEnter)
+                      .moveY(
+                          begin: AppEffects.entranceRise,
+                          end: 0,
+                          curve: AppEffects.easeStandard),
                   const SizedBox(height: 28),
+                  // 6 ô OTP nảy vào lần lượt — nhịp gõ mã.
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [for (var i = 0; i < _otpLength; i++) _otpBox(i)],
+                    children: [
+                      for (var i = 0; i < _otpLength; i++)
+                        _otpBox(i)
+                            .animate(
+                              delay: AppEffects.staggerStep * (2 + i),
+                            )
+                            .fadeIn(duration: AppEffects.durBase)
+                            .scaleXY(
+                              begin: 0.8,
+                              end: 1,
+                              duration: AppEffects.durEnter,
+                              curve: AppEffects.easeEmphasized,
+                            ),
+                    ],
                   ),
                   const SizedBox(height: 22),
-                  Center(child: _resend()),
+                  Center(child: _resend())
+                      .animate(delay: AppEffects.staggerStep * 8)
+                      .fadeIn(duration: AppEffects.durEnter),
+                  // Spacer PHẢI là con trực tiếp của Column (không bọc animate).
                   const Spacer(),
                   TvButton(
                     label: 'Xác nhận',
@@ -185,7 +211,7 @@ class _OtpScreenState extends State<OtpScreen> {
               color: hasValue ? AppColors.accent : AppColors.borderDefault,
               width: hasValue ? 1.5 : 1,
             ),
-            boxShadow: hasValue ? AppEffects.glowCyanSm : null,
+            boxShadow: hasValue ? AppEffects.glowAccentSm : null,
           ),
           child: TextField(
             controller: _controllers[index],

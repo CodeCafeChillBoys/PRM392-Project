@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:tech_void/data/helpers/auth_helper.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/local_notification_service.dart';
@@ -9,8 +11,9 @@ import '../../widgets/widgets.dart';
 import 'method_screen.dart';
 import 'register_screen.dart';
 
-/// Login — email + password (with eye toggle), gradient CTA with a loading
-/// spinner, and a register link. Mirrors `LoginScreen.jsx`.
+/// Login — VOID LUXE: hero glow gold "thở" chậm, lockup + form vào màn theo
+/// nhịp stagger (fade + rise 24px), CTA champagne có vệt sheen quét định kỳ.
+/// Mirrors `LoginScreen.jsx`.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -114,155 +117,167 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.bgBase,
-          gradient: RadialGradient(
-            center: Alignment(0, -1),
-            radius: 1.1,
-            colors: [Color(0x1A00F0FF), Colors.transparent],
-            stops: [0, 0.6],
+    // Các khối nội dung vào màn theo nhịp stagger 60ms (fade + rise 24px).
+    final content = <Widget>[
+      const SizedBox(height: 64),
+      Text('PREMIUM TECH', style: AppText.label(AppColors.gold700)),
+      const SizedBox(height: 14),
+      const TvLogo(size: TvLogoSize.lg),
+      const SizedBox(height: 22),
+      Text(
+        'Cửa hàng công nghệ tương lai.\nĐăng nhập để khám phá ưu đãi độc quyền.',
+        textAlign: TextAlign.center,
+        style: AppText.body(AppColors.textSecondary).copyWith(fontSize: 14),
+      ),
+      const SizedBox(height: 44),
+      const _FieldLabel('Email'),
+      TvInput(
+        controller: _email,
+        leading: const TvIcon('mail'),
+        hintText: 'email@techstore.vn',
+        keyboardType: TextInputType.emailAddress,
+      ),
+      const SizedBox(height: 16),
+      const _FieldLabel('Mật khẩu'),
+      TvInput(
+        controller: _password,
+        leading: const TvIcon('lock'),
+        hintText: '••••••••',
+        obscureText: !_showPassword,
+        trailing: GestureDetector(
+          onTap: () => setState(() => _showPassword = !_showPassword),
+          child: TvIcon(
+            _showPassword ? 'eye-off' : 'eye',
+            color: AppColors.textTertiary,
           ),
         ),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 60),
-                        Transform.scale(
-                          scale: 1.4,
-                          child: const TvLogo(size: TvLogoSize.lg),
-                        ),
-                        const SizedBox(height: 26),
-                        Text(
-                          'Cửa hàng công nghệ tương lai.\nĐăng nhập để khám phá ưu đãi độc quyền.',
-                          textAlign: TextAlign.center,
-                          style: AppText.body(
-                            AppColors.textSecondary,
-                          ).copyWith(fontSize: 14),
-                        ),
-                        const SizedBox(height: 40),
-                        const _FieldLabel('Email'),
-                        TvInput(
-                          controller: _email,
-                          leading: const TvIcon('mail'),
-                          hintText: 'email@techstore.vn',
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: 16),
-                        const _FieldLabel('Mật khẩu'),
-                        TvInput(
-                          controller: _password,
-                          leading: const TvIcon('lock'),
-                          hintText: '••••••••',
-                          obscureText: !_showPassword,
-                          trailing: GestureDetector(
-                            onTap: () =>
-                                setState(() => _showPassword = !_showPassword),
-                            child: TvIcon(
-                              _showPassword ? 'eye-off' : 'eye',
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: GestureDetector(
-                            onTap: () => TvToast.show(
-                              context,
-                              'Tính năng đặt lại mật khẩu đang được phát triển',
-                            ),
-                            child: Text(
-                              'Quên mật khẩu?',
-                              style: AppText.sm(AppColors.textAccent),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        TvButton(
-                          label: 'Đăng nhập',
-                          size: TvButtonSize.lg,
-                          fullWidth: true,
-                          loading: _loading,
-                          trailingIcon: const TvIcon('arrow-right', size: 18),
-                          onPressed: _submit,
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: Divider(color: AppColors.borderSubtle),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+      ),
+      const SizedBox(height: 10),
+      Align(
+        alignment: Alignment.centerRight,
+        child: GestureDetector(
+          onTap: () => TvToast.show(
+            context,
+            'Tính năng đặt lại mật khẩu đang được phát triển',
+          ),
+          child: Text('Quên mật khẩu?', style: AppText.sm(AppColors.textAccent)),
+        ),
+      ),
+      const SizedBox(height: 24),
+      // CTA champagne + vệt sheen quét qua mỗi ~6.5s (ánh kim loại chải).
+      TvButton(
+        label: 'Đăng nhập',
+        size: TvButtonSize.lg,
+        fullWidth: true,
+        loading: _loading,
+        trailingIcon: const TvIcon('arrow-right', size: 18),
+        onPressed: _submit,
+      )
+          .animate(onPlay: (c) => c.repeat())
+          .shimmer(
+            delay: 4700.ms,
+            duration: 1800.ms,
+            color: const Color(0x33FFFFFF),
+          ),
+      const SizedBox(height: 20),
+      Row(
+        children: [
+          Expanded(child: Divider(color: AppColors.borderSubtle)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'HOẶC',
+              style: AppText.label().copyWith(color: AppColors.textTertiary),
+            ),
+          ),
+          Expanded(child: Divider(color: AppColors.borderSubtle)),
+        ],
+      ),
+      const SizedBox(height: 20),
+      TvButton(
+        label: 'Đăng nhập bằng Google',
+        variant: TvButtonVariant.ghost,
+        size: TvButtonSize.lg,
+        fullWidth: true,
+        loading: _googleLoading,
+        leadingIcon: Container(
+          width: 20,
+          height: 20,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: const Text(
+            'G',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              fontFamily: 'sans-serif',
+            ),
+          ),
+        ),
+        onPressed: _googleSubmit,
+      ),
+    ];
+
+    return Scaffold(
+      backgroundColor: AppColors.bgBase,
+      body: Stack(
+        children: [
+          // Hero glow gold "thở" chậm (opacity 0.55 <-> 1.0, chu kỳ 4s) — một
+          // controller lặp duy nhất, rẻ về hiệu năng.
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(gradient: AppColors.heroGlow),
+            )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .fade(begin: 0.55, end: 1.0, duration: 4.seconds),
+          ),
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints:
+                      BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        children: [
+                          ...content
+                              .animate(interval: AppEffects.staggerStep)
+                              .fadeIn(
+                                duration: AppEffects.durEnter,
+                                curve: AppEffects.easeStandard,
+                              )
+                              .moveY(
+                                begin: AppEffects.entranceRise,
+                                end: 0,
+                                duration: AppEffects.durEnter,
+                                curve: AppEffects.easeStandard,
                               ),
-                              child: Text(
-                                'HOẶC',
-                                style: AppText.label().copyWith(
-                                  color: AppColors.textTertiary,
+                          const Spacer(),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            child: _RegisterPrompt(
+                              onRegister: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const RegisterScreen(),
                                 ),
                               ),
                             ),
-                            const Expanded(
-                              child: Divider(color: AppColors.borderSubtle),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        TvButton(
-                          label: 'Đăng nhập bằng Google',
-                          variant: TvButtonVariant.ghost,
-                          size: TvButtonSize.lg,
-                          fullWidth: true,
-                          loading: _googleLoading,
-                          leadingIcon: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: const Text(
-                              'G',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                fontFamily: 'sans-serif',
-                              ),
-                            ),
                           ),
-                          onPressed: _googleSubmit,
-                        ),
-                        const Spacer(),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: _RegisterPrompt(
-                            onRegister: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const RegisterScreen(),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

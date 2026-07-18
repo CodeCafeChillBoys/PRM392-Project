@@ -36,7 +36,7 @@ class StaffProductDetailScreen extends StatelessWidget {
                     child: AspectRatio(
                       aspectRatio: 1,
                       child: ColoredBox(
-                        color: Colors.black,
+                        color: AppColors.ink900,
                         child: ProductImage(
                           url: product.heroImageUrl,
                           dimmed: product.isSoldOut,

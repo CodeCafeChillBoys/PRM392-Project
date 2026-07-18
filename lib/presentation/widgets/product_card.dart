@@ -2,17 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_effects.dart';
+import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../data/models/product.dart';
+import 'fly_to_cart.dart';
+import 'pressable.dart';
 import 'product_image.dart';
 import 'tv_badge.dart';
 import 'tv_icon_button.dart';
 import 'tv_price.dart';
 
-/// Product grid card — image, sold-out badge, brand, title, price, and a cyan
-/// (+) add-to-cart tile overlapping the price row.
+/// Product grid card — VOID LUXE editorial: ảnh trên tile ink900, eyebrow
+/// brand tracking rộng, tên bodyStrong (không hét), giá gold, hairline subtle.
+/// Nút (+) ghost tinh tế thay tile accent chói thời neon. Cả card có
+/// press-scale + haptic.
 /// Mirrors `components/data/ProductCard.jsx`.
-class ProductCard extends StatelessWidget {
+class ProductCard extends StatefulWidget {
   const ProductCard({
     super.key,
     required this.product,
@@ -25,38 +30,62 @@ class ProductCard extends StatelessWidget {
   final VoidCallback? onAdd;
 
   @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  /// Điểm XUẤT PHÁT của hiệu ứng bay vào giỏ (ô ảnh của chính card này).
+  final _imageKey = GlobalKey();
+
+  void _handleAdd() {
+    FlyToCart.launch(
+      context: context,
+      sourceKey: _imageKey,
+      imageUrl: widget.product.imageUrl,
+    );
+    widget.onAdd?.call();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
+    final onTap = widget.onTap;
+    final onAdd = widget.onAdd;
     final soldOut = product.isSoldOut;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return PressableScale(
       onTap: onTap,
+      scale: 0.98,
+      pressedOpacity: 0.92,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           border: Border.all(color: AppColors.borderSubtle),
           boxShadow: AppEffects.shadowSm,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               AspectRatio(
+                key: _imageKey, // nguồn của hiệu ứng bay vào giỏ
                 aspectRatio: 1,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
                     ColoredBox(
-                      color: Colors.black,
-                      child: ProductImage(url: product.imageUrl, dimmed: soldOut),
+                      color: AppColors.ink900,
+                      child:
+                          ProductImage(url: product.imageUrl, dimmed: soldOut),
                     ),
                     if (soldOut)
                       const Positioned(
                         top: 8,
                         left: 8,
-                        child: TvBadge('Hết hàng', variant: TvBadgeVariant.neutral),
+                        child:
+                            TvBadge('Hết hàng', variant: TvBadgeVariant.neutral),
                       ),
                   ],
                 ),
@@ -75,15 +104,14 @@ class ProductCard extends StatelessWidget {
                           style: AppText.label(AppColors.textTertiary)
                               .copyWith(fontSize: 10),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 5),
                         Text(
                           product.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppText.body()
-                              .copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                          style: AppText.bodyStrong().copyWith(fontSize: 14),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 9),
                         Padding(
                           padding: const EdgeInsets.only(right: 40),
                           child: FittedBox(
@@ -100,13 +128,14 @@ class ProductCard extends StatelessWidget {
                       child: Opacity(
                         opacity: soldOut ? 0.5 : 1,
                         child: TvIconButton(
-                          variant: soldOut
-                              ? TvIconButtonVariant.elevated
-                              : TvIconButtonVariant.accent,
+                          variant: TvIconButtonVariant.elevated,
                           enabled: !soldOut,
-                          onPressed: soldOut ? null : onAdd,
+                          // Bay vào giỏ rồi mới thêm thật (hiệu ứng không chặn).
+                          onPressed:
+                              soldOut || onAdd == null ? null : _handleAdd,
                           tooltip: 'Thêm vào giỏ',
-                          icon: const Icon(Icons.add, size: 22),
+                          icon: const Icon(Icons.add,
+                              size: 20, color: AppColors.gold400),
                         ),
                       ),
                     ),

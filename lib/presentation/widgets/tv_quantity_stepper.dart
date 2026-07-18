@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_effects.dart';
 import '../../core/theme/app_typography.dart';
+import 'pressable.dart';
 
 /// Quantity stepper — minus / value / plus, as seen on cart line items and
-/// the product detail screen. Mirrors `components/forms/QuantityStepper.jsx`.
+/// the product detail screen.
+///
+/// VOID LUXE: nút có press-scale + haptic selection; con số đổi bằng
+/// AnimatedSwitcher trượt dọc (tăng trượt lên, giảm trượt xuống).
+/// Mirrors `components/forms/QuantityStepper.jsx`.
 class TvQuantityStepper extends StatelessWidget {
   const TvQuantityStepper({
     super.key,
@@ -33,10 +39,29 @@ class TvQuantityStepper extends StatelessWidget {
         const SizedBox(width: 10),
         SizedBox(
           width: 22,
-          child: Text(
-            '$value',
-            textAlign: TextAlign.center,
-            style: AppText.mono(size: 15),
+          height: 22,
+          child: ClipRect(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 150),
+              switchInCurve: AppEffects.easeStandard,
+              switchOutCurve: AppEffects.easeStandard,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.5),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: Text(
+                '$value',
+                key: ValueKey(value),
+                textAlign: TextAlign.center,
+                style: AppText.mono(size: 15),
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 10),
@@ -54,8 +79,9 @@ class _StepButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return PressableScale(
+      scale: 0.88,
+      haptic: PressHaptic.selection,
       onTap: onTap,
       child: Container(
         width: 30,

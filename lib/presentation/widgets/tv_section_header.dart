@@ -24,7 +24,7 @@ class TvSectionHeader extends StatelessWidget {
       children: [
         if (icon != null) ...[
           IconTheme.merge(
-            data: const IconThemeData(color: AppColors.textAccent, size: 18),
+            data: IconThemeData(color: AppColors.textAccent, size: 18),
             child: icon!,
           ),
           const SizedBox(width: 10),

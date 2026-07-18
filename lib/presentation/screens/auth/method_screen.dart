@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
@@ -76,7 +77,17 @@ class MethodScreen extends StatelessWidget {
                       OtpScreen(email: email, verifyToken: verifyToken),
                     ),
                   ),
-                ],
+                ]
+                    .animate(interval: AppEffects.staggerStep)
+                    .fadeIn(
+                        duration: AppEffects.durEnter,
+                        curve: AppEffects.easeStandard)
+                    .moveY(
+                      begin: AppEffects.entranceRise,
+                      end: 0,
+                      duration: AppEffects.durEnter,
+                      curve: AppEffects.easeStandard,
+                    ),
               ),
             ),
           ),
@@ -115,7 +126,7 @@ class _MethodCard extends StatelessWidget {
             color: primary ? AppColors.accent : AppColors.borderSubtle,
             width: primary ? 1.5 : 1,
           ),
-          boxShadow: primary ? AppEffects.glowCyanSm : AppEffects.shadowSm,
+          boxShadow: primary ? AppEffects.glowAccentSm : AppEffects.shadowSm,
         ),
         child: Row(
           children: [
@@ -126,7 +137,7 @@ class _MethodCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: primary ? AppColors.accent : AppColors.bgOverlay,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: primary ? AppEffects.glowCyanSm : null,
+                boxShadow: primary ? AppEffects.glowAccentSm : null,
               ),
               child: TvIcon(
                 iconName,
@@ -156,7 +167,7 @@ class _MethodCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const TvIcon(
+            TvIcon(
               'chevron-right',
               size: 20,
               color: AppColors.textTertiary,

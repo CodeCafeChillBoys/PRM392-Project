@@ -1,89 +1,114 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// Maps the design system's Lucide icon names to Flutter [IconData].
 ///
-/// The Stitch source uses Lucide line icons; Material's *_outlined glyphs are
-/// the closest always-available, offline-safe match. Centralising the mapping
-/// here means swapping to a real Lucide package later touches ONE file.
+/// VOID LUXE: dùng bộ Lucide THẬT (lucide_icons_flutter, icon-font stroke
+/// 1.5-2px) thay cho Material glyphs đội lốt — điểm "generic" lớn nhất của
+/// giao diện cũ. String keys giữ nguyên nên 0 call-site phải đổi.
 class AppIcons {
   AppIcons._();
 
   static const Map<String, IconData> _map = {
     // navigation / app bars
-    'compass': Icons.explore_outlined,
-    'search': Icons.search,
-    'shopping-bag': Icons.shopping_bag_outlined,
-    'shopping-cart': Icons.shopping_cart_outlined,
-    'user': Icons.person_outline,
-    'bell': Icons.notifications_none_rounded,
-    'arrow-left': Icons.arrow_back_rounded,
-    'arrow-right': Icons.arrow_forward_rounded,
-    'chevron-right': Icons.chevron_right_rounded,
-    'chevron-down': Icons.keyboard_arrow_down_rounded,
-    'plus': Icons.add_rounded,
-    'sliders-horizontal': Icons.tune_rounded,
+    'compass': LucideIcons.compass,
+    'search': LucideIcons.search,
+    'shopping-bag': LucideIcons.shoppingBag,
+    'shopping-cart': LucideIcons.shoppingCart,
+    'user': LucideIcons.user,
+    'bell': LucideIcons.bell,
+    'arrow-left': LucideIcons.arrowLeft,
+    'arrow-right': LucideIcons.arrowRight,
+    'chevron-right': LucideIcons.chevronRight,
+    'chevron-down': LucideIcons.chevronDown,
+    'plus': LucideIcons.plus,
+    'sliders-horizontal': LucideIcons.slidersHorizontal,
 
     // status / feedback
-    'check': Icons.check_rounded,
-    'check-check': Icons.done_all_rounded,
-    'check-circle': Icons.check_circle_outline_rounded,
-    'x-circle': Icons.highlight_off_rounded,
-    'shield-check': Icons.verified_user_outlined,
-    'message-circle': Icons.chat_bubble_outline_rounded,
+    'check': LucideIcons.check,
+    'check-check': LucideIcons.checkCheck,
+    'check-circle': LucideIcons.circleCheck,
+    'x-circle': LucideIcons.circleX,
+    'shield-check': LucideIcons.shieldCheck,
+    'message-circle': LucideIcons.messageCircle,
 
     // auth / forms
-    'mail': Icons.mail_outline_rounded,
-    'mail-check': Icons.mark_email_read_outlined,
-    'mail-open': Icons.drafts_outlined,
-    'lock': Icons.lock_outline_rounded,
-    'eye': Icons.visibility_outlined,
-    'eye-off': Icons.visibility_off_outlined,
-    'phone': Icons.phone_outlined,
-    'home': Icons.home_outlined,
-    'map-pin': Icons.location_on_outlined,
+    'mail': LucideIcons.mail,
+    'mail-check': LucideIcons.mailCheck,
+    'mail-open': LucideIcons.mailOpen,
+    'lock': LucideIcons.lock,
+    'eye': LucideIcons.eye,
+    'eye-off': LucideIcons.eyeOff,
+    'phone': LucideIcons.phone,
+    'home': LucideIcons.house,
+    'map-pin': LucideIcons.mapPin,
 
     // commerce
-    'trash-2': Icons.delete_outline_rounded,
-    'ticket-percent': Icons.confirmation_number_outlined,
-    'heart': Icons.favorite_border_rounded,
-    'star': Icons.star_rounded,
+    'trash-2': LucideIcons.trash2,
+    'ticket-percent': LucideIcons.ticketPercent,
+    'heart': LucideIcons.heart,
+    'star': LucideIcons.star,
 
     // shipping / payment
-    'truck': Icons.local_shipping_outlined,
-    'zap': Icons.bolt_rounded,
-    'clock': Icons.schedule_rounded,
-    'credit-card': Icons.credit_card_rounded,
-    'qr-code': Icons.qr_code_2_rounded,
-    'landmark': Icons.account_balance_outlined,
-    'banknote': Icons.payments_outlined,
-    'wallet': Icons.account_balance_wallet_outlined,
-    'external-link': Icons.open_in_new_rounded,
+    'truck': LucideIcons.truck,
+    'zap': LucideIcons.zap,
+    'sun': LucideIcons.sun, // toggle theme sáng
+    'moon': LucideIcons.moon, // toggle theme tối
+    // Category tiles (Home merchandising)
+    'cpu': LucideIcons.cpu,
+    'laptop': LucideIcons.laptop,
+    'smartphone': LucideIcons.smartphone,
+    'headphones': LucideIcons.headphones,
+    'monitor': LucideIcons.monitor,
+    'mouse': LucideIcons.mouse,
+    'keyboard': LucideIcons.keyboard,
+    'gamepad': LucideIcons.gamepad2,
+    'clock': LucideIcons.clock,
+    'credit-card': LucideIcons.creditCard,
+    'qr-code': LucideIcons.qrCode,
+    'landmark': LucideIcons.landmark,
+    'banknote': LucideIcons.banknote,
+    'wallet': LucideIcons.wallet,
+    'external-link': LucideIcons.externalLink,
 
     // promo / orders
-    'tag': Icons.sell_outlined,
-    'percent': Icons.percent_rounded,
-    'gift': Icons.card_giftcard_rounded,
-    'package-check': Icons.inventory_2_outlined,
-    'package': Icons.inventory_2_outlined,
-    'inbox': Icons.inbox_outlined,
-    'bar-chart': Icons.bar_chart_rounded,
-    'log-out': Icons.logout_rounded,
-    'camera': Icons.photo_camera_outlined,
-    'image': Icons.image_outlined,
+    'tag': LucideIcons.tag,
+    'percent': LucideIcons.percent,
+    'gift': LucideIcons.gift,
+    'package-check': LucideIcons.packageCheck,
+    'package': LucideIcons.package,
+    'inbox': LucideIcons.inbox,
+    'bar-chart': LucideIcons.chartBar,
+    'log-out': LucideIcons.logOut,
+    'camera': LucideIcons.camera,
+    'image': LucideIcons.image,
 
     // device status bar
-    'signal': Icons.signal_cellular_alt_rounded,
-    'wifi': Icons.wifi_rounded,
-    'battery-full': Icons.battery_full_rounded,
+    'signal': LucideIcons.signal,
+    'wifi': LucideIcons.wifi,
+    'battery-full': LucideIcons.batteryFull,
 
     // media / image upload
-    'edit': Icons.edit_outlined,
+    'edit': LucideIcons.squarePen,
 
     // chat AI
-    'bot': Icons.smart_toy_outlined,
-    'send': Icons.send_rounded,
+    'bot': LucideIcons.bot,
+    'send': LucideIcons.send,
+
+    // admin dashboard (khu quản trị & giám sát vận hành)
+    'layout-dashboard': LucideIcons.layoutDashboard,
+    'users': LucideIcons.users,
+    'activity': LucideIcons.activity,
+    'shield': LucideIcons.shield,
+    'shield-alert': LucideIcons.shieldAlert,
+    'trending-up': LucideIcons.trendingUp,
+    'monitor-smartphone': LucideIcons.monitorSmartphone,
+    'user-cog': LucideIcons.userCog,
+    'refresh-cw': LucideIcons.refreshCw,
+    'boxes': LucideIcons.boxes,
+    'circle-alert': LucideIcons.circleAlert,
   };
 
   /// Resolve a Lucide name to an [IconData], falling back to a neutral glyph.
-  static IconData get(String name) => _map[name] ?? Icons.circle_outlined;
+  static IconData get(String name) => _map[name] ?? LucideIcons.circle;
 }

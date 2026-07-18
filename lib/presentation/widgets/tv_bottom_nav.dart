@@ -1,4 +1,7 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_effects.dart';
@@ -8,13 +11,21 @@ import 'tv_icon.dart';
 
 /// One entry in the [TvBottomNav].
 class TvNavItem {
-  const TvNavItem({required this.label, required this.iconName});
+  const TvNavItem({required this.label, required this.iconName, this.iconKey});
   final String label;
   final String iconName;
+
+  /// Key gắn vào ô icon — dùng làm ĐÍCH cho hiệu ứng bay vào giỏ
+  /// ([FlyToCart.cartIconKey]). Bottom nav chỉ tồn tại 1 lần trong shell nên
+  /// đây là chỗ an toàn để gắn GlobalKey (app bar bị dựng nhiều lần trong
+  /// IndexedStack → trùng key).
+  final GlobalKey? iconKey;
 }
 
-/// Fixed bottom tab bar. The active item shows a cyan icon + label inside a
-/// soft glowing pill. Mirrors `components/navigation/BottomNav.jsx`.
+/// Fixed bottom tab bar — VOID LUXE glass: BackdropFilter blur nội dung cuộn
+/// phía sau (tắt qua [AppEffects.kGlassEnabled] → nền mờ đặc). Active item =
+/// icon + label gold trong pill goldSoft. Haptic selection khi chuyển tab.
+/// Mirrors `components/navigation/BottomNav.jsx`.
 class TvBottomNav extends StatelessWidget {
   const TvBottomNav({
     super.key,
@@ -29,9 +40,11 @@ class TvBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.bgBase,
+    final bar = DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppEffects.kGlassEnabled
+            ? AppEffects.glassFill
+            : AppEffects.glassFallbackFill,
         border: Border(top: BorderSide(color: AppColors.borderSubtle)),
       ),
       child: SafeArea(
@@ -41,21 +54,37 @@ class TvBottomNav extends StatelessWidget {
           child: Row(
             children: [
               for (var i = 0; i < items.length; i++)
-                Expanded(child: _NavButton(
+                Expanded(
+                    child: _NavButton(
                   item: items[i],
                   active: i == activeIndex,
-                  onTap: () => onChanged?.call(i),
+                  onTap: () {
+                    if (i != activeIndex) HapticFeedback.selectionClick();
+                    onChanged?.call(i);
+                  },
                 )),
             ],
           ),
         ),
       ),
     );
+
+    if (!AppEffects.kGlassEnabled) return bar;
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: AppEffects.glassSigma,
+          sigmaY: AppEffects.glassSigma,
+        ),
+        child: bar,
+      ),
+    );
   }
 }
 
 class _NavButton extends StatelessWidget {
-  const _NavButton({required this.item, required this.active, required this.onTap});
+  const _NavButton(
+      {required this.item, required this.active, required this.onTap});
 
   final TvNavItem item;
   final bool active;
@@ -74,6 +103,7 @@ class _NavButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
+              key: item.iconKey,
               duration: AppEffects.durBase,
               curve: AppEffects.easeStandard,
               width: 40,
@@ -82,7 +112,6 @@ class _NavButton extends StatelessWidget {
               decoration: BoxDecoration(
                 color: active ? AppColors.accentSoft : Colors.transparent,
                 borderRadius: BorderRadius.circular(999),
-                boxShadow: active ? AppEffects.glowCyanSm : null,
               ),
               child: TvIcon(item.iconName, size: 20, color: color),
             ),

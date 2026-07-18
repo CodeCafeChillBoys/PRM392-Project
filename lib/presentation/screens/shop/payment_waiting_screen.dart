@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/services/order_service.dart';
 import '../../state/app_nav.dart';
@@ -139,10 +141,63 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: CircularProgressIndicator(color: AppColors.textAccent),
+                // Thay spinner generic: huy hiệu thẻ thanh toán "thở" + vành
+                // sáng chạy vòng — nói đúng việc đang diễn ra (chờ cổng VNPay).
+                SizedBox(
+                  width: 104,
+                  height: 104,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Vành gradient xoay chậm
+                      Container(
+                        width: 104,
+                        height: 104,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: SweepGradient(
+                            colors: [
+                              AppColors.accent.withValues(alpha: 0),
+                              AppColors.accent.withValues(alpha: 0.55),
+                              AppColors.accent.withValues(alpha: 0),
+                            ],
+                            stops: const [0.0, 0.5, 1.0],
+                          ),
+                        ),
+                      )
+                          .animate(onPlay: (c) => c.repeat())
+                          .rotate(duration: const Duration(milliseconds: 2400)),
+                      // Lõi đặc che giữa → thành vành mảnh
+                      Container(
+                        width: 92,
+                        height: 92,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.bgBase,
+                        ),
+                      ),
+                      // Huy hiệu thẻ, thở nhẹ
+                      Container(
+                        width: 78,
+                        height: 78,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.accentSoft,
+                          border: Border.all(color: AppColors.accentSoftLine),
+                        ),
+                        child: TvIcon('credit-card',
+                            size: 32, color: AppColors.textAccent),
+                      )
+                          .animate(onPlay: (c) => c.repeat(reverse: true))
+                          .scaleXY(
+                            begin: 1,
+                            end: 1.06,
+                            duration: const Duration(milliseconds: 1100),
+                            curve: Curves.easeInOut,
+                          ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Text('Đang chờ thanh toán VNPay',
@@ -158,7 +213,13 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
                   ),
                 ),
               ],
-            ),
+            )
+                .animate()
+                .fadeIn(duration: AppEffects.durEnter)
+                .moveY(
+                    begin: AppEffects.entranceRise,
+                    end: 0,
+                    curve: AppEffects.easeStandard),
           ),
         ),
         TvButton(

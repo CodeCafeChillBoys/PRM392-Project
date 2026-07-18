@@ -36,8 +36,10 @@ class ApiConfig {
     return 'http://localhost:5173';
   }
 
-  /// Default network timeout for requests.
-  static const Duration timeout = Duration(seconds: 20);
+  /// Default network timeout for requests. BE localhost trả lời ~60-150ms nên
+  /// 12s là dư; ngắn hơn 20s để lỗi mạng ảo emulator surface nhanh (đỡ "xoay lâu")
+  /// và giới hạn tổng thời gian khi ApiClient.get auto-retry.
+  static const Duration timeout = Duration(seconds: 12);
 
   // ----------------------------------------------------------------------
   // Auth — mirrors "Luồng BE / Register" (email-link OR email-OTP verify).
@@ -118,6 +120,28 @@ class ApiConfig {
   // Chat AI — "Trợ lý TechStore" (Gemini phía BE, không lưu history).
   // ----------------------------------------------------------------------
   static const String chat = '/api/Chat';
+
+  // ----------------------------------------------------------------------
+  // Admin — quản trị & giám sát vận hành (CHỈ role Admin; JWT policy AdminOnly).
+  // Mirror UsersController + AdminController phía BE.
+  // ----------------------------------------------------------------------
+  /// Danh sách người dùng (kèm `?role=Customer|Staff|Admin` để lọc).
+  static const String usersList = '/api/users';
+  static String userById(String id) => '/api/users/$id';
+
+  /// Đổi role người dùng (PUT body `{role}`) — đường an toàn thay set-role cũ.
+  static String userRole(String id) => '/api/users/$id/role';
+
+  /// Thống kê tổng hợp cho dashboard (kèm `?from=&to=` ISO-8601 UTC).
+  static const String adminStats = '/api/admin/stats';
+  static const String adminSessions = '/api/admin/sessions';
+  static const String adminDevices = '/api/admin/devices';
+
+  /// Sản phẩm sắp hết hàng (kèm `?threshold=10`).
+  static const String adminLowStock = '/api/admin/products/low-stock';
+
+  /// Cập nhật tồn kho 1 sản phẩm (PUT body `{stockQuantity}`).
+  static String adminProductStock(String id) => '/api/admin/products/$id/stock';
 
   /// Build an absolute URL from one of the endpoint constants above.
   static Uri uri(String endpoint, [Map<String, dynamic>? query]) {
