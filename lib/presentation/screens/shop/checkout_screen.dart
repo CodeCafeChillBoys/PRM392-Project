@@ -18,10 +18,11 @@ import '../../../data/services/goong_service.dart';
 import '../../../data/services/mock_data.dart';
 import '../../../data/services/order_service.dart';
 import '../../../data/services/shipping_service.dart';
+import '../../../data/services/wallet_service.dart';
 import '../../state/cart_controller.dart';
 import '../../widgets/widgets.dart';
+import '../wallet/wallet_screen.dart';
 import 'payment_result_screen.dart';
-import 'payment_waiting_screen.dart';
 
 /// Checkout — nhập địa chỉ (Goong autocomplete → toạ độ), tính phí ship theo
 /// khoảng cách (`POST /api/shipping/calculate`), xem bản đồ Shop→Nhà, chọn
@@ -39,6 +40,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _orderService = OrderService();
   final _shippingService = ShippingService();
   final _goong = GoongService();
+  final _walletService = WalletService();
   final _addressCtrl = TextEditingController();
   final _mapController = MapController();
 
@@ -54,10 +56,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   ShippingQuote? _quote; // kết quả tính phí
   bool _loadingFee = false;
 
-  String _payment = 'VNPay';
+  String _payment = 'Wallet';
   bool _confirming = false;
 
+  /// Số dư Ví hiện tại — null khi đang tải (guard trước khi so sánh).
+  double? _walletBalance;
+
   double get _grand => widget.total + (_quote?.shippingFee ?? 0);
+
+  /// Ví không đủ để thanh toán đơn này. BE hiện CHỈ trừ tiền HÀNG
+  /// (`widget.total`) khi checkout bằng Ví — CHƯA trừ phí ship — nên so với
+  /// `widget.total` (không phải `_grand`) mới khớp số BE thực sự trừ.
+  bool get _walletShort =>
+      _payment == 'Wallet' &&
+      _walletBalance != null &&
+      _walletBalance! < widget.total;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWalletBalance();
+  }
+
+  Future<void> _loadWalletBalance() async {
+    try {
+      final wallet = await _walletService.fetchWallet();
+      if (mounted) setState(() => _walletBalance = wallet.balance);
+    } catch (_) {
+      // Không tải được số dư — hàng Ví ẩn số dư; checkout vẫn hoạt động bình
+      // thường (BE tự kiểm tra số dư khi gọi API thật, lỗi thiếu tiền vẫn bắt ở _confirm).
+    }
+  }
 
   @override
   void dispose() {
@@ -174,25 +203,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // BE đã xoá giỏ → đồng bộ lại.
       cart.refresh();
 
-      if (result.needsGateway && result.gatewayUrl != null) {
-        navigator.pushReplacement(MaterialPageRoute(
-          builder: (_) => PaymentWaitingScreen(
+      // BE không còn trả cổng thanh toán (VNPay giờ chỉ dùng để nạp Ví) —
+      // Ví và COD đều xác nhận đơn ngay, luôn sang thẳng màn Kết quả.
+      navigator.pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => PaymentResultScreen(
+            success: true,
             orderId: result.orderId,
-            gatewayUrl: result.gatewayUrl!,
+            totalAmount: _grand,
+            paymentMethod: _payment,
           ),
-        ));
-      } else {
-        // Thay thế màn hình Checkout bằng màn hình Kết quả thanh toán
-        navigator.pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => PaymentResultScreen(
-              success: true,
-              orderId: result.orderId,
-              totalAmount: _grand,
-              paymentMethod: _payment,
-            ),
-          ),
-        );
+        ),
+      );
+    } on ApiException catch (e) {
+      // Vd 400 "Số dư ví không đủ..." — hiện đúng message BE trả.
+      if (mounted) {
+        setState(() => _confirming = false);
+        TvToast.show(context, e.message);
       }
     } catch (_) {
       if (mounted) {
@@ -202,9 +229,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
+  /// Ví không đủ tiền — mở màn Ví để nạp thêm, quay lại thì tải lại số dư.
+  Future<void> _goTopUp() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const WalletScreen()),
+    );
+    if (mounted) _loadWalletBalance();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isVNPay = _payment == 'VNPay';
     return Scaffold(
       backgroundColor: AppColors.bgBase,
       body: Column(
@@ -227,14 +261,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 _invoiceCard(),
                 const SizedBox(height: 26),
                 TvButton(
-                  label: isVNPay ? 'Thanh toán qua VNPay' : 'Xác nhận đặt hàng',
+                  label: _walletShort
+                      ? 'Nạp thêm để thanh toán'
+                      : (_payment == 'Wallet'
+                          ? 'Thanh toán bằng Ví'
+                          : 'Xác nhận đặt hàng'),
                   size: TvButtonSize.lg,
                   fullWidth: true,
                   loading: _confirming,
-                  leadingIcon: isVNPay
-                      ? const TvIcon('external-link', size: 18)
-                      : null,
-                  onPressed: _confirm,
+                  onPressed: _walletShort ? _goTopUp : _confirm,
                 ),
                 const SizedBox(height: 12),
                 // Trust line — giọng "tech data" JetBrains Mono.
@@ -471,9 +506,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
 
   Widget _paymentSection() {
-    // Chỉ giữ phương thức call API thật: VNPay (cổng thật) + COD (trả khi nhận).
+    // Chỉ giữ phương thức call API thật: Ví (trừ số dư ngay) + COD (trả khi nhận).
     final methods = MockData.paymentMethods
-        .where((m) => m.value == 'VNPay' || m.value == 'COD')
+        .where((m) => m.value == 'Wallet' || m.value == 'COD')
         .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +522,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           TvOptionRow(
             icon: TvIcon(method.iconName),
             title: method.title,
-            subtitle: method.subtitle,
+            // Hàng Ví hiện số dư thay vì mô tả tĩnh — khách thấy ngay có đủ
+            // tiền không trước khi bấm xác nhận.
+            subtitle: method.value == 'Wallet'
+                ? (_walletBalance != null
+                    ? 'Số dư: ${formatVnd(_walletBalance!)}'
+                    : 'Đang tải số dư...')
+                : method.subtitle,
             selected: _payment == method.value,
             onTap: () => setState(() => _payment = method.value),
           ),
@@ -519,8 +560,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             value: formatVnd(_grand),
             emphasis: true,
           ),
+          if (_grand > 0) ...[
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${_capitalizeFirst(readVietnameseNumber(_grand.round()))} đồng',
+                textAlign: TextAlign.right,
+                style: AppText.xs(AppColors.textTertiary)
+                    .copyWith(fontStyle: FontStyle.italic),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
+
+/// Viết hoa chữ cái đầu (vd "mười một triệu" → "Mười một triệu").
+String _capitalizeFirst(String s) =>
+    s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';

@@ -14,6 +14,76 @@ String formatVnd(num value) {
   return '$sign$buffer' 'đ';
 }
 
+const _readOnes = [
+  'không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'
+];
+const _readScales = [
+  '', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ', 'tỷ tỷ'
+];
+
+/// Đọc 1 nhóm 3 chữ số (0..999) thành chữ. [full] = đọc cả "không trăm" cho
+/// nhóm không đứng đầu (vd 1.005 → "một nghìn không trăm lẻ năm").
+String _readTriple(int n, {required bool full}) {
+  final tram = n ~/ 100, chuc = (n % 100) ~/ 10, donvi = n % 10;
+  final parts = <String>[];
+  if (tram > 0) {
+    parts..add(_readOnes[tram])..add('trăm');
+  } else if (full) {
+    parts..add('không')..add('trăm');
+  }
+  if (chuc > 1) {
+    parts..add(_readOnes[chuc])..add('mươi');
+    if (donvi == 1) {
+      parts.add('mốt');
+    } else if (donvi == 5) {
+      parts.add('lăm');
+    } else if (donvi > 0) {
+      parts.add(_readOnes[donvi]);
+    }
+  } else if (chuc == 1) {
+    parts.add('mười');
+    if (donvi == 5) {
+      parts.add('lăm');
+    } else if (donvi > 0) {
+      parts.add(_readOnes[donvi]); // "mười một", "mười hai"...
+    }
+  } else if (donvi > 0) {
+    if (tram > 0 || full) parts.add('lẻ'); // "một trăm lẻ năm"
+    parts.add(_readOnes[donvi]);
+  }
+  return parts.join(' ');
+}
+
+/// Đọc một số nguyên đồng thành chữ tiếng Việt (không kèm "đồng").
+/// Vd: 30000000 → "ba mươi triệu", 1205 → "một nghìn hai trăm lẻ năm".
+/// Theo quy tắc hoá đơn: mươi/mười, mốt/một, lăm/năm, lẻ, nghìn/triệu/tỷ.
+String readVietnameseNumber(int amount) {
+  if (amount == 0) return 'không';
+  final negative = amount < 0;
+  var n = amount.abs();
+
+  // Tách thành các nhóm 3 chữ số (nhóm thấp nhất trước).
+  final groups = <int>[];
+  while (n > 0) {
+    groups.add(n % 1000);
+    n ~/= 1000;
+  }
+
+  final segments = <String>[];
+  // Đọc từ nhóm cao nhất xuống.
+  for (var i = groups.length - 1; i >= 0; i--) {
+    final g = groups[i];
+    final isLeading = segments.isEmpty;
+    if (g == 0) continue; // nhóm toàn 0 → bỏ (vd 1.000.000 → "một triệu")
+    final words = _readTriple(g, full: !isLeading);
+    final scale = _readScales[i];
+    segments.add(scale.isEmpty ? words : '$words $scale');
+  }
+
+  final result = segments.join(' ');
+  return negative ? 'âm $result' : result;
+}
+
 /// `mm:ss` countdown formatter — e.g. `120` → `02:00`. Used by the OTP screen.
 String formatCountdown(int totalSeconds) {
   final m = (totalSeconds ~/ 60).toString().padLeft(2, '0');

@@ -12,6 +12,7 @@ import 'presentation/state/cart_controller.dart';
 import 'presentation/state/catalog_controller.dart';
 import 'presentation/state/theme_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'core/utils/formatters.dart';
 import 'data/services/local_notification_service.dart';
 import 'data/services/recently_viewed_service.dart';
 import 'presentation/screens/shop/payment_result_screen.dart';
@@ -64,6 +65,10 @@ class TechVoidApp extends StatefulWidget {
 
 class _TechVoidAppState extends State<TechVoidApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  // SnackBar toàn cục cho deep link (kết quả nạp ví): dùng ScaffoldMessenger vì
+  // nó không cần Overlay tổ tiên như TvToast — deep link chạy ngoài cây widget màn.
+  final GlobalKey<ScaffoldMessengerState> _messengerKey =
+      GlobalKey<ScaffoldMessengerState>();
   late final AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
@@ -111,6 +116,35 @@ class _TechVoidAppState extends State<TechVoidApp> {
         ),
       );
     }
+
+    // Nạp Ví qua VNPay xong — BE redirect về đây. Không mở màn mới (WalletScreen
+    // tự refresh số dư khi resume), chỉ báo kết quả bằng toast.
+    if (uri.host == 'wallet-topup-result' ||
+        uri.path == '/wallet-topup-result' ||
+        uri.path == 'wallet-topup-result') {
+      final success = uri.queryParameters['success'] == 'true';
+      final amount = double.tryParse(uri.queryParameters['amount'] ?? '') ?? 0.0;
+      _showWalletTopUpResult(success, amount);
+    }
+  }
+
+  /// Báo kết quả nạp ví bằng SnackBar toàn cục (ScaffoldMessenger) — chạy được
+  /// kể cả khi deep link đến lúc chưa có màn nào mở overlay riêng.
+  void _showWalletTopUpResult(bool success, double amount) {
+    _messengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor:
+            success ? AppColors.success500 : AppColors.danger500,
+        content: Text(
+          success
+              ? 'Nạp ví thành công! +${formatVnd(amount)}'
+              : 'Nạp ví thất bại hoặc đã huỷ.',
+          style: const TextStyle(
+              color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+      ));
   }
 
   @override
@@ -135,6 +169,7 @@ class _TechVoidAppState extends State<TechVoidApp> {
         return MaterialApp(
         title: 'TECH_VOID',
         navigatorKey: _navigatorKey,
+        scaffoldMessengerKey: _messengerKey,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.current(),
         // Key theo theme: LoginScreen là const nên không tự rebuild khi
@@ -165,6 +200,8 @@ class _TechVoidAppState extends State<TechVoidApp> {
               ),
             );
           }
+          // wallet-topup-result đến qua uriLinkStream → _handleDeepLink
+          // (SnackBar), không qua named-route, nên không xử ở đây.
           return null;
         },
         // Keep the layout phone-shaped (max 430px) and centered on wide screens

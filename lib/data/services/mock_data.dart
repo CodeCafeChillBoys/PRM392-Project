@@ -118,6 +118,12 @@ class MockData {
 
   static const List<PaymentMethod> paymentMethods = [
     PaymentMethod(
+      value: 'Wallet',
+      iconName: 'wallet',
+      title: 'Ví TechStore',
+      subtitle: 'Thanh toán nhanh bằng số dư Ví — trừ tiền ngay',
+    ),
+    PaymentMethod(
       value: 'VNPay',
       iconName: 'qr-code',
       title: 'Ví VNPay',

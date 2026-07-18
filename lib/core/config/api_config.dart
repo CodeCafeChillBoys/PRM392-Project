@@ -87,6 +87,13 @@ class ApiConfig {
   static String vnpayGateway(String orderId) => '/payment/vnpay?order=$orderId';
 
   // ----------------------------------------------------------------------
+  // Wallet — "Ví TechStore": nạp tiền qua VNPay + thanh toán bằng số dư.
+  // ----------------------------------------------------------------------
+  static const String wallet = '/api/wallet';
+  static const String walletTransactions = '/api/wallet/transactions';
+  static const String walletTopUp = '/api/wallet/top-up';
+
+  // ----------------------------------------------------------------------
   // Shipping (Goong qua BE) — tính phí theo khoảng cách thực tế.
   // ----------------------------------------------------------------------
   static const String shippingCalculate = '/api/shipping/calculate';

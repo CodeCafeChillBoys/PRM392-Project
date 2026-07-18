@@ -4,17 +4,43 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../data/services/api_client.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/services/wallet_service.dart';
 import '../../state/theme_controller.dart';
 import '../../widgets/widgets.dart';
 import '../auth/login_screen.dart';
+import '../wallet/wallet_screen.dart';
 import 'my_orders_screen.dart';
 
 /// Tab Hồ sơ: thông tin tài khoản + lối vào "Đơn hàng của tôi" + Đăng xuất.
 /// Là tab page (không Scaffold riêng — RootShell đã bọc).
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _walletService = WalletService();
+  double? _walletBalance;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWallet();
+  }
+
+  /// Tải số dư ví để hiện trên mục "Ví TechStore" (ẩn số nếu chưa đăng nhập/lỗi).
+  Future<void> _loadWallet() async {
+    if (apiClient.authToken == null) return;
+    try {
+      final w = await _walletService.fetchWallet();
+      if (mounted) setState(() => _walletBalance = w.balance);
+    } catch (_) {/* ẩn số dư nếu không tải được */}
+  }
 
   Future<void> _logout(BuildContext context) async {
     final ok = await showTvConfirm(
@@ -45,6 +71,19 @@ class ProfileScreen extends StatelessWidget {
             children: [
               _header(name, email),
               const SizedBox(height: 24),
+              _menuTile(
+                icon: 'wallet',
+                label: 'Ví TechStore',
+                trailingValue:
+                    _walletBalance != null ? formatVnd(_walletBalance!) : null,
+                onTap: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const WalletScreen()),
+                  );
+                  _loadWallet(); // cập nhật số dư sau khi từ màn Ví về
+                },
+              ),
+              const SizedBox(height: 12),
               _menuTile(
                 icon: 'package',
                 label: 'Đơn hàng của tôi',
@@ -165,6 +204,7 @@ class ProfileScreen extends StatelessWidget {
     required String icon,
     required String label,
     required VoidCallback onTap,
+    String? trailingValue,
     bool danger = false,
   }) {
     final color = danger ? AppColors.danger500 : AppColors.textAccent;
@@ -186,6 +226,10 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
+            if (trailingValue != null) ...[
+              Text(trailingValue, style: AppText.price().copyWith(fontSize: 15)),
+              const SizedBox(width: 8),
+            ],
             if (!danger)
               TvIcon('chevron-right',
                   size: 20, color: AppColors.textTertiary),

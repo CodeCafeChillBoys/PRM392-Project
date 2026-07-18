@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show TextInputFormatter;
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_effects.dart';
@@ -31,6 +32,7 @@ class TvInput extends StatefulWidget {
     this.fillColor,
     this.dashed = false,
     this.maxLines = 1,
+    this.inputFormatters,
   });
 
   final TextEditingController? controller;
@@ -50,6 +52,9 @@ class TvInput extends StatefulWidget {
 
   /// Số dòng tối đa — > 1 biến ô thành textarea (bỏ chiều cao cố định).
   final int maxLines;
+
+  /// Bộ lọc nhập liệu (vd chỉ số, tự chèn dấu phân tách nghìn).
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   State<TvInput> createState() => _TvInputState();
@@ -124,6 +129,7 @@ class _TvInputState extends State<TvInput> {
               onEditingComplete: widget.onEditingComplete,
               obscureText: widget.obscureText,
               keyboardType: widget.keyboardType,
+              inputFormatters: widget.inputFormatters,
               textInputAction: widget.textInputAction,
               autofocus: widget.autofocus,
               cursorColor: AppColors.accent,

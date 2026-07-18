@@ -80,7 +80,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final name = apiClient.userName?.trim();
     if (name == null || name.isEmpty) return part;
     final first = name.split(' ').last; // người Việt gọi theo tên cuối
-    return '$part,\n$first';
+    return '$part, $first';
   }
 
   void _openDetail(Product p) => Navigator.of(context).push(
@@ -209,9 +209,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   children: [
                     Text(
                       widget.autofocusSearch ? 'Tìm kiếm' : _greeting(),
-                      style: AppText.display(),
+                      style: AppText.h1(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Text(
                       widget.autofocusSearch
                           ? 'Gõ tên sản phẩm hoặc thương hiệu bạn cần.'
