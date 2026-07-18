@@ -94,6 +94,19 @@ class AppIcons {
     // chat AI
     'bot': LucideIcons.bot,
     'send': LucideIcons.send,
+
+    // admin dashboard (khu quản trị & giám sát vận hành)
+    'layout-dashboard': LucideIcons.layoutDashboard,
+    'users': LucideIcons.users,
+    'activity': LucideIcons.activity,
+    'shield': LucideIcons.shield,
+    'shield-alert': LucideIcons.shieldAlert,
+    'trending-up': LucideIcons.trendingUp,
+    'monitor-smartphone': LucideIcons.monitorSmartphone,
+    'user-cog': LucideIcons.userCog,
+    'refresh-cw': LucideIcons.refreshCw,
+    'boxes': LucideIcons.boxes,
+    'circle-alert': LucideIcons.circleAlert,
   };
 
   /// Resolve a Lucide name to an [IconData], falling back to a neutral glyph.
