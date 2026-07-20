@@ -15,6 +15,7 @@ export 'tv_button.dart';
 export 'tv_card.dart';
 export 'tv_chat_bubble.dart';
 export 'tv_confirm_dialog.dart';
+export 'tv_date_filter.dart';
 export 'tv_icon.dart';
 export 'tv_icon_button.dart';
 export 'fly_to_cart.dart';

@@ -70,6 +70,7 @@ class AppIcons {
     'banknote': LucideIcons.banknote,
     'wallet': LucideIcons.wallet,
     'external-link': LucideIcons.externalLink,
+    'refund': LucideIcons.rotateCcw, // hoàn tiền (yêu cầu/duyệt hoàn về ví)
 
     // promo / orders
     'tag': LucideIcons.tag,
@@ -107,6 +108,11 @@ class AppIcons {
     'refresh-cw': LucideIcons.refreshCw,
     'boxes': LucideIcons.boxes,
     'circle-alert': LucideIcons.circleAlert,
+    // Thống kê / bộ lọc ngày
+    'calendar': LucideIcons.calendar,
+    'calendar-range': LucideIcons.calendarRange,
+    'pie-chart': LucideIcons.chartPie,
+    'line-chart': LucideIcons.chartLine,
   };
 
   /// Resolve a Lucide name to an [IconData], falling back to a neutral glyph.

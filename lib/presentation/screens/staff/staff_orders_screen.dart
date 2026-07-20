@@ -426,7 +426,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                  '${o.paymentMethod} · ${o.paymentStatus == 'Paid' ? 'Đã thanh toán' : 'Chưa TT'}',
+                  '${o.paymentMethod} · ${paymentStatusLabel(o.paymentStatus)}',
                   style: AppText.xs(AppColors.textTertiary)),
               Text(formatVnd(o.totalAmount),
                   style: AppText.price().copyWith(fontSize: 15)),

@@ -20,6 +20,43 @@ class CartController extends ChangeNotifier {
   int get count => _items.fold(0, (sum, i) => sum + i.quantity);
   double get subtotal => _items.fold(0.0, (sum, i) => sum + i.totalPrice);
 
+  // ── Chọn món để thanh toán (mặc định tích hết) ──────────────────────────
+  Set<String> _selectedIds = {};
+  Set<String> _knownIds = {};
+
+  bool isSelected(String cartItemId) => _selectedIds.contains(cartItemId);
+  bool get allSelected =>
+      _items.isNotEmpty && _items.every((i) => _selectedIds.contains(i.id));
+
+  List<CartItem> get _selectedItems =>
+      _items.where((i) => _selectedIds.contains(i.id)).toList();
+
+  /// Id các món đang được chọn (đúng thứ tự giỏ) — gửi cho BE khi checkout.
+  List<String> get selectedIds => _selectedItems.map((i) => i.id).toList();
+  int get selectedCount => _selectedItems.fold(0, (s, i) => s + i.quantity);
+  double get selectedSubtotal =>
+      _selectedItems.fold(0.0, (s, i) => s + i.totalPrice);
+
+  void toggle(String cartItemId) {
+    if (!_selectedIds.remove(cartItemId)) _selectedIds.add(cartItemId);
+    notifyListeners();
+  }
+
+  void selectAll(bool value) {
+    _selectedIds = value ? _items.map((i) => i.id).toSet() : <String>{};
+    notifyListeners();
+  }
+
+  /// Đồng bộ lựa chọn sau khi giỏ đổi: món MỚI tự tích, món cũ giữ trạng thái,
+  /// món biến mất bị loại. Gọi sau mỗi lần nạp lại `_items`.
+  void _syncSelection() {
+    final current = _items.map((i) => i.id).toSet();
+    _selectedIds = current
+        .where((id) => !_knownIds.contains(id) || _selectedIds.contains(id))
+        .toSet();
+    _knownIds = current;
+  }
+
   /// Tải/đồng bộ giỏ từ BE.
   Future<void> refresh() async {
     _loading = true;
@@ -27,6 +64,7 @@ class CartController extends ChangeNotifier {
     notifyListeners();
     try {
       _items = await _service.fetchCart();
+      _syncSelection();
     } catch (e) {
       _error = 'Không tải được giỏ hàng.';
       _items = const [];

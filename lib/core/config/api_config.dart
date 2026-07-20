@@ -83,6 +83,12 @@ class ApiConfig {
   static String ordersByUser(String userId) => '/api/Orders/user/$userId';
   static String orderStatusById(String id) => '/api/Orders/$id/status';
 
+  /// Refund (hoàn tiền về ví) — khách yêu cầu, staff duyệt/từ chối.
+  static String orderRefundRequest(String id) => '/api/orders/$id/refund-request';
+  static String orderRefundApprove(String id) => '/api/orders/$id/refund-approve';
+  static String orderRefundReject(String id) => '/api/orders/$id/refund-reject';
+  static String orderCancel(String id) => '/api/orders/$id/cancel';
+
   /// VNPay payment-gateway hand-off path (used by both the mock and real flows).
   static String vnpayGateway(String orderId) => '/payment/vnpay?order=$orderId';
 

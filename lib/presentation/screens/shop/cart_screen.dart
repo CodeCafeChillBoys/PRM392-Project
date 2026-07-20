@@ -147,7 +147,6 @@ class _CartBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtotal = cart.subtotal;
     return Column(
       children: [
         Expanded(
@@ -173,11 +172,10 @@ class _CartBody extends StatelessWidget {
                     ),
                 const SizedBox(height: 14),
               ],
-              _SummaryCard(subtotal: subtotal),
             ],
           ),
         ),
-        _CheckoutBar(subtotal: subtotal),
+        _CheckoutBar(cart: cart),
       ],
     );
   }
@@ -214,6 +212,16 @@ class _CartLine extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(
+              height: 88,
+              child: Center(
+                child: _SelectBox(
+                  selected: cart.isSelected(item.id),
+                  onTap: () => cart.toggle(item.id),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: SizedBox(
@@ -283,49 +291,14 @@ class _CartLine extends StatelessWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.subtotal});
-  final double subtotal;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: TvCard(
-        padding: 14,
-        child: Column(
-          children: [
-            _miniRow('Tổng tiền sản phẩm', formatVnd(subtotal)),
-            const SizedBox(height: 6),
-            _miniRow('Phí vận chuyển', 'Miễn phí',
-                valueColor: AppColors.success500),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _miniRow(String label, String value, {Color? valueColor}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style:
-                AppText.body(AppColors.textSecondary).copyWith(fontSize: 13)),
-        Text(value,
-            style: AppText.body(valueColor ?? AppColors.textPrimary)
-                .copyWith(fontSize: 13)),
-      ],
-    );
-  }
-}
-
 class _CheckoutBar extends StatelessWidget {
-  const _CheckoutBar({required this.subtotal});
-  final double subtotal;
+  const _CheckoutBar({required this.cart});
+  final CartController cart;
 
   @override
   Widget build(BuildContext context) {
+    final selectedTotal = cart.selectedSubtotal;
+    final canCheckout = cart.selectedCount > 0;
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgBase,
@@ -336,9 +309,32 @@ class _CheckoutBar extends StatelessWidget {
         top: false,
         child: Padding(
           padding:
-              EdgeInsets.fromLTRB(AppSpacing.gutter, 16, AppSpacing.gutter, 12),
+              EdgeInsets.fromLTRB(AppSpacing.gutter, 12, AppSpacing.gutter, 12),
           child: Column(
             children: [
+              // "Chọn tất cả" + số món đang chọn.
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Row(
+                  children: [
+                    _SelectBox(
+                      selected: cart.allSelected,
+                      onTap: () => cart.selectAll(!cart.allSelected),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => cart.selectAll(!cart.allSelected),
+                      child: Text('Chọn tất cả',
+                          style: AppText.sm(AppColors.textSecondary)),
+                    ),
+                    const Spacer(),
+                    Text('Đã chọn ${cart.selectedCount} sản phẩm',
+                        style: AppText.xs(AppColors.textTertiary)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
@@ -352,7 +348,7 @@ class _CheckoutBar extends StatelessWidget {
                     // Count-up: tổng tiền lăn số tới giá trị mới — gold,
                     // KHÔNG glow (tiết chế là tín hiệu luxury).
                     TweenAnimationBuilder<double>(
-                      tween: Tween(end: subtotal),
+                      tween: Tween(end: selectedTotal),
                       duration: const Duration(milliseconds: 400),
                       curve: AppEffects.easeStandard,
                       builder: (_, animated, _) => Text(
@@ -365,19 +361,58 @@ class _CheckoutBar extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               TvButton(
-                label: 'Tiến hành thanh toán',
+                label: canCheckout
+                    ? 'Tiến hành thanh toán'
+                    : 'Chọn sản phẩm để thanh toán',
                 size: TvButtonSize.lg,
                 fullWidth: true,
-                trailingIcon: const TvIcon('chevron-right', size: 18),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => CheckoutScreen(total: subtotal),
-                  ),
-                ),
+                trailingIcon:
+                    canCheckout ? const TvIcon('chevron-right', size: 18) : null,
+                onPressed: canCheckout
+                    ? () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CheckoutScreen(
+                              total: selectedTotal,
+                              cartItemIds: cart.selectedIds,
+                            ),
+                          ),
+                        )
+                    : null,
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Ô tích chọn vuông bo góc — dùng cho từng dòng giỏ và nút "Chọn tất cả".
+class _SelectBox extends StatelessWidget {
+  const _SelectBox({required this.selected, required this.onTap});
+
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(7),
+          border: Border.all(
+            color: selected ? AppColors.accent : AppColors.borderStrong,
+            width: 1.5,
+          ),
+        ),
+        child: selected
+            ? Icon(Icons.check, size: 16, color: AppColors.textOnAccent)
+            : null,
       ),
     );
   }

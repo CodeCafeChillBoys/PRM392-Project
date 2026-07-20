@@ -32,6 +32,12 @@ class OrderFlow {
       status == OrderStatus.pending ||
       status == OrderStatus.pendingPayment ||
       status == OrderStatus.confirmed;
+
+  /// Khách tự huỷ được khi đơn CHƯA gán shipper (Pending/PendingPayment/Confirmed).
+  static bool customerCanCancel(String status) =>
+      status == OrderStatus.pending ||
+      status == OrderStatus.pendingPayment ||
+      status == OrderStatus.confirmed;
 }
 
 /// Tab của màn Staff; mỗi tab nhận một nhóm trạng thái.

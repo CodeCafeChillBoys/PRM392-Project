@@ -3,6 +3,7 @@
 /// Parse tolerant nhiều tên key để chịu được thay đổi nhỏ phía BE.
 class OrderLine {
   const OrderLine({
+    this.id = '',
     required this.productName,
     this.brand = '',
     this.imageUrl = '',
@@ -10,6 +11,8 @@ class OrderLine {
     this.unitPrice = 0,
   });
 
+  /// Id của dòng đơn (OrderDetail.Id) — dùng để chọn món hoàn 1 phần.
+  final String id;
   final String productName;
   final String brand;
   final String imageUrl;
@@ -17,6 +20,7 @@ class OrderLine {
   final double unitPrice;
 
   factory OrderLine.fromJson(Map<String, dynamic> json) => OrderLine(
+        id: '${json['id'] ?? ''}',
         productName: '${json['productName'] ?? json['name'] ?? ''}',
         brand: '${json['brand'] ?? ''}',
         imageUrl:
@@ -45,6 +49,13 @@ class OrderModel {
     required this.staffId,
     this.itemCount,
     this.lines = const [],
+    this.refundReason = '',
+    this.refundImageUrl = '',
+    this.refundRequestedAt,
+    this.deliveredAt,
+    this.cancelReason = '',
+    this.cancelledAt,
+    this.refundedAmount = 0,
   });
 
   final String id;
@@ -69,6 +80,35 @@ class OrderModel {
   /// không trả mảng chi tiết. Dùng cho panel theo dõi đơn "đang giao gì".
   final List<OrderLine> lines;
 
+  /// Lý do khách yêu cầu hoàn tiền — rỗng nếu chưa yêu cầu (luồng refund).
+  final String refundReason;
+
+  /// Ảnh đính kèm yêu cầu hoàn (URL tương đối `/uploads/...`) — rỗng nếu không có.
+  final String refundImageUrl;
+
+  /// Thời điểm khách gửi yêu cầu hoàn (ISO) — null nếu chưa yêu cầu.
+  final String? refundRequestedAt;
+
+  /// Thời điểm giao hàng thành công (ISO) — null nếu chưa giao/đơn cũ.
+  final String? deliveredAt;
+
+  /// Lý do huỷ đơn (khách/staff) — rỗng nếu chưa huỷ.
+  final String cancelReason;
+
+  /// Thời điểm đơn bị huỷ (ISO) — null nếu chưa huỷ.
+  final String? cancelledAt;
+
+  /// Số tiền đã hoàn cho đơn (>0 nếu đã hoàn 1 phần hoặc toàn bộ) — cho badge.
+  final double refundedAmount;
+
+  /// Còn trong cửa sổ yêu cầu hoàn tiền (1 ngày kể từ khi nhận hàng).
+  /// Đơn cũ chưa có `deliveredAt` → false (không cho hoàn, khớp guard BE).
+  bool get refundWindowOpen {
+    final d = DateTime.tryParse(deliveredAt ?? '')?.toLocal();
+    if (d == null) return false;
+    return DateTime.now().difference(d) <= const Duration(days: 1);
+  }
+
   factory OrderModel.fromJson(Map<String, dynamic> json) => OrderModel(
         id: '${json['id'] ?? ''}',
         customerName: json['customerName'] as String? ?? '',
@@ -82,6 +122,13 @@ class OrderModel {
         staffId: '${json['staffId'] ?? ''}',
         itemCount: _parseItemCount(json),
         lines: _parseLines(json),
+        refundReason: json['refundReason'] as String? ?? '',
+        refundImageUrl: json['refundImageUrl'] as String? ?? '',
+        refundRequestedAt: json['refundRequestedAt'] as String?,
+        deliveredAt: json['deliveredAt'] as String?,
+        cancelReason: json['cancelReason'] as String? ?? '',
+        cancelledAt: json['cancelledAt'] as String?,
+        refundedAmount: (json['refundedAmount'] as num?)?.toDouble() ?? 0,
       );
 
   /// Ưu tiên field đếm sẵn; nếu không có thì suy ra từ độ dài mảng chi tiết đơn.

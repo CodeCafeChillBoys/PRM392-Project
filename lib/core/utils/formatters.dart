@@ -84,6 +84,20 @@ String readVietnameseNumber(int amount) {
   return negative ? 'âm $result' : result;
 }
 
+/// Nhãn tiếng Việt cho `PaymentStatus` của đơn (gồm cả trạng thái hoàn tiền).
+String paymentStatusLabel(String status) {
+  switch (status) {
+    case 'Paid':
+      return 'Đã thanh toán';
+    case 'Refunded':
+      return 'Đã hoàn tiền';
+    case 'RefundRequested':
+      return 'Chờ duyệt hoàn';
+    default:
+      return 'Chưa TT';
+  }
+}
+
 /// `mm:ss` countdown formatter — e.g. `120` → `02:00`. Used by the OTP screen.
 String formatCountdown(int totalSeconds) {
   final m = (totalSeconds ~/ 60).toString().padLeft(2, '0');
@@ -105,6 +119,18 @@ String formatRelativeTime(DateTime time, {DateTime? now}) {
   final dd = d.day.toString().padLeft(2, '0');
   final mm = d.month.toString().padLeft(2, '0');
   return '$dd/$mm/${d.year}';
+}
+
+/// Ngày giờ đầy đủ từ chuỗi ISO (đã đổi về giờ máy): "14:35 · 06/07/2026".
+/// Rỗng nếu không parse được.
+String formatDateTimeFromIso(String iso) {
+  final t = DateTime.tryParse(iso)?.toLocal();
+  if (t == null) return '';
+  final hh = t.hour.toString().padLeft(2, '0');
+  final mm = t.minute.toString().padLeft(2, '0');
+  final dd = t.day.toString().padLeft(2, '0');
+  final mo = t.month.toString().padLeft(2, '0');
+  return '$hh:$mm · $dd/$mo/${t.year}';
 }
 
 /// Như [formatRelativeTime] nhưng nhận chuỗi ISO (vd `OrderModel.orderDate`).

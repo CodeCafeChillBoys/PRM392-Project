@@ -11,23 +11,15 @@ import '../../../data/models/admin_stats.dart';
 import '../../../data/services/admin_service.dart';
 import '../../widgets/widgets.dart';
 import 'admin_common.dart';
+import 'admin_orders_line_chart.dart';
 import 'admin_revenue_chart.dart';
-
-/// Khoảng thời gian thống kê — quy ra (from, to) gửi BE (UTC).
-enum _StatRange {
-  last7(7, '7 ngày'),
-  last30(30, '30 ngày'),
-  last90(90, '90 ngày');
-
-  const _StatRange(this.days, this.label);
-  final int days;
-  final String label;
-}
+import 'admin_status_donut.dart';
 
 /// Khu Admin — Tổng quan: KPI (doanh thu / số đơn / khách mới / tồn thấp),
-/// biểu đồ doanh thu theo ngày, phân rã trạng thái đơn và tỉ trọng thanh toán.
-/// Số liệu lấy thẳng từ `GET /api/admin/stats` (BE đã tính "counted revenue"
-/// đúng luật màn Doanh thu của Staff). Tab-page: tự có app bar.
+/// biểu đồ cột doanh thu theo ngày, đường số đơn theo ngày, donut trạng thái
+/// đơn và tỉ trọng thanh toán. Số liệu lấy thẳng từ `GET /api/admin/stats` (BE
+/// đã tính "counted revenue" đúng luật màn Doanh thu của Staff). Bộ lọc ngày
+/// hybrid (chip nhanh + lịch chọn khoảng). Tab-page: tự có app bar.
 class AdminOverviewScreen extends StatefulWidget {
   const AdminOverviewScreen({super.key});
 
@@ -40,7 +32,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
 
   AdminStats? _stats;
   bool _loading = true;
-  _StatRange _range = _StatRange.last30;
+  late TvDateRange _range = TvDateRange.lastDays(30);
 
   @override
   void initState() {
@@ -51,11 +43,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final now = DateTime.now();
-      final stats = await _service.fetchStats(
-        from: now.subtract(Duration(days: _range.days)),
-        to: now,
-      );
+      // Gửi mốc local-00:00 → service tự đổi UTC; đúng ranh giới ngày VN.
+      final stats = await _service.fetchStats(from: _range.from, to: _range.to);
       if (mounted) setState(() => _stats = stats);
     } catch (_) {
       if (mounted) TvToast.show(context, 'Không tải được thống kê.');
@@ -64,8 +53,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
     }
   }
 
-  void _setRange(_StatRange r) {
-    if (r == _range) return;
+  void _setRange(TvDateRange r) {
+    if (r.stateKey == _range.stateKey) return;
     setState(() => _range = r);
     _load();
   }
@@ -86,14 +75,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
           ]),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: TvTabs(
-            distribute: true,
-            value: _range.name,
-            tabs: [for (final r in _StatRange.values) TvTab(r.name, r.label)],
-            onChanged: (v) =>
-                _setRange(_StatRange.values.firstWhere((r) => r.name == v)),
-          ),
+          padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
+          child: TvDateFilter(value: _range, onChanged: _setRange),
         ),
         Expanded(child: _body()),
       ],
@@ -107,22 +90,34 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
           baseColor: AppColors.skeletonBase,
           highlightColor: AppColors.skeletonHighlight,
         ),
-        child: _content(const AdminStats(
-          totalRevenue: 128000000,
-          orderCount: 42,
-          newCustomers: 12,
-          lowStockCount: 3,
-          shippingFeeTotal: 640000,
-          statusCounts: [
-            StatusCount(status: 'Delivered', count: 28),
-            StatusCount(status: 'Pending', count: 9),
-            StatusCount(status: 'Cancelled', count: 5),
-          ],
-          paymentSplit: [
-            PaymentSplit(method: 'VNPay', count: 24, revenue: 80000000),
-            PaymentSplit(method: 'COD', count: 18, revenue: 48000000),
-          ],
-        ), animate: false),
+        child: _content(
+          AdminStats(
+            totalRevenue: 128000000,
+            orderCount: 42,
+            newCustomers: 12,
+            lowStockCount: 3,
+            shippingFeeTotal: 640000,
+            statusCounts: const [
+              StatusCount(status: 'Delivered', count: 28),
+              StatusCount(status: 'Pending', count: 9),
+              StatusCount(status: 'Cancelled', count: 5),
+            ],
+            paymentSplit: const [
+              PaymentSplit(method: 'VNPay', count: 24, revenue: 80000000),
+              PaymentSplit(method: 'COD', count: 18, revenue: 48000000),
+            ],
+            // Series giả để bộ khung biểu đồ cột/đường cũng nhấp nháy khi tải.
+            revenueSeries: [
+              for (var i = 6; i >= 0; i--)
+                RevenuePoint(
+                  date: DateTime.now().subtract(Duration(days: i)),
+                  revenue: (i.isEven ? 30 : 14) * 1000000,
+                  orders: i.isEven ? 5 : 2,
+                ),
+            ],
+          ),
+          animate: false,
+        ),
       );
     }
     final stats = _stats;
@@ -150,7 +145,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
     }
 
     return ListView(
-      key: ValueKey(_range),
+      key: ValueKey(_range.stateKey),
       padding:
           EdgeInsets.fromLTRB(AppSpacing.gutter, 14, AppSpacing.gutter, 28),
       children: [
@@ -181,10 +176,11 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
           ]),
           2,
         ),
+        // Biểu đồ CỘT — doanh thu theo ngày.
         const SizedBox(height: 22),
         staggered(
           const TvSectionHeader(
-              icon: TvIcon('trending-up'), title: 'Doanh thu theo ngày'),
+              icon: TvIcon('bar-chart'), title: 'Doanh thu theo ngày'),
           3,
         ),
         const SizedBox(height: 12),
@@ -192,22 +188,38 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
           TvCard(child: AdminRevenueChart(points: stats.revenueSeries)),
           4,
         ),
+        // Biểu đồ ĐƯỜNG — số đơn theo ngày.
         const SizedBox(height: 22),
         staggered(
           const TvSectionHeader(
-              icon: TvIcon('package'), title: 'Trạng thái đơn'),
+              icon: TvIcon('activity'), title: 'Số đơn theo ngày'),
           5,
         ),
         const SizedBox(height: 12),
-        staggered(_statusBreakdown(stats), 6),
+        staggered(
+          TvCard(child: AdminOrdersLineChart(points: stats.revenueSeries)),
+          6,
+        ),
+        // Biểu đồ TRÒN (donut) — tỉ trọng trạng thái đơn.
+        const SizedBox(height: 22),
+        staggered(
+          const TvSectionHeader(
+              icon: TvIcon('pie-chart'), title: 'Trạng thái đơn'),
+          7,
+        ),
+        const SizedBox(height: 12),
+        staggered(
+          TvCard(child: AdminStatusDonut(data: stats.statusCounts)),
+          8,
+        ),
         const SizedBox(height: 22),
         staggered(
           const TvSectionHeader(
               icon: TvIcon('credit-card'), title: 'Thanh toán'),
-          7,
+          9,
         ),
         const SizedBox(height: 12),
-        staggered(_paymentSplit(stats), 8),
+        staggered(_paymentSplit(stats), 10),
       ],
     );
   }
@@ -266,57 +278,6 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _statusBreakdown(AdminStats stats) {
-    final total = stats.statusTotal;
-    if (stats.statusCounts.isEmpty || total == 0) {
-      return TvCard(
-        child: Text('Chưa có đơn trong khoảng này',
-            style: AppText.sm(AppColors.textSecondary)),
-      );
-    }
-    // Sắp xếp giảm dần theo số lượng để trạng thái phổ biến lên đầu.
-    final sorted = [...stats.statusCounts]
-      ..sort((a, b) => b.count.compareTo(a.count));
-    return TvCard(
-      child: Column(
-        children: [
-          for (var i = 0; i < sorted.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12),
-            _statusRow(sorted[i], total),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _statusRow(StatusCount sc, int total) {
-    final ratio = total == 0 ? 0.0 : sc.count / total;
-    final pct = (ratio * 100).round();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            OrderStatusBadge(sc.status),
-            const Spacer(),
-            Text('${sc.count} đơn · $pct%',
-                style: AppText.xs(AppColors.textSecondary)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            value: ratio == 0 ? null : ratio,
-            minHeight: 6,
-            backgroundColor: AppColors.bgOverlay,
-            valueColor: AlwaysStoppedAnimation(AppColors.accent),
-          ),
-        ),
-      ],
     );
   }
 
