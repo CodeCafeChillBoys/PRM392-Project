@@ -207,21 +207,18 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
     super.initState();
     // Duration 2000ms = khớp nhịp máy Staff gửi vị trí (StaffOrders _gpsInterval
     // = 2s). Marker trượt mượt từ điểm cũ → điểm mới bằng tween easeInOut.
+    // KHÔNG addListener(setState) mỗi frame nữa: chỉ RIÊNG bản đồ được bọc trong
+    // AnimatedBuilder (nghe cả 2 controller) nên chỉ subtree map redraw ~60fps,
+    // panel/scaffold KHÔNG rebuild theo frame → nhẹ CPU/pin, đỡ khựng máy yếu.
     _moveCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
-    )..addListener(() {
-        if (mounted) setState(() {}); // redraw marker mỗi frame khi tween chạy
-      });
+    );
     // Ghost preview: 14s một vòng kho→nhà; chỉ chạy khi _syncGhost cho phép.
-    // Tại mọi thời điểm chỉ 1 trong 2 controller hoạt động (ghost lúc đợi,
-    // _moveCtrl lúc live) → chi phí frame không đổi so với trước.
     _ghostCtrl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 14),
-    )..addListener(() {
-        if (mounted) setState(() {});
-      });
+    );
     _init();
   }
 
@@ -250,10 +247,16 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
     _fitAllMarkers();
     await _updateRoute(force: true);
 
-    // 2) Kết nối realtime (SignalR).
+    // 2) Kết nối realtime (SignalR). onLive tự bật/tắt badge "Trực tiếp" theo
+    //    trạng thái kết nối (đang nối lại / đóng → hạ live, poll 5s bù dữ liệu).
     try {
-      await _hub.connect(widget.order.id, _onLocation);
-      if (mounted) setState(() => _live = true);
+      await _hub.connect(
+        widget.order.id,
+        _onLocation,
+        onLive: (live) {
+          if (mounted) setState(() => _live = live);
+        },
+      );
     } catch (_) {
       if (mounted) {
         setState(() => _error = 'Không kết nối được theo dõi realtime.');
@@ -262,8 +265,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
 
     // 3) Lưới an toàn: SignalR có thể chập chờn (rớt/reconnect) trên emulator &
     //    mạng yếu. Poll REST định kỳ để xe vẫn cập nhật dù realtime gián đoạn.
-    _pollTimer =
-        Timer.periodic(const Duration(seconds: 5), (_) => _pollLocation());
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _pollLocation(),
+    );
     // Poll ngay 1 nhịp: đơn ĐÃ giao từ trước thì pin sáng đèn ngay khi mở màn,
     // không phải đợi 5s tick đầu tiên.
     _pollLocation();
@@ -286,7 +291,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
         if (dest != null) {
           try {
             _mapController.move(dest, 15);
-          } catch (_) {/* map chưa gắn xong */}
+          } catch (_) {
+            /* map chưa gắn xong */
+          }
         }
         return;
       }
@@ -298,7 +305,12 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
           p.longitude == cur.longitude) {
         return; // không đổi -> khỏi vẽ lại
       }
-      _moveShipperTo(p); // trượt mượt tới điểm mới (đã gọi _updateRoute bên trong)
+      // Nhánh poll cũng cập nhật mốc "Cập nhật lúc" (trước đây chỉ SignalR set →
+      // khi chạy bằng poll timestamp bị đứng yên).
+      setState(() => _updatedAt = DateTime.now().toUtc().toIso8601String());
+      _moveShipperTo(
+        p,
+      ); // trượt mượt tới điểm mới (đã gọi _updateRoute bên trong)
     } catch (_) {
       // Lỗi mạng thoáng qua (reset/timeout) — bỏ qua nhịp này, vòng poll sau thử lại.
     }
@@ -344,11 +356,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
   /// Canh khung bản đồ lần đầu để thấy shipper + nhà khách + cửa hàng.
   void _fitAllMarkers() {
     if (_initialFitDone) return;
-    final pts = <LatLng>[
-      _store,
-      ?_dest,
-      ?_shipper,
-    ];
+    final pts = <LatLng>[_store, ?_dest, ?_shipper];
     if (pts.length < 2) return;
     _initialFitDone = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -360,8 +368,49 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
             padding: const EdgeInsets.fromLTRB(48, 48, 48, 170),
           ),
         );
-      } catch (_) {/* map chưa gắn xong */}
+      } catch (_) {
+        /* map chưa gắn xong */
+      }
     });
+  }
+
+  /// Canh khung lại theo yêu cầu người dùng (bỏ qua guard fit-lần-đầu) — gom
+  /// kho + nhà + xe vào khung khi khách đã tự kéo/zoom map đi chỗ khác.
+  void _recenter() {
+    final pts = <LatLng>[_store, ?_dest, ?_animatedShipper];
+    if (pts.length < 2) return;
+    try {
+      _mapController.fitCamera(
+        CameraFit.coordinates(
+          coordinates: pts,
+          padding: const EdgeInsets.fromLTRB(48, 48, 48, 200),
+        ),
+      );
+    } catch (_) {
+      /* map chưa gắn xong */
+    }
+  }
+
+  Widget _recenterButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: _recenter,
+        child: Container(
+          width: 46,
+          height: 46,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.bgSurface,
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.borderSubtle),
+            boxShadow: AppEffects.shadowMd,
+          ),
+          child: Icon(Icons.my_location, size: 20, color: AppColors.textAccent),
+        ),
+      ),
+    );
   }
 
   @override
@@ -393,124 +442,145 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
   }
 
   Widget _mapView() {
-    final s = _animatedShipper; // vị trí nội suy (mượt) cho marker xe
     final d = _dest;
-    // Đường vẽ lấy từ CÙNG biến s như marker → co lại đúng frame xe di chuyển.
-    final visible = _visibleRoute(s);
     final waiting = _shipper == null && !_delivered;
-    // Xe ghost xem-trước chỉ tồn tại lúc đợi (GPS thật về là biến mất).
-    final ghost = waiting ? _ghostPos : null;
 
     return Stack(
       children: [
         Positioned.fill(
-          child: FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: s ?? d ?? _fallbackCenter,
-              initialZoom: s != null || d != null ? 14 : 12,
-              interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.pinchZoom |
-                    InteractiveFlag.drag |
-                    InteractiveFlag.doubleTapZoom,
-              ),
-            ),
-            children: [
-              const TvMapTiles(),
-              // Lúc đợi: toàn tuyến kho→nhà nét ĐỨT mờ (xem trước lộ trình).
-              if (waiting && _route.length >= 2)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: _route,
-                      strokeWidth: 3,
-                      color: AppColors.accent.withValues(alpha: 0.45),
-                      pattern: StrokePattern.dashed(segments: const [10, 8]),
-                    ),
-                  ],
-                ),
-              // Live: tuyến còn lại phía trước xe thật (trim theo frame).
-              // Đã giao → ẩn (hành trình kết thúc, spotlight về pin nhận).
-              if (!_delivered && visible.length >= 2)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: visible,
-                      strokeWidth: 4,
-                      color: AppColors.accent,
-                    ),
-                  ],
-                ),
-              MarkerLayer(
-                markers: [
-                  // Kho: sau khi giao xong thì MỜ đi — điểm xuất phát đã hoàn
-                  // thành vai trò, nhường spotlight cho điểm nhận.
-                  Marker(
-                    point: _store,
-                    width: 40,
-                    height: 40,
-                    child: AnimatedOpacity(
-                      duration: AppEffects.durSlow,
-                      opacity: _delivered ? 0.3 : 1,
-                      child: _pin('package', AppColors.textSecondary),
-                    ),
+          // Chỉ RIÊNG bản đồ rebuild theo frame (nghe 2 controller); panel/scaffold
+          // đứng yên → giảm mạnh chi phí frame so với setState toàn màn trước đây.
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_moveCtrl, _ghostCtrl]),
+            builder: (context, _) {
+              final s = _animatedShipper; // vị trí nội suy (mượt) cho marker xe
+              final visible = _visibleRoute(s); // co đúng frame xe đi qua
+              final ghost = waiting ? _ghostPos : null; // xe xem-trước lúc đợi
+              return FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: s ?? d ?? _fallbackCenter,
+                  initialZoom: s != null || d != null ? 14 : 12,
+                  interactionOptions: const InteractionOptions(
+                    flags:
+                        InteractiveFlag.pinchZoom |
+                        InteractiveFlag.drag |
+                        InteractiveFlag.doubleTapZoom,
                   ),
-                  if (d != null)
-                    Marker(
-                      point: d,
-                      width: _delivered ? 72 : 40,
-                      height: _delivered ? 72 : 40,
-                      child: _delivered ? _deliveredPin(context) : _pin('map-pin', AppColors.accent),
+                ),
+                children: [
+                  const TvMapTiles(),
+                  // Lúc đợi: toàn tuyến kho→nhà nét ĐỨT mờ (xem trước lộ trình).
+                  if (waiting && _route.length >= 2)
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: _route,
+                          strokeWidth: 3,
+                          color: AppColors.accent.withValues(alpha: 0.45),
+                          pattern: StrokePattern.dashed(
+                            segments: const [10, 8],
+                          ),
+                        ),
+                      ],
                     ),
-                  // Ghost: xe mờ 55% + chip "XEM TRƯỚC" — không thể nhầm với xe thật.
-                  if (ghost != null)
-                    Marker(
-                      point: ghost,
-                      width: 78,
-                      height: 74,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Opacity(
-                            opacity: 0.55,
-                            child: SizedBox(
-                              width: 44,
-                              height: 44,
-                              child: _pin('truck', AppColors.accent),
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.accentSoft,
-                              borderRadius: BorderRadius.circular(999),
-                              border:
-                                  Border.all(color: AppColors.accentSoftLine),
-                            ),
-                            child: Text(
-                              'XEM TRƯỚC',
-                              style: AppText.label(AppColors.textAccent)
-                                  .copyWith(fontSize: 7.5, letterSpacing: 0.8),
-                            ),
-                          ),
-                        ],
+                  // Live: tuyến còn lại phía trước xe thật (trim theo frame).
+                  // Đã giao → ẩn (hành trình kết thúc, spotlight về pin nhận).
+                  if (!_delivered && visible.length >= 2)
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: visible,
+                          strokeWidth: 4,
+                          color: AppColors.accent,
+                        ),
+                      ],
+                    ),
+                  MarkerLayer(
+                    markers: [
+                      // Kho: sau khi giao xong thì MỜ đi — điểm xuất phát đã hoàn
+                      // thành vai trò, nhường spotlight cho điểm nhận.
+                      Marker(
+                        point: _store,
+                        width: 40,
+                        height: 40,
+                        child: AnimatedOpacity(
+                          duration: AppEffects.durSlow,
+                          opacity: _delivered ? 0.3 : 1,
+                          child: _pin('package', AppColors.textSecondary),
+                        ),
                       ),
-                    ),
-                  // Xe thật — ẩn sau khi giao xong (hành trình đã kết thúc).
-                  if (s != null && !_delivered)
-                    Marker(
-                      point: s,
-                      width: 48,
-                      height: 48,
-                      child: _pin('truck', AppColors.accent),
-                    ),
+                      if (d != null)
+                        Marker(
+                          point: d,
+                          width: _delivered ? 72 : 40,
+                          height: _delivered ? 72 : 40,
+                          child: _delivered
+                              ? _deliveredPin(context)
+                              : _pin('map-pin', AppColors.accent),
+                        ),
+                      // Ghost: xe mờ 55% + chip "XEM TRƯỚC" — không thể nhầm với xe thật.
+                      if (ghost != null)
+                        Marker(
+                          point: ghost,
+                          width: 78,
+                          height: 74,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Opacity(
+                                opacity: 0.55,
+                                child: SizedBox(
+                                  width: 44,
+                                  height: 44,
+                                  child: _pin('truck', AppColors.accent),
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentSoft,
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(
+                                    color: AppColors.accentSoftLine,
+                                  ),
+                                ),
+                                child: Text(
+                                  'XEM TRƯỚC',
+                                  style: AppText.label(
+                                    AppColors.textAccent,
+                                  ).copyWith(fontSize: 7.5, letterSpacing: 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      // Xe thật — ẩn sau khi giao xong (hành trình đã kết thúc).
+                      if (s != null && !_delivered)
+                        Marker(
+                          point: s,
+                          width: 48,
+                          height: 48,
+                          child: _pin('truck', AppColors.accent),
+                        ),
+                    ],
+                  ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
+        // Nút canh khung lại (re-center) — nổi trên bản đồ, phía trên panel.
+        if (!_loading && !_delivered)
+          Positioned(
+            right: 16,
+            bottom: MediaQuery.sizeOf(context).height * 0.26,
+            child: _recenterButton(),
+          ),
         // Panel liquid-glass kéo được: thông tin tài xế/ETA/timeline/sản phẩm.
         Positioned.fill(
           child: DraggableScrollableSheet(
@@ -537,10 +607,13 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
         if (_loading)
           Positioned.fill(
             child: ColoredBox(
-              color: Color(0x66000000),
+              // Scrim nhẹ hơn ở light (map sáng), đậm ở dark.
+              color: AppColors.isLight
+                  ? const Color(0x33000000)
+                  : const Color(0x66000000),
               child: Center(
-                  child:
-                      CircularProgressIndicator(color: AppColors.textAccent)),
+                child: CircularProgressIndicator(color: AppColors.textAccent),
+              ),
             ),
           ),
       ],
@@ -548,14 +621,14 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
   }
 
   Widget _pin(String icon, Color color) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.bgBase,
-          shape: BoxShape.circle,
-          border: Border.all(color: color, width: 2),
-        ),
-        alignment: Alignment.center,
-        child: TvIcon(icon, size: 20, color: color),
-      );
+    decoration: BoxDecoration(
+      color: AppColors.bgBase,
+      shape: BoxShape.circle,
+      border: Border.all(color: color, width: 2),
+    ),
+    alignment: Alignment.center,
+    child: TvIcon(icon, size: 20, color: color),
+  );
 
   /// Pin "SÁNG ĐÈN" tại nhà khách khi ĐÃ GIAO: lõi success phát sáng + quầng
   /// pulse lan toả lặp — spotlight của bản đồ dồn về điểm nhận hàng
@@ -576,17 +649,17 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
           height: 72,
           child: AppEffects.motionScale(context) > 0
               ? halo
-                  .animate(onPlay: (c) => c.repeat())
-                  .scaleXY(
-                    begin: 0.4,
-                    end: 1,
-                    duration: const Duration(milliseconds: 1500),
-                    curve: Curves.easeOut,
-                  )
-                  .fadeOut(
-                    duration: const Duration(milliseconds: 1500),
-                    curve: Curves.easeOut,
-                  )
+                    .animate(onPlay: (c) => c.repeat())
+                    .scaleXY(
+                      begin: 0.4,
+                      end: 1,
+                      duration: const Duration(milliseconds: 1500),
+                      curve: Curves.easeOut,
+                    )
+                    .fadeOut(
+                      duration: const Duration(milliseconds: 1500),
+                      curve: Curves.easeOut,
+                    )
               : Opacity(opacity: 0.3, child: halo),
         ),
         // Lõi pin phát sáng.
@@ -611,5 +684,4 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen>
       ],
     );
   }
-
 }

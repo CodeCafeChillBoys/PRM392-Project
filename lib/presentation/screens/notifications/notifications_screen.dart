@@ -89,8 +89,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     if (_feeds != null) {
-      final updatedPromo = _feeds!.promo.map((item) => item.copyWith(unread: false)).toList();
-      final updatedOrders = _feeds!.orders.map((item) => item.copyWith(unread: false)).toList();
+      final updatedPromo = _feeds!.promo
+          .map((item) => item.copyWith(unread: false))
+          .toList();
+      final updatedOrders = _feeds!.orders
+          .map((item) => item.copyWith(unread: false))
+          .toList();
       setState(() {
         _feeds = NotificationFeeds(promo: updatedPromo, orders: updatedOrders);
       });
@@ -121,67 +125,76 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   );
 
   Widget _skeleton() => Skeletonizer(
-        effect: ShimmerEffect(
-          baseColor: AppColors.skeletonBase,
-          highlightColor: AppColors.skeletonHighlight,
-        ),
-        child: ListView.separated(
-          padding: EdgeInsets.fromLTRB(
-              AppSpacing.gutter, 58, AppSpacing.gutter, 24),
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: 5,
-          separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemBuilder: (_, _) => const TvNotificationItem(notification: _ghost),
-        ),
-      );
+    effect: ShimmerEffect(
+      baseColor: AppColors.skeletonBase,
+      highlightColor: AppColors.skeletonHighlight,
+    ),
+    child: ListView.separated(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.gutter,
+        58,
+        AppSpacing.gutter,
+        24,
+      ),
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 5,
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (_, _) => const TvNotificationItem(notification: _ghost),
+    ),
+  );
 
   /// Empty state theo từng tab (trước đây tab rỗng chỉ là khoảng trắng).
   Widget _empty() {
     final promo = _tab == 'promo';
     return ListView(
-      children: [
-        const SizedBox(height: 60),
-        Center(
-          child: Container(
-            width: 76,
-            height: 76,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.accentSoft,
-              border: Border.all(color: AppColors.accentSoftLine),
-            ),
-            child: TvIcon(promo ? 'ticket-percent' : 'package',
-                size: 30, color: AppColors.textAccent),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Center(
-          child: Text(
-            promo ? 'Chưa có khuyến mãi' : 'Chưa có thông báo đơn hàng',
-            style: AppText.h2().copyWith(fontSize: 17),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              promo
-                  ? 'Ưu đãi và mã giảm giá mới sẽ xuất hiện ở đây.'
-                  : 'Cập nhật về đơn hàng của bạn sẽ hiện ở đây.',
-              textAlign: TextAlign.center,
-              style: AppText.sm(AppColors.textTertiary),
-            ),
-          ),
-        ),
-      ]
-          .animate(interval: AppEffects.staggerStep)
-          .fadeIn(duration: AppEffects.durEnter)
-          .moveY(
-              begin: AppEffects.entranceRise,
-              end: 0,
-              curve: AppEffects.easeStandard),
+      children:
+          [
+                const SizedBox(height: 60),
+                Center(
+                  child: Container(
+                    width: 76,
+                    height: 76,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.accentSoft,
+                      border: Border.all(color: AppColors.accentSoftLine),
+                    ),
+                    child: TvIcon(
+                      promo ? 'ticket-percent' : 'package',
+                      size: 30,
+                      color: AppColors.textAccent,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Center(
+                  child: Text(
+                    promo ? 'Chưa có khuyến mãi' : 'Chưa có thông báo đơn hàng',
+                    style: AppText.h2().copyWith(fontSize: 17),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      promo
+                          ? 'Ưu đãi và mã giảm giá mới sẽ xuất hiện ở đây.'
+                          : 'Cập nhật về đơn hàng của bạn sẽ hiện ở đây.',
+                      textAlign: TextAlign.center,
+                      style: AppText.sm(AppColors.textTertiary),
+                    ),
+                  ),
+                ),
+              ]
+              .animate(interval: AppEffects.staggerStep)
+              .fadeIn(duration: AppEffects.durEnter)
+              .moveY(
+                begin: AppEffects.entranceRise,
+                end: 0,
+                curve: AppEffects.easeStandard,
+              ),
     );
   }
 
@@ -223,7 +236,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ? _skeleton()
                 : Padding(
                     padding: EdgeInsets.fromLTRB(
-                        AppSpacing.gutter, 8, AppSpacing.gutter, 24),
+                      AppSpacing.gutter,
+                      8,
+                      AppSpacing.gutter,
+                      24,
+                    ),
                     child: Column(
                       children: [
                         TvTabs(
@@ -248,16 +265,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                       const SizedBox(height: 10),
                                   itemBuilder: (context, i) =>
                                       TvNotificationItem(
-                                    notification: list[i],
-                                    onTap: () => _markAsRead(list[i]),
-                                  )
+                                            notification: list[i],
+                                            onTap: () => _markAsRead(list[i]),
+                                          )
                                           .animate(
-                                            delay: AppEffects.staggerStep *
+                                            delay:
+                                                AppEffects.staggerStep *
                                                 i.clamp(0, 6),
                                           )
                                           .fadeIn(
-                                              duration: AppEffects.durEnter,
-                                              curve: AppEffects.easeStandard)
+                                            duration: AppEffects.durEnter,
+                                            curve: AppEffects.easeStandard,
+                                          )
                                           .moveY(
                                             begin: AppEffects.entranceRise,
                                             end: 0,

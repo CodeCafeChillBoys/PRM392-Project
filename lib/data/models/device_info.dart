@@ -20,12 +20,12 @@ class DeviceInfo {
   final String updatedAt;
 
   factory DeviceInfo.fromJson(Map<String, dynamic> json) => DeviceInfo(
-        id: '${json['id'] ?? ''}',
-        userId: '${json['userId'] ?? ''}',
-        deviceId: '${json['deviceId'] ?? ''}',
-        deviceName: '${json['deviceName'] ?? ''}',
-        deviceType: '${json['deviceType'] ?? ''}',
-        createdAt: '${json['createdAt'] ?? ''}',
-        updatedAt: '${json['updatedAt'] ?? ''}',
-      );
+    id: '${json['id'] ?? ''}',
+    userId: '${json['userId'] ?? ''}',
+    deviceId: '${json['deviceId'] ?? ''}',
+    deviceName: '${json['deviceName'] ?? ''}',
+    deviceType: '${json['deviceType'] ?? ''}',
+    createdAt: '${json['createdAt'] ?? ''}',
+    updatedAt: '${json['updatedAt'] ?? ''}',
+  );
 }

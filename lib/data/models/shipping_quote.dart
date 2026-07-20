@@ -16,11 +16,11 @@ class ShippingQuote {
   final String routePolyline; // encoded polyline (Google format) để vẽ tuyến
 
   factory ShippingQuote.fromJson(Map<String, dynamic> json) => ShippingQuote(
-        distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0,
-        durationMinutes: (json['durationMinutes'] as num?)?.toDouble() ?? 0,
-        shippingFee: (json['shippingFee'] as num?)?.toDouble() ?? 0,
-        routePolyline: json['routePolyline'] as String? ?? '',
-      );
+    distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0,
+    durationMinutes: (json['durationMinutes'] as num?)?.toDouble() ?? 0,
+    shippingFee: (json['shippingFee'] as num?)?.toDouble() ?? 0,
+    routePolyline: json['routePolyline'] as String? ?? '',
+  );
 
   /// Giải mã [routePolyline] thành danh sách toạ độ để vẽ Polyline trên bản đồ.
   List<LatLng> decodedRoute() => decodePolyline(routePolyline);

@@ -96,7 +96,10 @@ class _TvToastViewState extends State<_TvToastView>
                 end: Offset.zero,
               ).animate(_anim),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   gradient: AppColors.gradientCta,
                   borderRadius: BorderRadius.circular(999),
@@ -105,8 +108,11 @@ class _TvToastViewState extends State<_TvToastView>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(AppIcons.get('check-circle'),
-                        size: 16, color: AppColors.textOnAccent),
+                    Icon(
+                      AppIcons.get('check-circle'),
+                      size: 16,
+                      color: AppColors.textOnAccent,
+                    ),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(

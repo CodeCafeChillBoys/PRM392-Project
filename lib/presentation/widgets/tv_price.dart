@@ -27,11 +27,11 @@ class TvPrice extends StatelessWidget {
   final Color? color;
 
   double get _fs => switch (size) {
-        TvPriceSize.sm => 15,
-        TvPriceSize.md => 20,
-        TvPriceSize.lg => 26,
-        TvPriceSize.xl => 34,
-      };
+    TvPriceSize.sm => 15,
+    TvPriceSize.md => 20,
+    TvPriceSize.lg => 26,
+    TvPriceSize.xl => 34,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +43,9 @@ class TvPrice extends StatelessWidget {
       children: [
         Text(
           formatVnd(value),
-          style: AppText.price(color).copyWith(
-            fontSize: fs,
-            letterSpacing: -fs * 0.01,
-          ),
+          style: AppText.price(
+            color,
+          ).copyWith(fontSize: fs, letterSpacing: -fs * 0.01),
         ),
         if (original != null) ...[
           const SizedBox(width: 8),

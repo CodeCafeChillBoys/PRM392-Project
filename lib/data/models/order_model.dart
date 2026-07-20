@@ -17,18 +17,23 @@ class OrderLine {
   final double unitPrice;
 
   factory OrderLine.fromJson(Map<String, dynamic> json) => OrderLine(
-        productName: '${json['productName'] ?? json['name'] ?? ''}',
-        brand: '${json['brand'] ?? ''}',
-        imageUrl:
-            '${json['imageUrl'] ?? json['image'] ?? json['productImage'] ?? ''}',
-        quantity: (json['quantity'] as num?)?.toInt() ??
-            (json['qty'] as num?)?.toInt() ??
-            1,
-        unitPrice: (json['unitPrice'] as num?)?.toDouble() ??
-            (json['price'] as num?)?.toDouble() ??
-            0,
-      );
+    productName: '${json['productName'] ?? json['name'] ?? ''}',
+    brand: '${json['brand'] ?? ''}',
+    imageUrl:
+        '${json['imageUrl'] ?? json['image'] ?? json['productImage'] ?? ''}',
+    quantity:
+        (json['quantity'] as num?)?.toInt() ??
+        (json['qty'] as num?)?.toInt() ??
+        1,
+    unitPrice:
+        (json['unitPrice'] as num?)?.toDouble() ??
+        (json['price'] as num?)?.toDouble() ??
+        0,
+  );
 }
+
+/// Trạng thái hoàn tiền suy ra từ `paymentStatus` của đơn.
+enum RefundState { none, requested, refunded }
 
 /// Một đơn hàng — khớp BE `OrderResponseDTO`.
 class OrderModel {
@@ -45,13 +50,18 @@ class OrderModel {
     required this.staffId,
     this.itemCount,
     this.lines = const [],
+    this.refundReason,
+    this.refundImageUrl,
+    this.refundRequestedAt,
+    this.deliveredAt,
   });
 
   final String id;
   final String customerName;
   final String shippingAddress;
   final double totalAmount;
-  final String status; // Pending / PendingPayment / Confirmed / Shipped / Delivered / Cancelled
+  final String
+  status; // Pending / PendingPayment / Confirmed / Shipped / Delivered / Cancelled
   final String paymentMethod;
   final String paymentStatus; // Pending / Paid / Failed
   final String orderDate;
@@ -69,24 +79,62 @@ class OrderModel {
   /// không trả mảng chi tiết. Dùng cho panel theo dõi đơn "đang giao gì".
   final List<OrderLine> lines;
 
+  /// Thông tin hoàn tiền (chỉ có khi khách đã gửi yêu cầu). Ảnh là đường dẫn
+  /// tương đối `/uploads/refunds/...` (ghép `ApiConfig.baseUrl` khi hiển thị).
+  final String? refundReason;
+  final String? refundImageUrl;
+  final DateTime? refundRequestedAt;
+
+  /// Thời điểm đơn được xác nhận đã giao — mốc tính cửa sổ hoàn tiền (1 ngày).
+  final DateTime? deliveredAt;
+
+  /// Đơn đủ điều kiện xin hoàn: đã giao + đã thanh toán + còn trong 1 ngày kể
+  /// từ khi giao (khớp ràng buộc BE `RequestRefundAsync`).
+  bool get canRequestRefund {
+    final d = deliveredAt;
+    return status.toLowerCase() == 'delivered' &&
+        paymentStatus.toLowerCase() == 'paid' &&
+        d != null &&
+        DateTime.now().difference(d) <= const Duration(days: 1);
+  }
+
+  /// Trạng thái hoàn tiền suy từ `paymentStatus`.
+  RefundState get refundState {
+    switch (paymentStatus.toLowerCase()) {
+      case 'refundrequested':
+        return RefundState.requested;
+      case 'refunded':
+        return RefundState.refunded;
+      default:
+        return RefundState.none;
+    }
+  }
+
   factory OrderModel.fromJson(Map<String, dynamic> json) => OrderModel(
-        id: '${json['id'] ?? ''}',
-        customerName: json['customerName'] as String? ?? '',
-        shippingAddress: json['shippingAddress'] as String? ?? '',
-        totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0,
-        status: json['status'] as String? ?? '',
-        paymentMethod: json['paymentMethod'] as String? ?? '',
-        paymentStatus: json['paymentStatus'] as String? ?? '',
-        orderDate: '${json['orderDate'] ?? ''}',
-        shippingFee: (json['shippingFee'] as num?)?.toDouble() ?? 0,
-        staffId: '${json['staffId'] ?? ''}',
-        itemCount: _parseItemCount(json),
-        lines: _parseLines(json),
-      );
+    id: '${json['id'] ?? ''}',
+    customerName: json['customerName'] as String? ?? '',
+    shippingAddress: json['shippingAddress'] as String? ?? '',
+    totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0,
+    status: json['status'] as String? ?? '',
+    paymentMethod: json['paymentMethod'] as String? ?? '',
+    paymentStatus: json['paymentStatus'] as String? ?? '',
+    orderDate: '${json['orderDate'] ?? ''}',
+    shippingFee: (json['shippingFee'] as num?)?.toDouble() ?? 0,
+    staffId: '${json['staffId'] ?? ''}',
+    itemCount: _parseItemCount(json),
+    lines: _parseLines(json),
+    refundReason: json['refundReason'] as String?,
+    refundImageUrl: json['refundImageUrl'] as String?,
+    refundRequestedAt: DateTime.tryParse(
+      '${json['refundRequestedAt'] ?? ''}',
+    )?.toLocal(),
+    deliveredAt: DateTime.tryParse('${json['deliveredAt'] ?? ''}')?.toLocal(),
+  );
 
   /// Ưu tiên field đếm sẵn; nếu không có thì suy ra từ độ dài mảng chi tiết đơn.
   static int? _parseItemCount(Map<String, dynamic> json) {
-    final direct = json['itemCount'] ?? json['totalItems'] ?? json['itemsCount'];
+    final direct =
+        json['itemCount'] ?? json['totalItems'] ?? json['itemsCount'];
     if (direct is num) return direct.toInt();
     final items = json['items'] ?? json['orderDetails'] ?? json['orderItems'];
     if (items is List) return items.length;

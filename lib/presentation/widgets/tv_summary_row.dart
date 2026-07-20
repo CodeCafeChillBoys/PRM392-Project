@@ -23,20 +23,21 @@ class TvSummaryRow extends StatelessWidget {
   final SummaryTone tone;
 
   Color get _valueColor => switch (tone) {
-        SummaryTone.normal => AppColors.textPrimary,
-        SummaryTone.accent => AppColors.textAccent,
-        SummaryTone.success => AppColors.success500,
-        SummaryTone.danger => AppColors.danger500,
-        SummaryTone.muted => AppColors.textSecondary,
-      };
+    SummaryTone.normal => AppColors.textPrimary,
+    SummaryTone.accent => AppColors.textAccent,
+    SummaryTone.success => AppColors.success500,
+    SummaryTone.danger => AppColors.danger500,
+    SummaryTone.muted => AppColors.textSecondary,
+  };
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: emphasis ? 6 : 4),
       child: Row(
-        crossAxisAlignment:
-            emphasis ? CrossAxisAlignment.baseline : CrossAxisAlignment.center,
+        crossAxisAlignment: emphasis
+            ? CrossAxisAlignment.baseline
+            : CrossAxisAlignment.center,
         textBaseline: TextBaseline.alphabetic,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -44,8 +45,13 @@ class TvSummaryRow extends StatelessWidget {
             child: Text(
               label,
               style: emphasis
-                  ? AppText.h2().copyWith(fontSize: 16, fontWeight: FontWeight.w700)
-                  : AppText.body(AppColors.textSecondary).copyWith(fontSize: 14),
+                  ? AppText.h2().copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    )
+                  : AppText.body(
+                      AppColors.textSecondary,
+                    ).copyWith(fontSize: 14),
             ),
           ),
           const SizedBox(width: 12),
@@ -55,8 +61,9 @@ class TvSummaryRow extends StatelessWidget {
             // tín hiệu luxury (glow neon đã nghỉ hưu ở đây).
             style: emphasis
                 ? AppText.priceXL()
-                : AppText.body(_valueColor)
-                    .copyWith(fontWeight: FontWeight.w700, fontSize: 14),
+                : AppText.body(
+                    _valueColor,
+                  ).copyWith(fontWeight: FontWeight.w700, fontSize: 14),
           ),
         ],
       ),

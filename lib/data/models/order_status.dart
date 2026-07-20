@@ -49,8 +49,7 @@ enum StaffTab {
       case StaffTab.all:
         return true;
       case StaffTab.toDeliver:
-        return status == OrderStatus.pending ||
-            status == OrderStatus.confirmed;
+        return status == OrderStatus.pending || status == OrderStatus.confirmed;
       case StaffTab.delivering:
         return status == OrderStatus.shipped;
       case StaffTab.done:

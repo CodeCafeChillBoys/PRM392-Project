@@ -98,7 +98,7 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
     return Column(
       children: [
         SizedBox(
-          height: 148,
+          height: 168,
           child: PageView.builder(
             controller: _controller,
             itemCount: _banners.length,
@@ -128,9 +128,7 @@ class _HomeBannerCarouselState extends State<HomeBannerCarousel> {
                 height: 6,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
-                  color: i == _page
-                      ? AppColors.accent
-                      : AppColors.borderStrong,
+                  color: i == _page ? AppColors.accent : AppColors.borderStrong,
                 ),
               ),
               if (i != _banners.length - 1) const SizedBox(width: 5),
@@ -154,84 +152,127 @@ class _Banner extends StatelessWidget {
     // Nền gradient theo theme; banner AI được phép dùng tint cyan (signal).
     final LinearGradient bg = def.isSignal
         ? (light
-            ? const LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [Color(0xFFE2F1F3), Color(0xFFFFFFFF)])
-            : const LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [Color(0xFF07181B), Color(0xFF0A0A0C)]))
+              ? const LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Color(0xFFE2F1F3), Color(0xFFFFFFFF)],
+                )
+              : const LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Color(0xFF07181B), Color(0xFF0A0A0C)],
+                ))
         : (light
-            ? const LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [Color(0xFFF1E8D8), Color(0xFFFFFFFF)])
-            : const LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [Color(0xFF1D1710), Color(0xFF0A0A0C)]));
+              ? const LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Color(0xFFE5FAFB), Color(0xFFFFFFFF)],
+                )
+              : const LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Color(0xFF1D1710), Color(0xFF0A0A0C)],
+                ));
     final Color accent = def.isSignal ? AppColors.signal : AppColors.textAccent;
 
     return PressableScale(
       onTap: onTap ?? () {},
       haptic: onTap == null ? PressHaptic.none : PressHaptic.light,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: bg,
-          borderRadius: BorderRadius.circular(AppRadii.lg),
-          border: Border.all(color: AppColors.borderSubtle),
-          boxShadow: AppEffects.shadowSm,
-        ),
-        padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(def.eyebrow,
-                      style: AppText.label(accent).copyWith(fontSize: 10)),
-                  const SizedBox(height: 8),
-                  Text(
-                    def.title,
-                    style: AppText.h2().copyWith(fontSize: 18, height: 1.2),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(def.sub,
-                      style: AppText.xs(AppColors.textTertiary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                ],
-              ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: bg,
+              borderRadius: BorderRadius.circular(AppRadii.xl),
+              border: Border.all(color: AppColors.borderSubtle),
+              boxShadow: AppEffects.shadowSm,
             ),
-            const SizedBox(width: 10),
-            // "Ảnh" typographic: icon lớn mờ — điểm nhấn thị giác không stock-photo.
-            Opacity(
-              opacity: 0.85,
-              child: Container(
-                width: 64,
-                height: 64,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: def.isSignal
-                      ? AppColors.glassCyan
-                      : AppColors.accentSoft,
-                  border: Border.all(
-                    color: def.isSignal
-                        ? AppColors.signal.withValues(alpha: 0.35)
-                        : AppColors.accentSoftLine,
+            padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        def.eyebrow,
+                        style: AppText.label(accent).copyWith(fontSize: 10),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        def.title,
+                        style: AppText.h2().copyWith(fontSize: 18, height: 1.2),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        def.sub,
+                        style: AppText.xs(AppColors.textTertiary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
-                child: TvIcon(def.icon, size: 28, color: accent),
+                // Chừa chỗ cho khối minh hoạ bên phải.
+                const SizedBox(width: 100),
+              ],
+            ),
+          ),
+          // Khối minh hoạ nằm GỌN bên phải trong card: ring echo mờ + puck
+          // trắng bật glow cyan (puck "nổi" trên quầng cyan tạo cảm giác 3D).
+          Positioned(
+            right: 6,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: SizedBox(
+                width: 104,
+                height: 104,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 104,
+                      height: 104,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: def.isSignal
+                            ? AppColors.glassCyan
+                            : AppColors.accentSoft,
+                      ),
+                    ),
+                    Container(
+                      width: 76,
+                      height: 76,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bgSurface,
+                        border: Border.all(
+                          color: def.isSignal
+                              ? AppColors.signal.withValues(alpha: 0.35)
+                              : AppColors.accentSoftLine,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.22),
+                            blurRadius: 22,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: TvIcon(def.icon, size: 36, color: accent),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -298,14 +339,18 @@ class CategoryTilesRow extends StatelessWidget {
                       border: Border.all(color: AppColors.borderSubtle),
                       boxShadow: AppEffects.shadowSm,
                     ),
-                    child: TvIcon(_iconFor(c),
-                        size: 22, color: AppColors.textAccent),
+                    child: TvIcon(
+                      _iconFor(c),
+                      size: 22,
+                      color: AppColors.textAccent,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     c,
-                    style: AppText.xs(AppColors.textSecondary)
-                        .copyWith(fontSize: 10.5),
+                    style: AppText.xs(
+                      AppColors.textSecondary,
+                    ).copyWith(fontSize: 10.5),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
@@ -351,13 +396,19 @@ class TrustStrip extends StatelessWidget {
                 children: [
                   TvIcon(_items[i].$1, size: 18, color: AppColors.textAccent),
                   const SizedBox(height: 7),
-                  Text(_items[i].$2,
-                      style: AppText.xs(AppColors.textPrimary)
-                          .copyWith(fontWeight: FontWeight.w600)),
+                  Text(
+                    _items[i].$2,
+                    style: AppText.xs(
+                      AppColors.textPrimary,
+                    ).copyWith(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 1),
-                  Text(_items[i].$3,
-                      style: AppText.xs(AppColors.textTertiary)
-                          .copyWith(fontSize: 9.5)),
+                  Text(
+                    _items[i].$3,
+                    style: AppText.xs(
+                      AppColors.textTertiary,
+                    ).copyWith(fontSize: 9.5),
+                  ),
                 ],
               ),
             ),
@@ -376,7 +427,11 @@ class TrustStrip extends StatelessWidget {
 /// viền, eyebrow, tên cỡ display, một câu dẫn. Đây là chỗ thở giữa các dải
 /// dày đặc, và là thứ khiến Home không giống template.
 class VoidPicksSection extends StatelessWidget {
-  const VoidPicksSection({super.key, required this.product, required this.onOpen});
+  const VoidPicksSection({
+    super.key,
+    required this.product,
+    required this.onOpen,
+  });
 
   final Product product;
   final VoidCallback onOpen;
@@ -415,16 +470,20 @@ class VoidPicksSection extends StatelessWidget {
                       left: 12,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.bgBase.withValues(alpha: 0.72),
                           borderRadius: BorderRadius.circular(6),
-                          border:
-                              Border.all(color: AppColors.accentSoftLine),
+                          border: Border.all(color: AppColors.accentSoftLine),
                         ),
-                        child: Text('VOID PICKS',
-                            style: AppText.label(AppColors.textAccent)
-                                .copyWith(fontSize: 9.5)),
+                        child: Text(
+                          'VOID PICKS',
+                          style: AppText.label(
+                            AppColors.textAccent,
+                          ).copyWith(fontSize: 9.5),
+                        ),
                       ),
                     ),
                   ],
@@ -437,8 +496,9 @@ class VoidPicksSection extends StatelessWidget {
                   children: [
                     Text(
                       '${product.brand.toUpperCase()} · ${product.categoryName.toUpperCase()}',
-                      style: AppText.label(AppColors.textTertiary)
-                          .copyWith(fontSize: 9.5),
+                      style: AppText.label(
+                        AppColors.textTertiary,
+                      ).copyWith(fontSize: 9.5),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -451,8 +511,9 @@ class VoidPicksSection extends StatelessWidget {
                     Text(
                       'Lựa chọn của đội ngũ TECH_VOID tuần này — hiệu năng và '
                       'thiết kế đáng để nâng cấp.',
-                      style: AppText.sm(AppColors.textSecondary)
-                          .copyWith(height: 1.5),
+                      style: AppText.sm(
+                        AppColors.textSecondary,
+                      ).copyWith(height: 1.5),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -462,12 +523,18 @@ class VoidPicksSection extends StatelessWidget {
                         Expanded(child: TvPrice(value: product.price)),
                         Row(
                           children: [
-                            Text('Xem chi tiết',
-                                style: AppText.label(AppColors.textAccent)
-                                    .copyWith(fontSize: 11)),
+                            Text(
+                              'Xem chi tiết',
+                              style: AppText.label(
+                                AppColors.textAccent,
+                              ).copyWith(fontSize: 11),
+                            ),
                             const SizedBox(width: 4),
-                            TvIcon('arrow-right',
-                                size: 15, color: AppColors.textAccent),
+                            TvIcon(
+                              'arrow-right',
+                              size: 15,
+                              color: AppColors.textAccent,
+                            ),
                           ],
                         ),
                       ],
@@ -509,9 +576,12 @@ class RecentlyViewedStrip extends StatelessWidget {
             children: [
               TvIcon('clock', size: 15, color: AppColors.textTertiary),
               const SizedBox(width: 8),
-              Text('VỪA XEM',
-                  style: AppText.label(AppColors.textPrimary)
-                      .copyWith(fontSize: 13)),
+              Text(
+                'VỪA XEM',
+                style: AppText.label(
+                  AppColors.textPrimary,
+                ).copyWith(fontSize: 13),
+              ),
             ],
           ),
         ),
@@ -542,13 +612,16 @@ class RecentlyViewedStrip extends StatelessWidget {
                         ),
                         clipBehavior: Clip.antiAlias,
                         child: ProductImage(
-                            url: p.imageUrl, dimmed: p.isSoldOut),
+                          url: p.imageUrl,
+                          dimmed: p.isSoldOut,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         p.name,
-                        style: AppText.xs(AppColors.textSecondary)
-                            .copyWith(fontSize: 10.5, height: 1.25),
+                        style: AppText.xs(
+                          AppColors.textSecondary,
+                        ).copyWith(fontSize: 10.5, height: 1.25),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -626,39 +699,50 @@ class _FlashSaleStripState extends State<FlashSaleStrip> {
             children: [
               TvIcon('zap', size: 16, color: AppColors.sale500),
               const SizedBox(width: 8),
-              Text('FLASH SALE',
-                  style: AppText.label(AppColors.textPrimary)
-                      .copyWith(fontSize: 13)),
+              Text(
+                'FLASH SALE',
+                style: AppText.label(
+                  AppColors.textPrimary,
+                ).copyWith(fontSize: 13),
+              ),
               const SizedBox(width: 10),
               // Đồng hồ đếm ngược tới 0h — pill đỏ dịu.
               // Dưới 10 phút cuối: nhấp nháy nhẹ để tạo cảm giác gấp gáp.
-              Builder(builder: (context) {
-                final urgent = _left.inMinutes < 10;
-                final pill = Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.dangerSoft,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    _fmt(_left),
-                    style: AppText.mono(size: 11, color: AppColors.sale500)
-                        .copyWith(fontWeight: FontWeight.w700),
-                  ),
-                );
-                if (!urgent) return pill;
-                return pill
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .fadeIn(
-                      duration: const Duration(milliseconds: 620),
-                      begin: 0.45,
-                      curve: Curves.easeInOut,
-                    );
-              }),
+              Builder(
+                builder: (context) {
+                  final urgent = _left.inMinutes < 10;
+                  final pill = Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.dangerSoft,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      _fmt(_left),
+                      style: AppText.mono(
+                        size: 11,
+                        color: AppColors.sale500,
+                      ).copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  );
+                  if (!urgent) return pill;
+                  return pill
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .fadeIn(
+                        duration: const Duration(milliseconds: 620),
+                        begin: 0.45,
+                        curve: Curves.easeInOut,
+                      );
+                },
+              ),
               const Spacer(),
-              Text('Kết thúc hôm nay',
-                  style: AppText.xs(AppColors.textTertiary)),
+              Text(
+                'Kết thúc hôm nay',
+                style: AppText.xs(AppColors.textTertiary),
+              ),
             ],
           ),
         ),
@@ -709,7 +793,7 @@ class _FlashCard extends StatelessWidget {
         width: 138,
         decoration: BoxDecoration(
           color: AppColors.bgSurface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
           border: Border.all(color: AppColors.borderSubtle),
           boxShadow: AppEffects.shadowSm,
         ),
@@ -725,7 +809,9 @@ class _FlashCard extends StatelessWidget {
                   child: ColoredBox(
                     color: AppColors.ink900,
                     child: ProductImage(
-                        url: product.imageUrl, dimmed: product.isSoldOut),
+                      url: product.imageUrl,
+                      dimmed: product.isSoldOut,
+                    ),
                   ),
                 ),
                 // Badge -% — đỏ sale, chữ trắng (đúng liều chất "chợ").
@@ -734,15 +820,19 @@ class _FlashCard extends StatelessWidget {
                   left: 8,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.sale500,
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
                       '-$discount%',
-                      style: AppText.mono(size: 10, color: Colors.white)
-                          .copyWith(fontWeight: FontWeight.w700),
+                      style: AppText.mono(
+                        size: 10,
+                        color: Colors.white,
+                      ).copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
@@ -755,8 +845,9 @@ class _FlashCard extends StatelessWidget {
                 children: [
                   Text(
                     product.name,
-                    style: AppText.sm(AppColors.textPrimary)
-                        .copyWith(fontWeight: FontWeight.w600, height: 1.25),
+                    style: AppText.sm(
+                      AppColors.textPrimary,
+                    ).copyWith(fontWeight: FontWeight.w600, height: 1.25),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

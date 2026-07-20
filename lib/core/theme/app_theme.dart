@@ -15,37 +15,39 @@ class AppTheme {
   static ThemeData current() => AppColors.isLight ? light() : dark();
 
   static ThemeData dark() => _base(
-        brightness: Brightness.dark,
-        scheme: ColorScheme.dark(
-          brightness: Brightness.dark,
-          primary: AppColors.gold500,
-          onPrimary: const Color(0xFF161006),
-          secondary: AppColors.gold700,
-          onSecondary: const Color(0xFFF6F4EF),
-          surface: const Color(0xFF101013),
-          onSurface: const Color(0xFFF6F4EF),
-          error: AppColors.danger500,
-          onError: Colors.white,
-        ),
-      );
+    brightness: Brightness.dark,
+    scheme: ColorScheme.dark(
+      brightness: Brightness.dark,
+      primary: AppColors.gold500,
+      onPrimary: const Color(0xFF161006),
+      secondary: AppColors.gold700,
+      onSecondary: const Color(0xFFF6F4EF),
+      surface: const Color(0xFF101013),
+      onSurface: const Color(0xFFF6F4EF),
+      error: AppColors.danger500,
+      onError: Colors.white,
+    ),
+  );
 
   static ThemeData light() => _base(
-        brightness: Brightness.light,
-        scheme: ColorScheme.light(
-          brightness: Brightness.light,
-          primary: const Color(0xFF17140E), // CTA đen Musinsa
-          onPrimary: const Color(0xFFFDF9F0),
-          secondary: AppColors.gold600,
-          onSecondary: const Color(0xFF1A1712),
-          surface: Colors.white,
-          onSurface: const Color(0xFF1A1712),
-          error: AppColors.sale500,
-          onError: Colors.white,
-        ),
-      );
+    brightness: Brightness.light,
+    scheme: ColorScheme.light(
+      brightness: Brightness.light,
+      primary: const Color(0xFF141919), // CTA đen mát Musinsa
+      onPrimary: const Color(0xFFFFFFFF),
+      secondary: const Color(0xFF2DCCD3), // cyan brand
+      onSecondary: const Color(0xFF141919),
+      surface: Colors.white,
+      onSurface: const Color(0xFF141919),
+      error: AppColors.sale500,
+      onError: Colors.white,
+    ),
+  );
 
-  static ThemeData _base(
-      {required Brightness brightness, required ColorScheme scheme}) {
+  static ThemeData _base({
+    required Brightness brightness,
+    required ColorScheme scheme,
+  }) {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,

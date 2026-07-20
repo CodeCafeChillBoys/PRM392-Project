@@ -44,7 +44,9 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
     super.initState();
     _openGateway();
     _timer = Timer.periodic(
-        const Duration(seconds: 3), (_) => _poll(isAuto: true));
+      const Duration(seconds: 3),
+      (_) => _poll(isAuto: true),
+    );
   }
 
   @override
@@ -55,9 +57,13 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
 
   Future<void> _openGateway() async {
     try {
-      await launchUrl(Uri.parse(widget.gatewayUrl),
-          mode: LaunchMode.externalApplication);
-    } catch (_) {/* đơn đã tạo; lỗi mở cổng thì user bấm "Mở lại cổng" */}
+      await launchUrl(
+        Uri.parse(widget.gatewayUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {
+      /* đơn đã tạo; lỗi mở cổng thì user bấm "Mở lại cổng" */
+    }
   }
 
   Future<void> _poll({bool isAuto = false}) async {
@@ -75,8 +81,10 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
         _timer?.cancel();
         setState(() => _state = _PayState.failed);
       } else if (!isAuto) {
-        TvToast.show(context,
-            'Đơn vẫn đang chờ thanh toán. Hoàn tất trên VNPay rồi bấm kiểm tra lại nhé.');
+        TvToast.show(
+          context,
+          'Đơn vẫn đang chờ thanh toán. Hoàn tất trên VNPay rồi bấm kiểm tra lại nhé.',
+        );
       }
     } catch (_) {
       if (!isAuto && mounted) TvToast.show(context, 'Lỗi kiểm tra trạng thái.');
@@ -103,10 +111,7 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
             onBack: _goHome,
           ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: _body(),
-            ),
+            child: Padding(padding: const EdgeInsets.all(24), child: _body()),
           ),
         ],
       ),
@@ -138,88 +143,109 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
       children: [
         Expanded(
           child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Thay spinner generic: huy hiệu thẻ thanh toán "thở" + vành
-                // sáng chạy vòng — nói đúng việc đang diễn ra (chờ cổng VNPay).
-                SizedBox(
-                  width: 104,
-                  height: 104,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Vành gradient xoay chậm
-                      Container(
-                        width: 104,
-                        height: 104,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: SweepGradient(
-                            colors: [
-                              AppColors.accent.withValues(alpha: 0),
-                              AppColors.accent.withValues(alpha: 0.55),
-                              AppColors.accent.withValues(alpha: 0),
+            child:
+                Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Thay spinner generic: huy hiệu thẻ thanh toán "thở" + vành
+                        // sáng chạy vòng — nói đúng việc đang diễn ra (chờ cổng VNPay).
+                        SizedBox(
+                          width: 104,
+                          height: 104,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Vành gradient xoay chậm
+                              Container(
+                                    width: 104,
+                                    height: 104,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: SweepGradient(
+                                        colors: [
+                                          AppColors.accent.withValues(alpha: 0),
+                                          AppColors.accent.withValues(
+                                            alpha: 0.55,
+                                          ),
+                                          AppColors.accent.withValues(alpha: 0),
+                                        ],
+                                        stops: const [0.0, 0.5, 1.0],
+                                      ),
+                                    ),
+                                  )
+                                  .animate(onPlay: (c) => c.repeat())
+                                  .rotate(
+                                    duration: const Duration(
+                                      milliseconds: 2400,
+                                    ),
+                                  ),
+                              // Lõi đặc che giữa → thành vành mảnh
+                              Container(
+                                width: 92,
+                                height: 92,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.bgBase,
+                                ),
+                              ),
+                              // Huy hiệu thẻ, thở nhẹ
+                              Container(
+                                    width: 78,
+                                    height: 78,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.accentSoft,
+                                      border: Border.all(
+                                        color: AppColors.accentSoftLine,
+                                      ),
+                                    ),
+                                    child: TvIcon(
+                                      'credit-card',
+                                      size: 32,
+                                      color: AppColors.textAccent,
+                                    ),
+                                  )
+                                  .animate(
+                                    onPlay: (c) => c.repeat(reverse: true),
+                                  )
+                                  .scaleXY(
+                                    begin: 1,
+                                    end: 1.06,
+                                    duration: const Duration(
+                                      milliseconds: 1100,
+                                    ),
+                                    curve: Curves.easeInOut,
+                                  ),
                             ],
-                            stops: const [0.0, 0.5, 1.0],
                           ),
                         ),
-                      )
-                          .animate(onPlay: (c) => c.repeat())
-                          .rotate(duration: const Duration(milliseconds: 2400)),
-                      // Lõi đặc che giữa → thành vành mảnh
-                      Container(
-                        width: 92,
-                        height: 92,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.bgBase,
+                        const SizedBox(height: 24),
+                        Text(
+                          'Đang chờ thanh toán VNPay',
+                          style: AppText.h2(),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      // Huy hiệu thẻ, thở nhẹ
-                      Container(
-                        width: 78,
-                        height: 78,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.accentSoft,
-                          border: Border.all(color: AppColors.accentSoftLine),
-                        ),
-                        child: TvIcon('credit-card',
-                            size: 32, color: AppColors.textAccent),
-                      )
-                          .animate(onPlay: (c) => c.repeat(reverse: true))
-                          .scaleXY(
-                            begin: 1,
-                            end: 1.06,
-                            duration: const Duration(milliseconds: 1100),
-                            curve: Curves.easeInOut,
+                        const SizedBox(height: 10),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: Text(
+                            'Hoàn tất thanh toán trên cổng VNPay, rồi quay lại app — màn này sẽ tự cập nhật.',
+                            textAlign: TextAlign.center,
+                            style: AppText.body(
+                              AppColors.textSecondary,
+                            ).copyWith(height: 1.55),
                           ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text('Đang chờ thanh toán VNPay',
-                    style: AppText.h2(), textAlign: TextAlign.center),
-                const SizedBox(height: 10),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 300),
-                  child: Text(
-                    'Hoàn tất thanh toán trên cổng VNPay, rồi quay lại app — màn này sẽ tự cập nhật.',
-                    textAlign: TextAlign.center,
-                    style: AppText.body(AppColors.textSecondary)
-                        .copyWith(height: 1.55),
-                  ),
-                ),
-              ],
-            )
-                .animate()
-                .fadeIn(duration: AppEffects.durEnter)
-                .moveY(
-                    begin: AppEffects.entranceRise,
-                    end: 0,
-                    curve: AppEffects.easeStandard),
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(duration: AppEffects.durEnter)
+                    .moveY(
+                      begin: AppEffects.entranceRise,
+                      end: 0,
+                      curve: AppEffects.easeStandard,
+                    ),
           ),
         ),
         TvButton(
@@ -272,10 +298,13 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
                 const SizedBox(height: 10),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 300),
-                  child: Text(subtitle,
-                      textAlign: TextAlign.center,
-                      style: AppText.body(AppColors.textSecondary)
-                          .copyWith(height: 1.55)),
+                  child: Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    style: AppText.body(
+                      AppColors.textSecondary,
+                    ).copyWith(height: 1.55),
+                  ),
                 ),
               ],
             ),

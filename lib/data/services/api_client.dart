@@ -35,10 +35,10 @@ class ApiClient {
   String? userRole;
 
   Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        if (authToken != null) 'Authorization': 'Bearer $authToken',
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    if (authToken != null) 'Authorization': 'Bearer $authToken',
+  };
 
   /// GET có auto-retry cho lỗi KẾT NỐI thoáng qua (mạng ảo emulator hay bị
   /// "Connection reset by peer" / timeout dù BE khoẻ). CHỈ retry lỗi kết nối,
@@ -47,13 +47,15 @@ class ApiClient {
   Future<dynamic> get(String endpoint, {Map<String, dynamic>? query}) async {
     final uri = ApiConfig.uri(endpoint, query);
     const maxTries = 3;
-    for (var attempt = 1;; attempt++) {
+    for (var attempt = 1; ; attempt++) {
       try {
-        final res =
-            await _client.get(uri, headers: _headers).timeout(ApiConfig.timeout);
+        final res = await _client
+            .get(uri, headers: _headers)
+            .timeout(ApiConfig.timeout);
         return _decode(res);
       } on Exception catch (e) {
-        final transient = e is TimeoutException ||
+        final transient =
+            e is TimeoutException ||
             e is SocketException ||
             e is http.ClientException;
         if (!transient || attempt >= maxTries) rethrow;
@@ -65,8 +67,11 @@ class ApiClient {
 
   Future<dynamic> post(String endpoint, {Object? body}) async {
     final res = await _client
-        .post(ApiConfig.uri(endpoint),
-            headers: _headers, body: jsonEncode(body))
+        .post(
+          ApiConfig.uri(endpoint),
+          headers: _headers,
+          body: jsonEncode(body),
+        )
         .timeout(ApiConfig.timeout);
     return _decode(res);
   }
@@ -91,8 +96,7 @@ class ApiClient {
 
   Future<dynamic> put(String endpoint, {Object? body}) async {
     final res = await _client
-        .put(ApiConfig.uri(endpoint),
-            headers: _headers, body: jsonEncode(body))
+        .put(ApiConfig.uri(endpoint), headers: _headers, body: jsonEncode(body))
         .timeout(ApiConfig.timeout);
     return _decode(res);
   }

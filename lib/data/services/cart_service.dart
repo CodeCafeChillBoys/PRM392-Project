@@ -21,16 +21,17 @@ class CartService {
   Future<void> addItem(String productId, int quantity) async {
     final userId = _client.userId;
     if (userId == null) return;
-    await _client.post(ApiConfig.cartAdd, body: {
-      'userId': userId,
-      'productId': productId,
-      'quantity': quantity,
-    });
+    await _client.post(
+      ApiConfig.cartAdd,
+      body: {'userId': userId, 'productId': productId, 'quantity': quantity},
+    );
   }
 
   Future<void> updateQuantity(String cartItemId, int quantity) async {
-    await _client
-        .put(ApiConfig.cartItemById(cartItemId), body: {'quantity': quantity});
+    await _client.put(
+      ApiConfig.cartItemById(cartItemId),
+      body: {'quantity': quantity},
+    );
   }
 
   Future<void> removeItem(String cartItemId) async {

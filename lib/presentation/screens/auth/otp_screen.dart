@@ -124,34 +124,36 @@ class _OtpScreenState extends State<OtpScreen> {
                 children: [
                   const SizedBox(height: 12),
                   Text('Nhập mã OTP', style: AppText.h1()).animate().fadeIn(
-                      duration: AppEffects.durEnter,
-                      curve: AppEffects.easeStandard),
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  ),
                   const SizedBox(height: 8),
                   Text.rich(
-                    TextSpan(
-                      style: AppText.body(
-                        AppColors.textSecondary,
-                      ).copyWith(fontSize: 14, height: 1.5),
-                      children: [
-                        const TextSpan(
-                          text: 'Mã xác thực 6 số đã được gửi tới\n',
-                        ),
                         TextSpan(
-                          text: widget.email,
-                          style: AppText.mono(
-                            size: 13,
-                            color: AppColors.textAccent,
-                          ),
+                          style: AppText.body(
+                            AppColors.textSecondary,
+                          ).copyWith(fontSize: 14, height: 1.5),
+                          children: [
+                            const TextSpan(
+                              text: 'Mã xác thực 6 số đã được gửi tới\n',
+                            ),
+                            TextSpan(
+                              text: widget.email,
+                              style: AppText.mono(
+                                size: 13,
+                                color: AppColors.textAccent,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  )
+                      )
                       .animate(delay: AppEffects.staggerStep)
                       .fadeIn(duration: AppEffects.durEnter)
                       .moveY(
-                          begin: AppEffects.entranceRise,
-                          end: 0,
-                          curve: AppEffects.easeStandard),
+                        begin: AppEffects.entranceRise,
+                        end: 0,
+                        curve: AppEffects.easeStandard,
+                      ),
                   const SizedBox(height: 28),
                   // 6 ô OTP nảy vào lần lượt — nhịp gõ mã.
                   Row(
@@ -159,9 +161,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     children: [
                       for (var i = 0; i < _otpLength; i++)
                         _otpBox(i)
-                            .animate(
-                              delay: AppEffects.staggerStep * (2 + i),
-                            )
+                            .animate(delay: AppEffects.staggerStep * (2 + i))
                             .fadeIn(duration: AppEffects.durBase)
                             .scaleXY(
                               begin: 0.8,

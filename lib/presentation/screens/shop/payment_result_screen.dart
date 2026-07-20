@@ -92,10 +92,8 @@ class PaymentResultScreen extends StatelessWidget {
                                   ),
                                 ],
                         ),
-                        child: Icon(
-                          success
-                              ? Icons.check_circle_outline_rounded
-                              : Icons.error_outline_rounded,
+                        child: TvIcon(
+                          success ? 'check-circle' : 'x-circle',
                           size: 54,
                           color: success
                               ? AppColors.success500
@@ -108,8 +106,8 @@ class PaymentResultScreen extends StatelessWidget {
                       Text(
                         success
                             ? (_isCod
-                                ? 'Đặt hàng thành công!'
-                                : 'Thanh toán thành công!')
+                                  ? 'Đặt hàng thành công!'
+                                  : 'Thanh toán thành công!')
                             : 'Thanh toán thất bại',
                         style: AppText.h1(
                           success ? AppColors.success500 : AppColors.danger500,
@@ -120,8 +118,8 @@ class PaymentResultScreen extends StatelessWidget {
                       Text(
                         success
                             ? (_isCod
-                                ? 'Cảm ơn bạn đã tin tưởng mua sắm tại TECH_VOID. Đơn hàng của bạn đã được tiếp nhận — bạn thanh toán khi nhận hàng.'
-                                : 'Cảm ơn bạn đã tin tưởng mua sắm tại TECH_VOID. Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.')
+                                  ? 'Cảm ơn bạn đã tin tưởng mua sắm tại TECH_VOID. Đơn hàng của bạn đã được tiếp nhận — bạn thanh toán khi nhận hàng.'
+                                  : 'Cảm ơn bạn đã tin tưởng mua sắm tại TECH_VOID. Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.')
                             : 'Giao dịch của bạn đã bị từ chối hoặc gặp sự cố. Vui lòng kiểm tra lại phương thức thanh toán.',
                         style: AppText.body(AppColors.textSecondary),
                         textAlign: TextAlign.center,

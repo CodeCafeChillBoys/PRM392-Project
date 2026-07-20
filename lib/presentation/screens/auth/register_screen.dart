@@ -70,95 +70,98 @@ class _RegisterScreenState extends State<RegisterScreen> {
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Tạo tài khoản TECH_VOID', style: AppText.h1()),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Gia nhập cộng đồng công nghệ ngay hôm nay.',
-                    style: AppText.body(
-                      AppColors.textSecondary,
-                    ).copyWith(fontSize: 14),
-                  ),
-                  const SizedBox(height: 24),
-                  _Field(
-                    label: 'Họ và tên',
-                    controller: _name,
-                    iconName: 'user',
-                    hint: 'Nguyễn Văn A',
-                  ),
-                  _Field(
-                    label: 'Email',
-                    controller: _email,
-                    iconName: 'mail',
-                    hint: 'email@techstore.vn',
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  _Field(
-                    label: 'Số điện thoại',
-                    controller: _phone,
-                    iconName: 'phone',
-                    hint: '090 123 4567',
-                    keyboardType: TextInputType.phone,
-                  ),
-                  _Field(
-                    label: 'Mật khẩu',
-                    controller: _password,
-                    iconName: 'lock',
-                    hint: '••••••••',
-                    obscure: true,
-                  ),
-                  _Field(
-                    label: 'Nhập lại mật khẩu',
-                    controller: _confirm,
-                    iconName: 'lock',
-                    hint: '••••••••',
-                    obscure: true,
-                  ),
-                  const SizedBox(height: 24),
-                  TvButton(
-                    label: 'Đăng ký',
-                    size: TvButtonSize.lg,
-                    fullWidth: true,
-                    loading: _loading,
-                    onPressed: _submit,
-                  ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
+                children:
+                    [
+                          Text('Tạo tài khoản TECH_VOID', style: AppText.h1()),
+                          const SizedBox(height: 6),
                           Text(
-                            'Đã có tài khoản? ',
-                            style: AppText.sm().copyWith(fontSize: 13),
+                            'Gia nhập cộng đồng công nghệ ngay hôm nay.',
+                            style: AppText.body(
+                              AppColors.textSecondary,
+                            ).copyWith(fontSize: 14),
                           ),
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Text(
-                              'Đăng nhập',
-                              style: AppText.sm(AppColors.textAccent).copyWith(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                          const SizedBox(height: 24),
+                          _Field(
+                            label: 'Họ và tên',
+                            controller: _name,
+                            iconName: 'user',
+                            hint: 'Nguyễn Văn A',
+                          ),
+                          _Field(
+                            label: 'Email',
+                            controller: _email,
+                            iconName: 'mail',
+                            hint: 'email@techstore.vn',
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          _Field(
+                            label: 'Số điện thoại',
+                            controller: _phone,
+                            iconName: 'phone',
+                            hint: '090 123 4567',
+                            keyboardType: TextInputType.phone,
+                          ),
+                          _Field(
+                            label: 'Mật khẩu',
+                            controller: _password,
+                            iconName: 'lock',
+                            hint: '••••••••',
+                            obscure: true,
+                          ),
+                          _Field(
+                            label: 'Nhập lại mật khẩu',
+                            controller: _confirm,
+                            iconName: 'lock',
+                            hint: '••••••••',
+                            obscure: true,
+                          ),
+                          const SizedBox(height: 24),
+                          TvButton(
+                            label: 'Đăng ký',
+                            size: TvButtonSize.lg,
+                            fullWidth: true,
+                            loading: _loading,
+                            onPressed: _submit,
+                          ),
+                          const SizedBox(height: 20),
+                          Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Đã có tài khoản? ',
+                                    style: AppText.sm().copyWith(fontSize: 13),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () => Navigator.pop(context),
+                                    child: Text(
+                                      'Đăng nhập',
+                                      style: AppText.sm(AppColors.textAccent)
+                                          .copyWith(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ]
-                    // Form vào màn theo nhịp — cùng ngữ pháp entrance toàn app.
-                    .animate(interval: AppEffects.staggerStep)
-                    .fadeIn(
-                        duration: AppEffects.durEnter,
-                        curve: AppEffects.easeStandard)
-                    .moveY(
-                      begin: AppEffects.entranceRise,
-                      end: 0,
-                      duration: AppEffects.durEnter,
-                      curve: AppEffects.easeStandard,
-                    ),
+                        ]
+                        // Form vào màn theo nhịp — cùng ngữ pháp entrance toàn app.
+                        .animate(interval: AppEffects.staggerStep)
+                        .fadeIn(
+                          duration: AppEffects.durEnter,
+                          curve: AppEffects.easeStandard,
+                        )
+                        .moveY(
+                          begin: AppEffects.entranceRise,
+                          end: 0,
+                          duration: AppEffects.durEnter,
+                          curve: AppEffects.easeStandard,
+                        ),
               ),
             ),
           ),

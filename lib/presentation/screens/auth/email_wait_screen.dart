@@ -92,23 +92,23 @@ class _EmailWaitScreenState extends State<EmailWaitScreen> {
                         children: [
                           // Huy hiệu mail "thở" — tín hiệu đang chờ bạn bấm link.
                           Container(
-                            width: 96,
-                            height: 96,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.accentSoft,
-                              border: Border.all(
-                                color: AppColors.accentSoftLine,
-                              ),
-                              boxShadow: AppEffects.glowAccentMd,
-                            ),
-                            child: TvIcon(
-                              'mail-open',
-                              size: 42,
-                              color: AppColors.textAccent,
-                            ),
-                          )
+                                width: 96,
+                                height: 96,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.accentSoft,
+                                  border: Border.all(
+                                    color: AppColors.accentSoftLine,
+                                  ),
+                                  boxShadow: AppEffects.glowAccentMd,
+                                ),
+                                child: TvIcon(
+                                  'mail-open',
+                                  size: 42,
+                                  color: AppColors.textAccent,
+                                ),
+                              )
                               .animate(onPlay: (c) => c.repeat(reverse: true))
                               .scaleXY(
                                 begin: 1,

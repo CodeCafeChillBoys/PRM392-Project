@@ -45,35 +45,54 @@ class OrderService {
     if (userId == null) {
       throw Exception('Chưa đăng nhập — không thể đặt hàng.');
     }
-    final json = await _client.post(ApiConfig.checkout, body: {
-      'shippingAddress': shippingAddress,
-      'paymentMethod': paymentMethod,
-      'userId': userId, // BE bắt buộc userId
-      // Toạ độ + phí ship: BE bỏ qua tới khi bổ sung (gap C1 trong báo cáo),
-      // gửi sẵn để khi BE thêm là chạy luôn không cần sửa FE.
-      'destinationLat': ?destinationLat,
-      'destinationLng': ?destinationLng,
-      'shippingFee': ?shippingFee,
-    }) as Map<String, dynamic>;
+    final json =
+        await _client.post(
+              ApiConfig.checkout,
+              body: {
+                'shippingAddress': shippingAddress,
+                'paymentMethod': paymentMethod,
+                'userId': userId, // BE bắt buộc userId
+                // Toạ độ + phí ship: BE bỏ qua tới khi bổ sung (gap C1 trong báo cáo),
+                // gửi sẵn để khi BE thêm là chạy luôn không cần sửa FE.
+                'destinationLat': ?destinationLat,
+                'destinationLng': ?destinationLng,
+                'shippingFee': ?shippingFee,
+              },
+            )
+            as Map<String, dynamic>;
     // orderId: VNPay trả ở top-level, COD nằm trong data.id
     final data = json['data'];
-    final orderId = json['orderId'] ??
+    final orderId =
+        json['orderId'] ??
         json['id'] ??
         (data is Map<String, dynamic> ? data['id'] : null) ??
         '';
     return OrderResult(
       orderId: '$orderId',
-      gatewayUrl: json['paymentUrl'] as String? ?? json['gatewayUrl'] as String?,
+      gatewayUrl:
+          json['paymentUrl'] as String? ?? json['gatewayUrl'] as String?,
     );
   }
 
   /// Tra trạng thái thanh toán của đơn (cho màn chờ VNPay): 'Pending' | 'Paid' | 'Failed'.
   Future<String> fetchPaymentStatus(String orderId) async {
     final json = await _client.get(ApiConfig.orderById(orderId));
-    final map = (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
+    final map =
+        (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
         ? json['data'] as Map<String, dynamic>
         : (json is Map<String, dynamic> ? json : <String, dynamic>{});
     return map['paymentStatus'] as String? ?? '';
+  }
+
+  /// Lấy 1 đơn ĐẦY ĐỦ (kèm danh sách sản phẩm/lines, deliveredAt, refund...)
+  /// cho màn chi tiết đơn. GET /api/Orders/{id}.
+  Future<OrderModel> fetchOrderById(String orderId) async {
+    final json = await _client.get(ApiConfig.orderById(orderId));
+    final map =
+        (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
+        ? json['data'] as Map<String, dynamic>
+        : (json is Map<String, dynamic> ? json : <String, dynamic>{});
+    return OrderModel.fromJson(map);
   }
 
   /// Lấy tất cả đơn (cho trang Staff).
@@ -113,12 +132,15 @@ class OrderService {
     required double lng,
     String? orderId,
   }) async {
-    await _client.post(ApiConfig.trackingLocation, body: {
-      'shipperId': shipperId,
-      'lat': lat,
-      'lng': lng,
-      'orderId': ?orderId,
-    });
+    await _client.post(
+      ApiConfig.trackingLocation,
+      body: {
+        'shipperId': shipperId,
+        'lat': lat,
+        'lng': lng,
+        'orderId': ?orderId,
+      },
+    );
   }
 
   /// Staff xác nhận đã giao + ảnh chứng minh → BE đổi status sang Delivered,
@@ -132,13 +154,40 @@ class OrderService {
     );
   }
 
+  /// Khách gửi yêu cầu hoàn tiền cho đơn ĐÃ GIAO (trong 1 ngày). Ảnh minh
+  /// chứng tuỳ chọn. POST /api/orders/{id}/refund-request (multipart:
+  /// field "Reason" + file "Image"). Ném [ApiException] nếu quá hạn/không hợp lệ.
+  Future<void> requestRefund(
+    String orderId,
+    String reason, {
+    String? imagePath,
+  }) async {
+    await _client.sendMultipart(
+      'POST',
+      ApiConfig.orderRefundRequest(orderId),
+      fields: {'Reason': reason},
+      filePath: imagePath,
+      fileField: 'Image',
+    );
+  }
+
+  /// Staff duyệt hoàn tiền → BE cộng tiền về ví khách, đơn sang "Refunded".
+  Future<void> approveRefund(String orderId) async {
+    await _client.put(ApiConfig.orderRefundApprove(orderId));
+  }
+
+  /// Staff từ chối hoàn tiền → đơn quay lại trạng thái "Paid".
+  Future<void> rejectRefund(String orderId) async {
+    await _client.put(ApiConfig.orderRefundReject(orderId));
+  }
+
   /// Trạng thái đơn hiện tại (cho khách phát hiện khi đơn đã giao xong → ngừng theo dõi).
   Future<String> fetchOrderStatus(String orderId) async {
     final json = await _client.get(ApiConfig.orderById(orderId));
     final map =
         (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
-            ? json['data'] as Map<String, dynamic>
-            : (json is Map<String, dynamic> ? json : <String, dynamic>{});
+        ? json['data'] as Map<String, dynamic>
+        : (json is Map<String, dynamic> ? json : <String, dynamic>{});
     return map['status'] as String? ?? '';
   }
 

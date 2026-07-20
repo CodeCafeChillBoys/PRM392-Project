@@ -51,13 +51,14 @@ class TvSegmentedControl extends StatelessWidget {
           ),
           child: Text(
             o.label,
-            style: AppText.label(
-              selected ? AppColors.textAccent : AppColors.textSecondary,
-            ).copyWith(
-              fontSize: 14,
-              letterSpacing: 0.3,
-              textBaseline: TextBaseline.alphabetic,
-            ),
+            style:
+                AppText.label(
+                  selected ? AppColors.textAccent : AppColors.textSecondary,
+                ).copyWith(
+                  fontSize: 14,
+                  letterSpacing: 0.3,
+                  textBaseline: TextBaseline.alphabetic,
+                ),
           ),
         ),
       );

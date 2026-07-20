@@ -14,6 +14,9 @@ import 'presentation/state/theme_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'data/services/local_notification_service.dart';
 import 'data/services/recently_viewed_service.dart';
+import 'data/services/wishlist_service.dart';
+import 'data/services/address_service.dart';
+import 'data/services/local_profile_service.dart';
 import 'presentation/screens/shop/payment_result_screen.dart';
 
 void main() async {
@@ -26,15 +29,20 @@ void main() async {
     debugPrint('Local Notification initialization failed: $e');
   }
 
-  // Nạp danh sách "vừa xem" (local) trước khi dựng Home.
+  // Nạp danh sách "vừa xem" + "yêu thích" + "sổ địa chỉ" (local) trước khi dựng Home.
   await RecentlyViewedService.instance.load();
+  await WishlistService.instance.load();
+  await AddressService.instance.load();
+  await LocalProfileService.instance.load();
 
   // Light status-bar icons on the near-black canvas.
   try {
     await Firebase.initializeApp();
   } catch (e) {
     debugPrint('Firebase initialization failed: $e');
-    debugPrint('Please configure Firebase or add google-services.json if you want to use Firebase features.');
+    debugPrint(
+      'Please configure Firebase or add google-services.json if you want to use Firebase features.',
+    );
   }
   // Mặc định LIGHT (VOID PAPER) → icon status bar tối trên nền giấy sáng.
   // ThemeController tự cập nhật lại khi người dùng đổi theme/khôi phục pref.
@@ -77,12 +85,15 @@ class _TechVoidAppState extends State<TechVoidApp> {
     _appLinks = AppLinks();
 
     // Handle links when app is running in background/foreground
-    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint('Incoming deep link: $uri');
-      _handleDeepLink(uri);
-    }, onError: (err) {
-      debugPrint('Deep link error: $err');
-    });
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (uri) {
+        debugPrint('Incoming deep link: $uri');
+        _handleDeepLink(uri);
+      },
+      onError: (err) {
+        debugPrint('Deep link error: $err');
+      },
+    );
 
     // Handle initial link if app was closed
     _appLinks.getInitialLink().then((uri) {
@@ -94,10 +105,13 @@ class _TechVoidAppState extends State<TechVoidApp> {
   }
 
   void _handleDeepLink(Uri uri) {
-    if (uri.host == 'payment-result' || uri.path == '/payment-result' || uri.path == 'payment-result') {
+    if (uri.host == 'payment-result' ||
+        uri.path == '/payment-result' ||
+        uri.path == 'payment-result') {
       final success = uri.queryParameters['success'] == 'true';
       final orderId = uri.queryParameters['orderId'] ?? '';
-      final amount = double.tryParse(uri.queryParameters['amount'] ?? '') ?? 0.0;
+      final amount =
+          double.tryParse(uri.queryParameters['amount'] ?? '') ?? 0.0;
       final paymentMethod = uri.queryParameters['paymentMethod'] ?? 'VNPay';
 
       _navigatorKey.currentState?.push(
@@ -130,64 +144,70 @@ class _TechVoidAppState extends State<TechVoidApp> {
       ],
       // Watch ThemeController để MaterialApp (theme, letterbox) rebuild khi
       // đổi VOID LUXE (dark) ↔ VOID PAPER (light).
-      child: Builder(builder: (context) {
-        context.watch<ThemeController>();
-        return MaterialApp(
-        title: 'TECH_VOID',
-        navigatorKey: _navigatorKey,
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.current(),
-        // Key theo theme: LoginScreen là const nên không tự rebuild khi
-        // ThemeController notify (vd pref light nạp xong sau khi màn đã dựng).
-        home: KeyedSubtree(
-          key: ValueKey('home-${AppColors.isLight}'),
-          child: const LoginScreen(),
-        ),
-        onGenerateRoute: (settings) {
-          final name = settings.name;
-          if (name == null) return null;
+      child: Builder(
+        builder: (context) {
+          context.watch<ThemeController>();
+          return MaterialApp(
+            title: 'TECH_VOID',
+            navigatorKey: _navigatorKey,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.current(),
+            // Key theo theme: LoginScreen là const nên không tự rebuild khi
+            // ThemeController notify (vd pref light nạp xong sau khi màn đã dựng).
+            home: KeyedSubtree(
+              key: ValueKey('home-${AppColors.isLight}'),
+              child: const LoginScreen(),
+            ),
+            onGenerateRoute: (settings) {
+              final name = settings.name;
+              if (name == null) return null;
 
-          final uri = Uri.tryParse(name);
-          if (uri == null) return null;
+              final uri = Uri.tryParse(name);
+              if (uri == null) return null;
 
-          if (uri.host == 'payment-result' || uri.path == '/payment-result' || uri.path == 'payment-result') {
-            final success = uri.queryParameters['success'] == 'true';
-            final orderId = uri.queryParameters['orderId'] ?? '';
-            final amount = double.tryParse(uri.queryParameters['amount'] ?? '') ?? 0.0;
-            final paymentMethod = uri.queryParameters['paymentMethod'] ?? 'VNPay';
+              if (uri.host == 'payment-result' ||
+                  uri.path == '/payment-result' ||
+                  uri.path == 'payment-result') {
+                final success = uri.queryParameters['success'] == 'true';
+                final orderId = uri.queryParameters['orderId'] ?? '';
+                final amount =
+                    double.tryParse(uri.queryParameters['amount'] ?? '') ?? 0.0;
+                final paymentMethod =
+                    uri.queryParameters['paymentMethod'] ?? 'VNPay';
 
-            return MaterialPageRoute(
-              builder: (_) => PaymentResultScreen(
-                success: success,
-                orderId: orderId,
-                totalAmount: amount,
-                paymentMethod: paymentMethod,
-              ),
-            );
-          }
-          return null;
-        },
-        // Keep the layout phone-shaped (max 430px) and centered on wide screens
-        // (web/desktop), matching the design's mobile canvas.
-        builder: (context, child) => ColoredBox(
-          // Letterbox theo theme: void-black (dark) / giấy sẫm nhẹ (light).
-          color: AppColors.isLight
-              ? const Color(0xFFEDE8DF)
-              : const Color(0xFF030303),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: AppConfig.appMaxWidth,
-              ),
-              child: ColoredBox(
-                color: AppColors.bgBase,
-                child: child ?? const SizedBox.shrink(),
+                return MaterialPageRoute(
+                  builder: (_) => PaymentResultScreen(
+                    success: success,
+                    orderId: orderId,
+                    totalAmount: amount,
+                    paymentMethod: paymentMethod,
+                  ),
+                );
+              }
+              return null;
+            },
+            // Keep the layout phone-shaped (max 430px) and centered on wide screens
+            // (web/desktop), matching the design's mobile canvas.
+            builder: (context, child) => ColoredBox(
+              // Letterbox theo theme: void-black (dark) / giấy sẫm nhẹ (light).
+              color: AppColors.isLight
+                  ? const Color(0xFFEDE8DF)
+                  : const Color(0xFF030303),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppConfig.appMaxWidth,
+                  ),
+                  child: ColoredBox(
+                    color: AppColors.bgBase,
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 }

@@ -45,8 +45,10 @@ class StaffProductDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text('${product.brand} · ${product.categoryName}',
-                      style: AppText.xs(AppColors.textTertiary)),
+                  Text(
+                    '${product.brand} · ${product.categoryName}',
+                    style: AppText.xs(AppColors.textTertiary),
+                  ),
                   const SizedBox(height: 4),
                   Text(product.name, style: AppText.h2()),
                   const SizedBox(height: 10),
@@ -64,9 +66,11 @@ class StaffProductDetailScreen extends StatelessWidget {
                     product.description.isEmpty
                         ? 'Chưa có mô tả.'
                         : product.description,
-                    style: AppText.body(product.description.isEmpty
-                        ? AppColors.textTertiary
-                        : AppColors.textSecondary),
+                    style: AppText.body(
+                      product.description.isEmpty
+                          ? AppColors.textTertiary
+                          : AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   TvButton(
@@ -76,7 +80,8 @@ class StaffProductDetailScreen extends StatelessWidget {
                     onPressed: () async {
                       final updated = await Navigator.of(context).push<bool>(
                         MaterialPageRoute(
-                            builder: (_) => AddProductScreen(initial: product)),
+                          builder: (_) => AddProductScreen(initial: product),
+                        ),
                       );
                       if (updated == true && context.mounted) {
                         Navigator.of(context).pop(true);

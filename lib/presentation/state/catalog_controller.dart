@@ -9,7 +9,7 @@ import '../../data/services/product_service.dart';
 /// (no separate request).
 class CatalogController extends ChangeNotifier {
   CatalogController({ProductService? service})
-      : _service = service ?? ProductService() {
+    : _service = service ?? ProductService() {
     load();
   }
 

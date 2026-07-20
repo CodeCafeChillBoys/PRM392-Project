@@ -11,7 +11,8 @@ String formatVnd(num value) {
     buffer.write(digits[i]);
   }
   final sign = rounded < 0 ? '-' : '';
-  return '$sign$buffer' 'đ';
+  return '$sign$buffer'
+      'đ';
 }
 
 /// `mm:ss` countdown formatter — e.g. `120` → `02:00`. Used by the OTP screen.

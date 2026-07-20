@@ -36,8 +36,8 @@ class CartScreen extends StatelessWidget {
           child: cart.isLoading && cart.isEmpty
               ? const _CartSkeleton()
               : cart.isEmpty
-                  ? _EmptyCart()
-                  : _CartBody(cart: cart),
+              ? _EmptyCart()
+              : _CartBody(cart: cart),
         ),
       ],
     );
@@ -57,7 +57,11 @@ class _CartSkeleton extends StatelessWidget {
       ),
       child: ListView.separated(
         padding: EdgeInsets.fromLTRB(
-            AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+          AppSpacing.gutter,
+          14,
+          AppSpacing.gutter,
+          24,
+        ),
         physics: const NeverScrollableScrollPhysics(),
         itemCount: 3,
         separatorBuilder: (_, _) => const SizedBox(height: 14),
@@ -65,7 +69,10 @@ class _CartSkeleton extends StatelessWidget {
           padding: 12,
           child: Row(
             children: [
-              const Bone.square(size: 88, borderRadius: BorderRadius.all(Radius.circular(12))),
+              const Bone.square(
+                size: 88,
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -95,46 +102,51 @@ class _EmptyCart extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 84,
-              height: 84,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.bgElevated,
-                border: Border.all(color: AppColors.borderDefault),
-              ),
-              child: TvIcon('shopping-cart',
-                  size: 34, color: AppColors.textTertiary),
-            ),
-            const SizedBox(height: 16),
-            Text('Giỏ hàng trống', style: AppText.h2()),
-            const SizedBox(height: 4),
-            Text(
-              'Khám phá hàng nghìn sản phẩm công nghệ đỉnh cao.',
-              textAlign: TextAlign.center,
-              style:
-                  AppText.body(AppColors.textSecondary).copyWith(fontSize: 14),
-            ),
-            const SizedBox(height: 20),
-            TvButton(
-              label: 'Mua sắm ngay',
-              leadingIcon: const TvIcon('compass', size: 18),
-              onPressed: () => context.read<AppNav>().goExplore(),
-            ),
-          ]
-              .animate(interval: AppEffects.staggerStep)
-              .fadeIn(
-                duration: AppEffects.durEnter,
-                curve: AppEffects.easeStandard,
-              )
-              .moveY(
-                begin: AppEffects.entranceRise,
-                end: 0,
-                duration: AppEffects.durEnter,
-                curve: AppEffects.easeStandard,
-              ),
+          children:
+              [
+                    Container(
+                      width: 84,
+                      height: 84,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bgElevated,
+                        border: Border.all(color: AppColors.borderDefault),
+                      ),
+                      child: TvIcon(
+                        'shopping-cart',
+                        size: 34,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Giỏ hàng trống', style: AppText.h2()),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Khám phá hàng nghìn sản phẩm công nghệ đỉnh cao.',
+                      textAlign: TextAlign.center,
+                      style: AppText.body(
+                        AppColors.textSecondary,
+                      ).copyWith(fontSize: 14),
+                    ),
+                    const SizedBox(height: 20),
+                    TvButton(
+                      label: 'Mua sắm ngay',
+                      leadingIcon: const TvIcon('compass', size: 18),
+                      onPressed: () => context.read<AppNav>().goExplore(),
+                    ),
+                  ]
+                  .animate(interval: AppEffects.staggerStep)
+                  .fadeIn(
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  )
+                  .moveY(
+                    begin: AppEffects.entranceRise,
+                    end: 0,
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  ),
         ),
       ),
     );
@@ -153,13 +165,16 @@ class _CartBody extends StatelessWidget {
         Expanded(
           child: ListView(
             padding: EdgeInsets.fromLTRB(
-                AppSpacing.gutter, 14, AppSpacing.gutter, 8),
+              AppSpacing.gutter,
+              14,
+              AppSpacing.gutter,
+              8,
+            ),
             children: [
               for (final (i, item) in cart.items.indexed) ...[
                 _CartLine(item: item)
                     .animate(
-                      delay: Duration(
-                          milliseconds: (i * 60).clamp(0, 360)),
+                      delay: Duration(milliseconds: (i * 60).clamp(0, 360)),
                     )
                     .fadeIn(
                       duration: AppEffects.durEnter,
@@ -206,8 +221,7 @@ class _CartLine extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadii.md),
           border: Border.all(color: AppColors.dangerLine),
         ),
-        child:
-            const TvIcon('trash-2', size: 20, color: AppColors.danger500),
+        child: const TvIcon('trash-2', size: 20, color: AppColors.danger500),
       ),
       child: TvCard(
         padding: 12,
@@ -237,9 +251,12 @@ class _CartLine extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(item.brand.toUpperCase(),
-                                style: AppText.label(AppColors.textTertiary)
-                                    .copyWith(fontSize: 10)),
+                            Text(
+                              item.brand.toUpperCase(),
+                              style: AppText.label(
+                                AppColors.textTertiary,
+                              ).copyWith(fontSize: 10),
+                            ),
                             Text(
                               item.productName,
                               maxLines: 1,
@@ -256,8 +273,11 @@ class _CartLine extends StatelessWidget {
                         onTap: () => cart.remove(item.id),
                         child: Padding(
                           padding: EdgeInsets.all(2),
-                          child: TvIcon('trash-2',
-                              size: 18, color: AppColors.textTertiary),
+                          child: TvIcon(
+                            'trash-2',
+                            size: 18,
+                            color: AppColors.textTertiary,
+                          ),
                         ),
                       ),
                     ],
@@ -297,8 +317,11 @@ class _SummaryCard extends StatelessWidget {
           children: [
             _miniRow('Tổng tiền sản phẩm', formatVnd(subtotal)),
             const SizedBox(height: 6),
-            _miniRow('Phí vận chuyển', 'Miễn phí',
-                valueColor: AppColors.success500),
+            _miniRow(
+              'Phí vận chuyển',
+              'Miễn phí',
+              valueColor: AppColors.successStrong,
+            ),
           ],
         ),
       ),
@@ -309,12 +332,16 @@ class _SummaryCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style:
-                AppText.body(AppColors.textSecondary).copyWith(fontSize: 13)),
-        Text(value,
-            style: AppText.body(valueColor ?? AppColors.textPrimary)
-                .copyWith(fontSize: 13)),
+        Text(
+          label,
+          style: AppText.body(AppColors.textSecondary).copyWith(fontSize: 13),
+        ),
+        Text(
+          value,
+          style: AppText.body(
+            valueColor ?? AppColors.textPrimary,
+          ).copyWith(fontSize: 13),
+        ),
       ],
     );
   }
@@ -335,8 +362,12 @@ class _CheckoutBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding:
-              EdgeInsets.fromLTRB(AppSpacing.gutter, 16, AppSpacing.gutter, 12),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.gutter,
+            16,
+            AppSpacing.gutter,
+            12,
+          ),
           child: Column(
             children: [
               Padding(
@@ -346,9 +377,13 @@ class _CheckoutBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text('Tạm tính',
-                        style: AppText.h2().copyWith(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text(
+                      'Tạm tính',
+                      style: AppText.h2().copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     // Count-up: tổng tiền lăn số tới giá trị mới — gold,
                     // KHÔNG glow (tiết chế là tín hiệu luxury).
                     TweenAnimationBuilder<double>(

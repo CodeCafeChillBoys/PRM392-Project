@@ -38,10 +38,11 @@ class LoginSessionInfo {
         id: '${json['id'] ?? ''}',
         userId: '${json['userId'] ?? ''}',
         customerName:
-            json['customerName'] as String? ?? json['fullName'] as String? ?? '',
-        customerEmail: json['customerEmail'] as String? ??
-            json['email'] as String? ??
+            json['customerName'] as String? ??
+            json['fullName'] as String? ??
             '',
+        customerEmail:
+            json['customerEmail'] as String? ?? json['email'] as String? ?? '',
         status: json['status'] as String? ?? '',
         isOtpSent: json['isOtpSent'] as bool? ?? false,
         deviceName: '${json['deviceName'] ?? ''}',

@@ -93,8 +93,9 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
     // BE trả orderDate dạng UTC (đuôi Z) → phải toLocal() trước khi so
     // theo ngày/tháng, không thì đơn đặt 0h–7h sáng VN rớt khỏi "Hôm nay".
     return _orders
-        .where((o) =>
-            _range.accepts(DateTime.tryParse(o.orderDate)?.toLocal(), now))
+        .where(
+          (o) => _range.accepts(DateTime.tryParse(o.orderDate)?.toLocal(), now),
+        )
         .toList();
   }
 
@@ -137,8 +138,10 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
             tabs: [
               for (final r in _RevenueRange.values) TvTab(r.name, r.label),
             ],
-            onChanged: (v) => setState(() =>
-                _range = _RevenueRange.values.firstWhere((r) => r.name == v)),
+            onChanged: (v) => setState(
+              () =>
+                  _range = _RevenueRange.values.firstWhere((r) => r.name == v),
+            ),
           ),
         ),
         Expanded(child: _body()),
@@ -156,22 +159,30 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
         ),
         child: ListView(
           padding: EdgeInsets.fromLTRB(
-              AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+            AppSpacing.gutter,
+            14,
+            AppSpacing.gutter,
+            24,
+          ),
           physics: const NeverScrollableScrollPhysics(),
           children: [
             _totalCard(12500000, 8),
             const SizedBox(height: 12),
-            Row(children: [
-              Expanded(child: _statCard('VNPay đã thu', 8000000)),
-              const SizedBox(width: 10),
-              Expanded(child: _statCard('COD đã thu', 4500000)),
-            ]),
+            Row(
+              children: [
+                Expanded(child: _statCard('VNPay đã thu', 8000000)),
+                const SizedBox(width: 10),
+                Expanded(child: _statCard('COD đã thu', 4500000)),
+              ],
+            ),
             const SizedBox(height: 10),
-            Row(children: [
-              Expanded(child: _statCard('COD chờ thu', 1200000, warn: true)),
-              const SizedBox(width: 10),
-              Expanded(child: _statCard('Shop nhận từ ship', 90000)),
-            ]),
+            Row(
+              children: [
+                Expanded(child: _statCard('COD chờ thu', 1200000, warn: true)),
+                const SizedBox(width: 10),
+                Expanded(child: _statCard('Shop nhận từ ship', 90000)),
+              ],
+            ),
             const SizedBox(height: 12),
             _myIncomeCard(60000, 4),
           ],
@@ -186,20 +197,23 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
     final codSum = counted
         .where((o) => o.paymentMethod != 'VNPay')
         .fold<double>(0, (s, o) => s + o.totalAmount);
-    final codPending =
-        orders.where(_isCodPending).fold<double>(0, (s, o) => s + o.totalAmount);
-    final delivered =
-        orders.where((o) => o.status == OrderStatus.delivered).toList();
+    final codPending = orders
+        .where(_isCodPending)
+        .fold<double>(0, (s, o) => s + o.totalAmount);
+    final delivered = orders
+        .where((o) => o.status == OrderStatus.delivered)
+        .toList();
     final shipFeeSum = delivered.fold<double>(0, (s, o) => s + o.shippingFee);
-    final shopShipShare =
-        shipFeeSum * (1 - AppConfig.shipperCommissionRate);
+    final shopShipShare = shipFeeSum * (1 - AppConfig.shipperCommissionRate);
 
     final myId = apiClient.userId;
     final myDelivered = myId == null
         ? const <OrderModel>[]
         : delivered.where((o) => o.staffId == myId).toList();
-    final myShipFeeSum =
-        myDelivered.fold<double>(0, (s, o) => s + o.shippingFee);
+    final myShipFeeSum = myDelivered.fold<double>(
+      0,
+      (s, o) => s + o.shippingFee,
+    );
     final myCommission = myShipFeeSum * AppConfig.shipperCommissionRate;
 
     return RefreshIndicator(
@@ -210,55 +224,68 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
         // Key theo bộ lọc thời gian → đổi tab là các thẻ vào lại theo nhịp.
         key: ValueKey(_range),
         padding: EdgeInsets.fromLTRB(
-            AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+          AppSpacing.gutter,
+          14,
+          AppSpacing.gutter,
+          24,
+        ),
         children: [
           _totalCard(vnpaySum + codSum, counted.length)
               .animate()
               .fadeIn(duration: AppEffects.durEnter)
               .moveY(
-                  begin: AppEffects.entranceRise,
-                  end: 0,
-                  curve: AppEffects.easeStandard),
+                begin: AppEffects.entranceRise,
+                end: 0,
+                curve: AppEffects.easeStandard,
+              ),
           const SizedBox(height: 12),
           Row(
-            children: [
-              Expanded(child: _statCard('VNPay đã thu', vnpaySum)),
-              const SizedBox(width: 10),
-              Expanded(child: _statCard('COD đã thu', codSum)),
-            ],
-          )
+                children: [
+                  Expanded(child: _statCard('VNPay đã thu', vnpaySum)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _statCard('COD đã thu', codSum)),
+                ],
+              )
               .animate(delay: AppEffects.staggerStep)
               .fadeIn(duration: AppEffects.durEnter)
               .moveY(
-                  begin: AppEffects.entranceRise,
-                  end: 0,
-                  curve: AppEffects.easeStandard),
+                begin: AppEffects.entranceRise,
+                end: 0,
+                curve: AppEffects.easeStandard,
+              ),
           const SizedBox(height: 10),
           Row(
-            children: [
-              Expanded(
-                  child: _statCard('COD chờ thu', codPending, warn: true)),
-              const SizedBox(width: 10),
-              Expanded(child: _statCard('Shop nhận từ ship', shopShipShare)),
-            ],
-          )
+                children: [
+                  Expanded(
+                    child: _statCard('COD chờ thu', codPending, warn: true),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _statCard('Shop nhận từ ship', shopShipShare),
+                  ),
+                ],
+              )
               .animate(delay: AppEffects.staggerStep * 2)
               .fadeIn(duration: AppEffects.durEnter)
               .moveY(
-                  begin: AppEffects.entranceRise,
-                  end: 0,
-                  curve: AppEffects.easeStandard),
+                begin: AppEffects.entranceRise,
+                end: 0,
+                curve: AppEffects.easeStandard,
+              ),
           const SizedBox(height: 12),
           _myIncomeCard(myCommission, myDelivered.length)
               .animate(delay: AppEffects.staggerStep * 3)
               .fadeIn(duration: AppEffects.durEnter)
               .moveY(
-                  begin: AppEffects.entranceRise,
-                  end: 0,
-                  curve: AppEffects.easeStandard),
+                begin: AppEffects.entranceRise,
+                end: 0,
+                curve: AppEffects.easeStandard,
+              ),
           const SizedBox(height: 22),
           const TvSectionHeader(
-              icon: TvIcon('bar-chart'), title: 'Đơn được tính'),
+            icon: TvIcon('bar-chart'),
+            title: 'Đơn được tính',
+          ),
           const SizedBox(height: 12),
           if (counted.isEmpty)
             _empty()
@@ -283,8 +310,10 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
           const SizedBox(height: 8),
           Text(formatVnd(total), style: AppText.price().copyWith(fontSize: 30)),
           const SizedBox(height: 6),
-          Text('$count đơn được tính',
-              style: AppText.xs(AppColors.textTertiary)),
+          Text(
+            '$count đơn được tính',
+            style: AppText.xs(AppColors.textTertiary),
+          ),
         ],
       ),
     );
@@ -296,14 +325,18 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style:
-                  AppText.label(AppColors.textSecondary).copyWith(fontSize: 10)),
+          Text(
+            label,
+            style: AppText.label(
+              AppColors.textSecondary,
+            ).copyWith(fontSize: 10),
+          ),
           const SizedBox(height: 6),
           Text(
             formatVnd(value),
-            style: AppText.price(warn ? AppColors.warning500 : AppColors.textAccent)
-                .copyWith(fontSize: 17),
+            style: AppText.price(
+              warn ? AppColors.warning500 : AppColors.textAccent,
+            ).copyWith(fontSize: 17),
           ),
         ],
       ),
@@ -320,16 +353,27 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
             children: [
               TvIcon('wallet', size: 18, color: AppColors.textAccent),
               const SizedBox(width: 8),
-              Text('Thu nhập của tôi', style: AppText.h3().copyWith(fontSize: 15)),
+              Text(
+                'Thu nhập của tôi',
+                style: AppText.h3().copyWith(fontSize: 15),
+              ),
             ],
           ),
           const SizedBox(height: 10),
-          Text(formatVnd(commission), style: AppText.price().copyWith(fontSize: 22)),
+          Text(
+            formatVnd(commission),
+            style: AppText.price().copyWith(fontSize: 22),
+          ),
           const SizedBox(height: 4),
-          Text('$count cuốc đã giao', style: AppText.xs(AppColors.textTertiary)),
+          Text(
+            '$count cuốc đã giao',
+            style: AppText.xs(AppColors.textTertiary),
+          ),
           const SizedBox(height: 6),
-          Text('$pct% phí ship mỗi cuốc',
-              style: AppText.xs(AppColors.textTertiary)),
+          Text(
+            '$pct% phí ship mỗi cuốc',
+            style: AppText.xs(AppColors.textTertiary),
+          ),
         ],
       ),
     );
@@ -348,14 +392,19 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
               children: [
                 Row(
                   children: [
-                    Text('#${_shortId(o.id)}',
-                        style:
-                            AppText.mono(size: 12, color: AppColors.textTertiary)),
+                    Text(
+                      '#${_shortId(o.id)}',
+                      style: AppText.mono(
+                        size: 12,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     TvBadge(
                       isVnpay ? 'VNPay' : 'COD',
-                      variant:
-                          isVnpay ? TvBadgeVariant.glass : TvBadgeVariant.neutral,
+                      variant: isVnpay
+                          ? TvBadgeVariant.glass
+                          : TvBadgeVariant.neutral,
                     ),
                   ],
                 ),
@@ -374,8 +423,10 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          Text(formatVnd(o.totalAmount),
-              style: AppText.price().copyWith(fontSize: 15)),
+          Text(
+            formatVnd(o.totalAmount),
+            style: AppText.price().copyWith(fontSize: 15),
+          ),
         ],
       ),
     );
@@ -385,12 +436,13 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
     return Column(
       children: [
         const SizedBox(height: 40),
-        Center(
-            child: TvIcon('inbox', size: 44, color: AppColors.textTertiary)),
+        Center(child: TvIcon('inbox', size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(
-          child: Text('Chưa có doanh thu trong khoảng này',
-              style: AppText.body(AppColors.textSecondary)),
+          child: Text(
+            'Chưa có doanh thu trong khoảng này',
+            style: AppText.body(AppColors.textSecondary),
+          ),
         ),
       ],
     );

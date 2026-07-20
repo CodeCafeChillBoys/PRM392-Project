@@ -33,9 +33,10 @@ class _RootShellState extends State<RootShell> {
     const TvNavItem(label: 'Tìm kiếm', iconName: 'search'),
     // Icon giỏ = đích của hiệu ứng bay vào giỏ (bottom nav chỉ có 1 trong shell).
     TvNavItem(
-        label: 'Giỏ hàng',
-        iconName: 'shopping-bag',
-        iconKey: FlyToCart.cartIconKey),
+      label: 'Giỏ hàng',
+      iconName: 'shopping-bag',
+      iconKey: FlyToCart.cartIconKey,
+    ),
     const TvNavItem(label: 'Cá nhân', iconName: 'user'),
   ];
 
@@ -77,6 +78,7 @@ class _RootShellState extends State<RootShell> {
       bottomNavigationBar: TvBottomNav(
         items: _navItems,
         activeIndex: index,
+        floating: true, // khu khách: nav nổi kính bo tròn (VOID CYAN)
         onChanged: (i) => context.read<AppNav>().select(i),
       ),
     );

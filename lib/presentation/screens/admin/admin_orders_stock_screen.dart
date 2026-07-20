@@ -88,7 +88,9 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
       });
       TvToast.show(context, 'Đã cập nhật tồn kho "${p.name}".');
     } catch (_) {
-      if (mounted) TvToast.show(context, 'Không lưu được tồn kho. Thử lại sau.');
+      if (mounted) {
+        TvToast.show(context, 'Không lưu được tồn kho. Thử lại sau.');
+      }
     } finally {
       if (mounted) setState(() => _saving.remove(p.id));
     }
@@ -101,13 +103,16 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
         TvAppBar(
           mode: TvAppBarMode.page,
           title: 'Đơn & Kho',
-          actions: AdminActions.appBar(context, extra: [
-            TvIconButton(
-              icon: TvIcon('refresh-cw', color: AppColors.textAccent),
-              tooltip: 'Tải lại',
-              onPressed: _load,
-            ),
-          ]),
+          actions: AdminActions.appBar(
+            context,
+            extra: [
+              TvIconButton(
+                icon: TvIcon('refresh-cw', color: AppColors.textAccent),
+                tooltip: 'Tải lại',
+                onPressed: _load,
+              ),
+            ],
+          ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -119,7 +124,8 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
               TvTab(_OsTab.stock.name, 'Tồn thấp (${_lowStock.length})'),
             ],
             onChanged: (v) => setState(
-                () => _tab = _OsTab.values.firstWhere((t) => t.name == v)),
+              () => _tab = _OsTab.values.firstWhere((t) => t.name == v),
+            ),
           ),
         ),
         Expanded(child: _body()),
@@ -135,23 +141,29 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
           highlightColor: AppColors.skeletonHighlight,
         ),
         child: ListView.separated(
-          padding:
-              EdgeInsets.fromLTRB(AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.gutter,
+            14,
+            AppSpacing.gutter,
+            24,
+          ),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 6,
           separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemBuilder: (_, _) => _orderCard(const OrderModel(
-            id: 'ghostghost',
-            customerName: 'Đang tải đơn',
-            shippingAddress: '',
-            totalAmount: 12000000,
-            status: 'Pending',
-            paymentMethod: 'COD',
-            paymentStatus: 'Pending',
-            orderDate: '',
-            shippingFee: 0,
-            staffId: '',
-          )),
+          itemBuilder: (_, _) => _orderCard(
+            const OrderModel(
+              id: 'ghostghost',
+              customerName: 'Đang tải đơn',
+              shippingAddress: '',
+              totalAmount: 12000000,
+              status: 'Pending',
+              paymentMethod: 'COD',
+              paymentStatus: 'Pending',
+              orderDate: '',
+              shippingFee: 0,
+              staffId: '',
+            ),
+          ),
         ),
       );
     }
@@ -171,8 +183,7 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (_, i) {
               final t = StaffTab.values[i];
-              final count =
-                  _orders.where((o) => t.accepts(o.status)).length;
+              final count = _orders.where((o) => t.accepts(o.status)).length;
               return _FilterChip(
                 label: '${t.label} ($count)',
                 selected: t == _orderFilter,
@@ -191,18 +202,24 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
                 : ListView.separated(
                     key: ValueKey('orders-${_orderFilter.name}'),
                     padding: EdgeInsets.fromLTRB(
-                        AppSpacing.gutter, 12, AppSpacing.gutter, 24),
+                      AppSpacing.gutter,
+                      12,
+                      AppSpacing.gutter,
+                      24,
+                    ),
                     itemCount: _visibleOrders.length,
                     separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (_, i) => _orderCard(_visibleOrders[i])
                         .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
                         .fadeIn(
-                            duration: AppEffects.durEnter,
-                            curve: AppEffects.easeStandard)
+                          duration: AppEffects.durEnter,
+                          curve: AppEffects.easeStandard,
+                        )
                         .moveY(
-                            begin: AppEffects.entranceRise,
-                            end: 0,
-                            curve: AppEffects.easeStandard),
+                          begin: AppEffects.entranceRise,
+                          end: 0,
+                          curve: AppEffects.easeStandard,
+                        ),
                   ),
           ),
         ),
@@ -220,18 +237,24 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
           : ListView.separated(
               key: const ValueKey('stock'),
               padding: EdgeInsets.fromLTRB(
-                  AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+                AppSpacing.gutter,
+                14,
+                AppSpacing.gutter,
+                24,
+              ),
               itemCount: _lowStock.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (_, i) => _stockCard(_lowStock[i])
                   .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
                   .fadeIn(
-                      duration: AppEffects.durEnter,
-                      curve: AppEffects.easeStandard)
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  )
                   .moveY(
-                      begin: AppEffects.entranceRise,
-                      end: 0,
-                      curve: AppEffects.easeStandard),
+                    begin: AppEffects.entranceRise,
+                    end: 0,
+                    curve: AppEffects.easeStandard,
+                  ),
             ),
     );
   }
@@ -247,13 +270,17 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
         children: [
           Row(
             children: [
-              Text('#$shortId',
-                  style: AppText.mono(size: 12, color: AppColors.textTertiary)),
+              Text(
+                '#$shortId',
+                style: AppText.mono(size: 12, color: AppColors.textTertiary),
+              ),
               const SizedBox(width: 8),
               OrderStatusBadge(o.status),
               const Spacer(),
-              Text(formatVnd(o.totalAmount),
-                  style: AppText.price().copyWith(fontSize: 15)),
+              Text(
+                formatVnd(o.totalAmount),
+                style: AppText.price().copyWith(fontSize: 15),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -268,9 +295,12 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              TvBadge(isVnpay ? 'VNPay' : 'COD',
-                  variant:
-                      isVnpay ? TvBadgeVariant.glass : TvBadgeVariant.neutral),
+              TvBadge(
+                isVnpay ? 'VNPay' : 'COD',
+                variant: isVnpay
+                    ? TvBadgeVariant.glass
+                    : TvBadgeVariant.neutral,
+              ),
               if (when.isNotEmpty) ...[
                 const SizedBox(width: 8),
                 Text(when, style: AppText.xs(AppColors.textTertiary)),
@@ -308,17 +338,21 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(p.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.bodyStrong().copyWith(fontSize: 14)),
+                    Text(
+                      p.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.bodyStrong().copyWith(fontSize: 14),
+                    ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         ProductStockBadge(p.stockQuantity),
                         const SizedBox(width: 8),
-                        Text(formatVnd(p.price),
-                            style: AppText.price().copyWith(fontSize: 13)),
+                        Text(
+                          formatVnd(p.price),
+                          style: AppText.price().copyWith(fontSize: 13),
+                        ),
                       ],
                     ),
                   ],
@@ -382,8 +416,8 @@ class _AdminOrdersStockScreenState extends State<AdminOrdersStockScreen> {
         Center(child: TvIcon(icon, size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(
-            child:
-                Text(message, style: AppText.body(AppColors.textSecondary))),
+          child: Text(message, style: AppText.body(AppColors.textSecondary)),
+        ),
       ],
     );
   }

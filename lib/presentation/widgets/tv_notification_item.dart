@@ -8,20 +8,16 @@ import 'tv_icon.dart';
 /// Notification / promo list row — leading icon tile, title, body, timestamp,
 /// and an unread dot. Mirrors `components/data/NotificationItem.jsx`.
 class TvNotificationItem extends StatelessWidget {
-  const TvNotificationItem({
-    super.key,
-    required this.notification,
-    this.onTap,
-  });
+  const TvNotificationItem({super.key, required this.notification, this.onTap});
 
   final AppNotification notification;
   final VoidCallback? onTap;
 
   (Color, Color) get _tone => switch (notification.tone) {
-        NotificationTone.accent => (AppColors.accentSoft, AppColors.textAccent),
-        NotificationTone.violet => (AppColors.violetSoft, AppColors.violet400),
-        NotificationTone.neutral => (AppColors.bgOverlay, AppColors.textSecondary),
-      };
+    NotificationTone.accent => (AppColors.accentSoft, AppColors.textAccent),
+    NotificationTone.violet => (AppColors.violetSoft, AppColors.violet400),
+    NotificationTone.neutral => (AppColors.bgOverlay, AppColors.textSecondary),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +80,10 @@ class TvNotificationItem extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       notification.body,
-                      style: AppText.sm().copyWith(fontSize: 12.5, height: 1.45),
+                      style: AppText.sm().copyWith(
+                        fontSize: 12.5,
+                        height: 1.45,
+                      ),
                     ),
                   ],
                   if (notification.time.isNotEmpty) ...[

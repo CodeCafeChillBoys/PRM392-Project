@@ -31,16 +31,13 @@ class FlyToCart {
 
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     final srcBox = sourceKey.currentContext?.findRenderObject() as RenderBox?;
-    final dstBox =
-        cartIconKey.currentContext?.findRenderObject() as RenderBox?;
+    final dstBox = cartIconKey.currentContext?.findRenderObject() as RenderBox?;
     if (overlay == null || srcBox == null || dstBox == null) return;
     if (!srcBox.hasSize || !dstBox.hasSize) return;
 
     final start = srcBox.localToGlobal(Offset.zero);
     final startSize = srcBox.size;
-    final end = dstBox.localToGlobal(
-      dstBox.size.center(Offset.zero),
-    );
+    final end = dstBox.localToGlobal(dstBox.size.center(Offset.zero));
 
     late final OverlayEntry entry;
     entry = OverlayEntry(

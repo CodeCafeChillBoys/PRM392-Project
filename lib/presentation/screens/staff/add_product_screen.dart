@@ -78,7 +78,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
         final p = widget.initial;
         if (p != null && _category == null) {
           setState(() {
-            _category = list.where((c) => c.id == p.categoryId).firstOrNull ??
+            _category =
+                list.where((c) => c.id == p.categoryId).firstOrNull ??
                 list.where((c) => c.name == p.categoryName).firstOrNull;
           });
         }
@@ -161,7 +162,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 title: 'Chọn từ thư viện',
                 icon: const TvIcon('image'),
                 showRadio: false,
-                onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(ImageSource.gallery),
               ),
               const SizedBox(height: 8),
               TvOptionRow(
@@ -178,7 +180,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
     if (source == null) return;
     try {
       final picked = await _picker.pickImage(
-          source: source, imageQuality: 80, maxWidth: 1600);
+        source: source,
+        imageQuality: 80,
+        maxWidth: 1600,
+      );
       if (picked != null && mounted) {
         setState(() => _pickedImage = picked);
       }
@@ -252,7 +257,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
       if (mounted) {
         final msg = e is ApiException && e.statusCode == 400
             ? 'Lỗi: ${e.message}'
-            : (_isEdit ? 'Cập nhật thất bại. Thử lại nhé.' : 'Thêm sản phẩm thất bại. Thử lại nhé.');
+            : (_isEdit
+                  ? 'Cập nhật thất bại. Thử lại nhé.'
+                  : 'Thêm sản phẩm thất bại. Thử lại nhé.');
         TvToast.show(context, msg);
         setState(() => _submitting = false);
       }
@@ -328,7 +335,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                     child: _categoryPicker(),
                   ),
                   _field(
-                    label: _isEdit ? 'Ảnh (bấm để đổi, bỏ qua = giữ cũ)' : 'Ảnh sản phẩm',
+                    label: _isEdit
+                        ? 'Ảnh (bấm để đổi, bỏ qua = giữ cũ)'
+                        : 'Ảnh sản phẩm',
                     errorKey: 'image',
                     child: _imageSection(),
                   ),
@@ -375,7 +384,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           child,
           if (error != null) ...[
             const SizedBox(height: 4),
-            Text(error, style: AppText.xs(AppColors.danger500)),
+            Text(error, style: AppText.xs(AppColors.dangerStrong)),
           ],
         ],
       ),
@@ -400,7 +409,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
             Expanded(
               child: Text(
                 _category?.name ??
-                    (_loadingCategories ? 'Đang tải danh mục...' : 'Chọn danh mục'),
+                    (_loadingCategories
+                        ? 'Đang tải danh mục...'
+                        : 'Chọn danh mục'),
                 style: _category == null
                     ? AppText.body(AppColors.textTertiary)
                     : AppText.body(),
@@ -411,7 +422,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2, color: AppColors.accent),
+                  strokeWidth: 2,
+                  color: AppColors.accent,
+                ),
               )
             else
               TvIcon('chevron-down', color: AppColors.textTertiary),
@@ -436,8 +449,10 @@ class _AddProductScreenState extends State<AddProductScreen> {
         children: [
           TvIcon('image', size: 32, color: AppColors.textTertiary),
           const SizedBox(height: 8),
-          Text('Bấm để chọn ảnh từ máy',
-              style: AppText.xs(AppColors.textTertiary)),
+          Text(
+            'Bấm để chọn ảnh từ máy',
+            style: AppText.xs(AppColors.textTertiary),
+          ),
         ],
       );
     }

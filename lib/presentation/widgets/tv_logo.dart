@@ -23,10 +23,10 @@ class TvLogo extends StatelessWidget {
   final Color? color;
 
   double get _fs => switch (size) {
-        TvLogoSize.sm => 16,
-        TvLogoSize.md => 20,
-        TvLogoSize.lg => 28,
-      };
+    TvLogoSize.sm => 16,
+    TvLogoSize.md => 20,
+    TvLogoSize.lg => 28,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +60,7 @@ class TvLogo extends StatelessWidget {
               const TextSpan(text: 'TECH'),
               TextSpan(
                 text: '_',
-                style: wordmark.copyWith(
-                  color: color.withValues(alpha: 0.85),
-                ),
+                style: wordmark.copyWith(color: color.withValues(alpha: 0.85)),
               ),
               const TextSpan(text: 'VOID'),
             ],

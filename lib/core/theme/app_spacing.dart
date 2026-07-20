@@ -35,6 +35,7 @@ class AppRadii {
   static const double sm = 8;
   static const double md = 12; // default card / input
   static const double lg = 20; // product cards, sheets (VOID LUXE: 16 -> 20)
-  static const double xl = 24;
+  static const double xl = 24; // card lớn light (VOID CYAN)
+  static const double xxl = 28; // floating nav / hero card
   static const double pill = 999;
 }

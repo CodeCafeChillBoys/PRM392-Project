@@ -27,22 +27,20 @@ class AdminStats {
   final List<RevenuePoint> revenueSeries;
 
   /// Tổng số đơn theo mọi trạng thái (mẫu số cho thanh tỉ lệ breakdown).
-  int get statusTotal =>
-      statusCounts.fold<int>(0, (s, e) => s + e.count);
+  int get statusTotal => statusCounts.fold<int>(0, (s, e) => s + e.count);
 
   factory AdminStats.fromJson(Map<String, dynamic> json) => AdminStats(
-        from: '${json['from'] ?? ''}',
-        to: '${json['to'] ?? ''}',
-        totalRevenue: (json['totalRevenue'] as num?)?.toDouble() ?? 0,
-        orderCount: (json['orderCount'] as num?)?.toInt() ?? 0,
-        shippingFeeTotal:
-            (json['shippingFeeTotal'] as num?)?.toDouble() ?? 0,
-        newCustomers: (json['newCustomers'] as num?)?.toInt() ?? 0,
-        lowStockCount: (json['lowStockCount'] as num?)?.toInt() ?? 0,
-        statusCounts: _list(json['statusCounts'], StatusCount.fromJson),
-        paymentSplit: _list(json['paymentSplit'], PaymentSplit.fromJson),
-        revenueSeries: _list(json['revenueSeries'], RevenuePoint.fromJson),
-      );
+    from: '${json['from'] ?? ''}',
+    to: '${json['to'] ?? ''}',
+    totalRevenue: (json['totalRevenue'] as num?)?.toDouble() ?? 0,
+    orderCount: (json['orderCount'] as num?)?.toInt() ?? 0,
+    shippingFeeTotal: (json['shippingFeeTotal'] as num?)?.toDouble() ?? 0,
+    newCustomers: (json['newCustomers'] as num?)?.toInt() ?? 0,
+    lowStockCount: (json['lowStockCount'] as num?)?.toInt() ?? 0,
+    statusCounts: _list(json['statusCounts'], StatusCount.fromJson),
+    paymentSplit: _list(json['paymentSplit'], PaymentSplit.fromJson),
+    revenueSeries: _list(json['revenueSeries'], RevenuePoint.fromJson),
+  );
 
   static List<T> _list<T>(
     dynamic raw,
@@ -61,9 +59,9 @@ class StatusCount {
   final int count;
 
   factory StatusCount.fromJson(Map<String, dynamic> json) => StatusCount(
-        status: json['status'] as String? ?? '',
-        count: (json['count'] as num?)?.toInt() ?? 0,
-      );
+    status: json['status'] as String? ?? '',
+    count: (json['count'] as num?)?.toInt() ?? 0,
+  );
 }
 
 /// Doanh thu + số đơn theo phương thức thanh toán (VNPay / COD).
@@ -79,10 +77,10 @@ class PaymentSplit {
   final double revenue;
 
   factory PaymentSplit.fromJson(Map<String, dynamic> json) => PaymentSplit(
-        method: json['method'] as String? ?? '',
-        count: (json['count'] as num?)?.toInt() ?? 0,
-        revenue: (json['revenue'] as num?)?.toDouble() ?? 0,
-      );
+    method: json['method'] as String? ?? '',
+    count: (json['count'] as num?)?.toInt() ?? 0,
+    revenue: (json['revenue'] as num?)?.toDouble() ?? 0,
+  );
 }
 
 /// Một điểm trên đường doanh thu theo ngày (cho biểu đồ cột).
@@ -108,8 +106,8 @@ class RevenuePoint {
   }
 
   factory RevenuePoint.fromJson(Map<String, dynamic> json) => RevenuePoint(
-        date: DateTime.tryParse('${json['date'] ?? ''}'),
-        revenue: (json['revenue'] as num?)?.toDouble() ?? 0,
-        orders: (json['orders'] as num?)?.toInt() ?? 0,
-      );
+    date: DateTime.tryParse('${json['date'] ?? ''}'),
+    revenue: (json['revenue'] as num?)?.toDouble() ?? 0,
+    orders: (json['orders'] as num?)?.toInt() ?? 0,
+  );
 }

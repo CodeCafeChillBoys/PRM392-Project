@@ -31,7 +31,10 @@ class AdminService {
   /// Đổi role người dùng → trả về bản ghi đã cập nhật. Ném [ApiException] khi
   /// BE từ chối (vd không tìm thấy user, role không hợp lệ).
   Future<UserSummary> changeUserRole(String id, String role) async {
-    final json = await _client.put(ApiConfig.userRole(id), body: {'role': role});
+    final json = await _client.put(
+      ApiConfig.userRole(id),
+      body: {'role': role},
+    );
     return UserSummary.fromJson(_asMap(json));
   }
 
@@ -44,8 +47,10 @@ class AdminService {
       if (from != null) 'from': from.toUtc().toIso8601String(),
       if (to != null) 'to': to.toUtc().toIso8601String(),
     };
-    final json = await _client.get(ApiConfig.adminStats,
-        query: query.isEmpty ? null : query);
+    final json = await _client.get(
+      ApiConfig.adminStats,
+      query: query.isEmpty ? null : query,
+    );
     return AdminStats.fromJson(_asMap(json));
   }
 
@@ -63,8 +68,10 @@ class AdminService {
 
   /// Sản phẩm tồn ≤ [threshold] (mặc định 10 — khớp default BE).
   Future<List<Product>> fetchLowStock({int threshold = 10}) async {
-    final json = await _client
-        .get(ApiConfig.adminLowStock, query: {'threshold': threshold});
+    final json = await _client.get(
+      ApiConfig.adminLowStock,
+      query: {'threshold': threshold},
+    );
     return _asList(json).map(Product.fromJson).toList();
   }
 
@@ -80,7 +87,9 @@ class AdminService {
   // ── Helpers (chịu cả bare-list lẫn `{data:[]}`) ─────────────────────────────
 
   static List<Map<String, dynamic>> _asList(dynamic json) {
-    final raw = json is Map<String, dynamic> ? (json['data'] ?? json['items']) : json;
+    final raw = json is Map<String, dynamic>
+        ? (json['data'] ?? json['items'])
+        : json;
     if (raw is! List) return const [];
     return raw.whereType<Map<String, dynamic>>().toList();
   }

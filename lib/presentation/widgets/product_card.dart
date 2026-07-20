@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_effects.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../data/models/product.dart';
+import '../../data/services/wishlist_service.dart';
 import 'fly_to_cart.dart';
 import 'pressable.dart';
 import 'product_image.dart';
 import 'tv_badge.dart';
+import 'tv_rating.dart';
 import 'tv_icon_button.dart';
 import 'tv_price.dart';
 
@@ -18,12 +21,7 @@ import 'tv_price.dart';
 /// press-scale + haptic.
 /// Mirrors `components/data/ProductCard.jsx`.
 class ProductCard extends StatefulWidget {
-  const ProductCard({
-    super.key,
-    required this.product,
-    this.onTap,
-    this.onAdd,
-  });
+  const ProductCard({super.key, required this.product, this.onTap, this.onAdd});
 
   final Product product;
   final VoidCallback? onTap;
@@ -77,67 +75,103 @@ class _ProductCardState extends State<ProductCard> {
                   children: [
                     ColoredBox(
                       color: AppColors.ink900,
-                      child:
-                          ProductImage(url: product.imageUrl, dimmed: soldOut),
+                      child: ProductImage(
+                        url: product.imageUrl,
+                        dimmed: soldOut,
+                      ),
                     ),
                     if (soldOut)
                       const Positioned(
                         top: 8,
                         left: 8,
-                        child:
-                            TvBadge('Hết hàng', variant: TvBadgeVariant.neutral),
+                        child: TvBadge(
+                          'Hết hàng',
+                          variant: TvBadgeVariant.neutral,
+                        ),
                       ),
+                    // Tim yêu thích (local) — góc phải trên ảnh.
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: _WishHeart(productId: product.id),
+                    ),
                   ],
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                child: Stack(
-                  clipBehavior: Clip.none,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                    Text(
+                      product.brand.toUpperCase(),
+                      style: AppText.label(
+                        AppColors.textTertiary,
+                      ).copyWith(fontSize: 10),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      product.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.bodyStrong().copyWith(fontSize: 14),
+                    ),
+                    const SizedBox(height: 6),
+                    // Sao trung bình + số đánh giá (ẩn nếu chưa có đánh giá).
+                    if (product.hasReviews)
+                      Row(
+                        children: [
+                          TvRating(
+                            value: product.averageRating,
+                            showScale: false,
+                            size: 11,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '(${product.reviewCount})',
+                            style: AppText.xs(AppColors.textTertiary),
+                          ),
+                        ],
+                      )
+                    else
+                      Text(
+                        'Chưa có đánh giá',
+                        style: AppText.xs(AppColors.textTertiary),
+                      ),
+                    const SizedBox(height: 8),
+                    // Giá + nút (+) cùng hàng, căn giữa theo chiều dọc — thay
+                    // Stack/Positioned cũ (nút bị lệch, nhô cao hơn dòng giá).
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          product.brand.toUpperCase(),
-                          style: AppText.label(AppColors.textTertiary)
-                              .copyWith(fontSize: 10),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          product.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.bodyStrong().copyWith(fontSize: 14),
-                        ),
-                        const SizedBox(height: 9),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 40),
+                        Expanded(
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
                             child: TvPrice(value: product.price),
                           ),
                         ),
-                      ],
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Opacity(
-                        opacity: soldOut ? 0.5 : 1,
-                        child: TvIconButton(
-                          variant: TvIconButtonVariant.elevated,
-                          enabled: !soldOut,
-                          // Bay vào giỏ rồi mới thêm thật (hiệu ứng không chặn).
-                          onPressed:
-                              soldOut || onAdd == null ? null : _handleAdd,
-                          tooltip: 'Thêm vào giỏ',
-                          icon: const Icon(Icons.add,
-                              size: 20, color: AppColors.gold400),
+                        const SizedBox(width: 8),
+                        Opacity(
+                          opacity: soldOut ? 0.5 : 1,
+                          child: TvIconButton(
+                            variant: TvIconButtonVariant.elevated,
+                            size: TvIconButtonSize.sm,
+                            enabled: !soldOut,
+                            // Bay vào giỏ rồi mới thêm thật (không chặn).
+                            onPressed: soldOut || onAdd == null
+                                ? null
+                                : _handleAdd,
+                            tooltip: 'Thêm vào giỏ',
+                            icon: Icon(
+                              Icons.add,
+                              size: 18,
+                              color: AppColors.textAccent,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
@@ -146,6 +180,47 @@ class _ProductCardState extends State<ProductCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Nút tim yêu thích trên card — nghe [WishlistService] nên đổi trạng thái tức
+/// thì ở mọi nơi (card, badge header, màn Wishlist) khi bật/tắt.
+class _WishHeart extends StatelessWidget {
+  const _WishHeart({required this.productId});
+
+  final String productId;
+
+  @override
+  Widget build(BuildContext context) {
+    final wl = WishlistService.instance;
+    return ValueListenableBuilder<Set<String>>(
+      valueListenable: wl.notifier,
+      builder: (context, ids, _) {
+        final wished = ids.contains(productId);
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            wl.toggle(productId);
+          },
+          child: Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.bgSurface.withValues(alpha: 0.9),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.borderSubtle),
+            ),
+            child: Icon(
+              wished ? Icons.favorite : Icons.favorite_border,
+              size: 16,
+              color: wished ? AppColors.danger500 : AppColors.textTertiary,
+            ),
+          ),
+        );
+      },
     );
   }
 }

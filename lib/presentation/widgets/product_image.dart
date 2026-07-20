@@ -29,12 +29,12 @@ class ProductImage extends StatelessWidget {
   bool get _isNetwork => url.startsWith('http');
 
   Widget _network(String resolvedUrl) => CachedNetworkImage(
-        imageUrl: resolvedUrl,
-        fit: fit,
-        fadeInDuration: const Duration(milliseconds: 300),
-        placeholder: (_, _) => _placeholder(loading: true),
-        errorWidget: (_, _, _) => _placeholder(),
-      );
+    imageUrl: resolvedUrl,
+    fit: fit,
+    fadeInDuration: const Duration(milliseconds: 300),
+    placeholder: (_, _) => _placeholder(loading: true),
+    errorWidget: (_, _, _) => _placeholder(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -60,12 +60,15 @@ class ProductImage extends StatelessWidget {
   /// Placeholder tối giản — khối lặng ink900, không spinner (skeleton/fade-in
   /// lo phần chuyển cảnh; spinner xoay là "AI slop" đã nghỉ hưu).
   Widget _placeholder({bool loading = false}) => ColoredBox(
-        color: loading ? AppColors.ink900 : AppColors.bgElevated,
-        child: loading
-            ? const SizedBox.shrink()
-            : Center(
-                child: Icon(AppIcons.get('shopping-bag'),
-                    color: AppColors.textTertiary, size: 30),
-              ),
-      );
+    color: loading ? AppColors.ink900 : AppColors.bgElevated,
+    child: loading
+        ? const SizedBox.shrink()
+        : Center(
+            child: Icon(
+              AppIcons.get('shopping-bag'),
+              color: AppColors.textTertiary,
+              size: 30,
+            ),
+          ),
+  );
 }

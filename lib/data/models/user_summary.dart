@@ -25,13 +25,12 @@ class UserSummary {
   bool get isStaff => role == 'Staff';
 
   factory UserSummary.fromJson(Map<String, dynamic> json) => UserSummary(
-        id: '${json['id'] ?? json['userId'] ?? ''}',
-        fullName: json['fullName'] as String? ?? json['name'] as String? ?? '',
-        email: json['email'] as String? ?? '',
-        phoneNumber:
-            '${json['phoneNumber'] ?? json['phone'] ?? ''}',
-        address: '${json['address'] ?? ''}',
-        role: json['role'] as String? ?? 'Customer',
-        createdAt: '${json['createdAt'] ?? ''}',
-      );
+    id: '${json['id'] ?? json['userId'] ?? ''}',
+    fullName: json['fullName'] as String? ?? json['name'] as String? ?? '',
+    email: json['email'] as String? ?? '',
+    phoneNumber: '${json['phoneNumber'] ?? json['phone'] ?? ''}',
+    address: '${json['address'] ?? ''}',
+    role: json['role'] as String? ?? 'Customer',
+    createdAt: '${json['createdAt'] ?? ''}',
+  );
 }

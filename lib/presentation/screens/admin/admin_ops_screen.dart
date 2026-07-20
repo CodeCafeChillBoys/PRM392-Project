@@ -67,13 +67,16 @@ class _AdminOpsScreenState extends State<AdminOpsScreen> {
         TvAppBar(
           mode: TvAppBarMode.page,
           title: 'Vận hành',
-          actions: AdminActions.appBar(context, extra: [
-            TvIconButton(
-              icon: TvIcon('refresh-cw', color: AppColors.textAccent),
-              tooltip: 'Tải lại',
-              onPressed: _load,
-            ),
-          ]),
+          actions: AdminActions.appBar(
+            context,
+            extra: [
+              TvIconButton(
+                icon: TvIcon('refresh-cw', color: AppColors.textAccent),
+                tooltip: 'Tải lại',
+                onPressed: _load,
+              ),
+            ],
+          ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -85,7 +88,8 @@ class _AdminOpsScreenState extends State<AdminOpsScreen> {
               TvTab(_OpsTab.devices.name, 'Thiết bị (${_devices.length})'),
             ],
             onChanged: (v) => setState(
-                () => _tab = _OpsTab.values.firstWhere((t) => t.name == v)),
+              () => _tab = _OpsTab.values.firstWhere((t) => t.name == v),
+            ),
           ),
         ),
         Expanded(child: _body()),
@@ -101,20 +105,26 @@ class _AdminOpsScreenState extends State<AdminOpsScreen> {
           highlightColor: AppColors.skeletonHighlight,
         ),
         child: ListView.separated(
-          padding:
-              EdgeInsets.fromLTRB(AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.gutter,
+            14,
+            AppSpacing.gutter,
+            24,
+          ),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 7,
           separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemBuilder: (_, _) => _sessionCard(const LoginSessionInfo(
-            id: 'ghost',
-            userId: 'ghost',
-            customerName: 'Đang tải phiên',
-            customerEmail: 'loading@techvoid.vn',
-            status: 'Approved',
-            deviceName: 'Android · Pixel',
-            createdAt: '',
-          )),
+          itemBuilder: (_, _) => _sessionCard(
+            const LoginSessionInfo(
+              id: 'ghost',
+              userId: 'ghost',
+              customerName: 'Đang tải phiên',
+              customerEmail: 'loading@techvoid.vn',
+              status: 'Approved',
+              deviceName: 'Android · Pixel',
+              createdAt: '',
+            ),
+          ),
         ),
       );
     }
@@ -130,16 +140,22 @@ class _AdminOpsScreenState extends State<AdminOpsScreen> {
     if (_sessions.isEmpty) return _empty('Chưa có phiên đăng nhập nào');
     return ListView.separated(
       key: const ValueKey('sessions'),
-      padding: EdgeInsets.fromLTRB(AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.gutter,
+        14,
+        AppSpacing.gutter,
+        24,
+      ),
       itemCount: _sessions.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (_, i) => _sessionCard(_sessions[i])
           .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
           .fadeIn(duration: AppEffects.durEnter, curve: AppEffects.easeStandard)
           .moveY(
-              begin: AppEffects.entranceRise,
-              end: 0,
-              curve: AppEffects.easeStandard),
+            begin: AppEffects.entranceRise,
+            end: 0,
+            curve: AppEffects.easeStandard,
+          ),
     );
   }
 
@@ -147,25 +163,32 @@ class _AdminOpsScreenState extends State<AdminOpsScreen> {
     if (_devices.isEmpty) return _empty('Chưa ghi nhận thiết bị nào');
     return ListView.separated(
       key: const ValueKey('devices'),
-      padding: EdgeInsets.fromLTRB(AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.gutter,
+        14,
+        AppSpacing.gutter,
+        24,
+      ),
       itemCount: _devices.length,
       separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (_, i) => _deviceCard(_devices[i])
           .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
           .fadeIn(duration: AppEffects.durEnter, curve: AppEffects.easeStandard)
           .moveY(
-              begin: AppEffects.entranceRise,
-              end: 0,
-              curve: AppEffects.easeStandard),
+            begin: AppEffects.entranceRise,
+            end: 0,
+            curve: AppEffects.easeStandard,
+          ),
     );
   }
 
   Widget _sessionCard(LoginSessionInfo s) {
     final name = s.customerName.isEmpty ? 'Khách' : s.customerName;
     final when = formatRelativeFromIso(s.createdAt);
-    final device = [s.deviceName, s.deviceType]
-        .where((e) => e.isNotEmpty)
-        .join(' · ');
+    final device = [
+      s.deviceName,
+      s.deviceType,
+    ].where((e) => e.isNotEmpty).join(' · ');
     return TvCard(
       padding: 12,
       child: Column(
@@ -174,10 +197,12 @@ class _AdminOpsScreenState extends State<AdminOpsScreen> {
           Row(
             children: [
               Expanded(
-                child: Text(name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.bodyStrong().copyWith(fontSize: 14)),
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.bodyStrong().copyWith(fontSize: 14),
+                ),
               ),
               const SizedBox(width: 8),
               _SessionStatusPill(s),
@@ -185,22 +210,29 @@ class _AdminOpsScreenState extends State<AdminOpsScreen> {
           ),
           if (s.customerEmail.isNotEmpty) ...[
             const SizedBox(height: 2),
-            Text(s.customerEmail,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.xs(AppColors.textTertiary)),
+            Text(
+              s.customerEmail,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.xs(AppColors.textTertiary),
+            ),
           ],
           const SizedBox(height: 8),
           Row(
             children: [
-              TvIcon('monitor-smartphone',
-                  size: 14, color: AppColors.textTertiary),
+              TvIcon(
+                'monitor-smartphone',
+                size: 14,
+                color: AppColors.textTertiary,
+              ),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(device.isEmpty ? 'Thiết bị không rõ' : device,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.xs(AppColors.textSecondary)),
+                child: Text(
+                  device.isEmpty ? 'Thiết bị không rõ' : device,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.xs(AppColors.textSecondary),
+                ),
               ),
               if (when.isNotEmpty) ...[
                 const SizedBox(width: 8),
@@ -236,10 +268,12 @@ class _AdminOpsScreenState extends State<AdminOpsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.bodyStrong().copyWith(fontSize: 14)),
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.bodyStrong().copyWith(fontSize: 14),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   [
@@ -263,11 +297,11 @@ class _AdminOpsScreenState extends State<AdminOpsScreen> {
       children: [
         const SizedBox(height: 120),
         Center(
-            child: TvIcon('activity', size: 44, color: AppColors.textTertiary)),
+          child: TvIcon('activity', size: 44, color: AppColors.textTertiary),
+        ),
         const SizedBox(height: 12),
         Center(
-          child:
-              Text(message, style: AppText.body(AppColors.textSecondary)),
+          child: Text(message, style: AppText.body(AppColors.textSecondary)),
         ),
       ],
     );

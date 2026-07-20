@@ -12,7 +12,7 @@ void main() {
         'id': '1',
         'orderDetails': [
           {'x': 1},
-          {'x': 2}
+          {'x': 2},
         ],
       });
       expect(o.itemCount, 2);

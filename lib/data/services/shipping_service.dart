@@ -14,13 +14,15 @@ class ShippingService {
     required double destinationLat,
     required double destinationLng,
   }) async {
-    final json = await _client.post(
-      ApiConfig.shippingCalculate,
-      body: {
-        'destinationLat': destinationLat,
-        'destinationLng': destinationLng,
-      },
-    ) as Map<String, dynamic>;
+    final json =
+        await _client.post(
+              ApiConfig.shippingCalculate,
+              body: {
+                'destinationLat': destinationLat,
+                'destinationLng': destinationLng,
+              },
+            )
+            as Map<String, dynamic>;
     return ShippingQuote.fromJson(json);
   }
 }

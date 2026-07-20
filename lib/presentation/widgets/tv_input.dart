@@ -82,23 +82,28 @@ class _TvInputState extends State<TvInput> {
       duration: AppEffects.durBase,
       curve: AppEffects.easeStandard,
       height: multiline ? null : height,
-      padding:
-          EdgeInsets.symmetric(horizontal: 14, vertical: multiline ? 10 : 0),
+      padding: EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: multiline ? 10 : 0,
+      ),
       decoration: BoxDecoration(
-        color: widget.fillColor ??
+        color:
+            widget.fillColor ??
             (widget.dashed ? Colors.transparent : AppColors.bgElevated),
         borderRadius: BorderRadius.circular(AppRadii.md),
         border: widget.dashed
             ? null
             : Border.all(
-                color:
-                    _focused ? AppColors.borderAccent : AppColors.borderDefault,
+                color: _focused
+                    ? AppColors.borderAccent
+                    : AppColors.borderDefault,
               ),
         boxShadow: _focused && !widget.dashed ? AppEffects.focusRing : null,
       ),
       child: Row(
-        crossAxisAlignment:
-            multiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: multiline
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
           if (widget.leading != null) ...[
             AnimatedSwitcher(
@@ -106,8 +111,7 @@ class _TvInputState extends State<TvInput> {
               child: IconTheme.merge(
                 key: ValueKey(_focused),
                 data: IconThemeData(
-                  color:
-                      _focused ? AppColors.gold400 : AppColors.textTertiary,
+                  color: _focused ? AppColors.accent : AppColors.textTertiary,
                   size: 18,
                 ),
                 child: widget.leading!,
@@ -129,8 +133,9 @@ class _TvInputState extends State<TvInput> {
               cursorColor: AppColors.accent,
               style: AppText.body(),
               maxLines: widget.maxLines,
-              textAlignVertical:
-                  multiline ? TextAlignVertical.top : TextAlignVertical.center,
+              textAlignVertical: multiline
+                  ? TextAlignVertical.top
+                  : TextAlignVertical.center,
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,

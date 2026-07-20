@@ -25,15 +25,17 @@ class AuthService {
   /// Giải mã JWT, lưu userId / userName / userEmail / userRole vào client dùng chung.
   void _applySession(String token) {
     final claims = JwtDecoder.decode(token);
-    _client.userId = (claims['nameid'] ??
-            claims['sub'] ??
-            claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'])
-        ?.toString();
+    _client.userId =
+        (claims['nameid'] ??
+                claims['sub'] ??
+                claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'])
+            ?.toString();
     _client.userName = (claims['unique_name'] ?? claims['name'])?.toString();
     _client.userEmail = claims['email']?.toString();
-    _client.userRole = (claims['role'] ??
-            claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'])
-        ?.toString();
+    _client.userRole =
+        (claims['role'] ??
+                claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'])
+            ?.toString();
   }
 
   /// Đăng xuất: xoá toàn bộ session trong client dùng chung và thoát Google.
@@ -46,9 +48,7 @@ class AuthService {
     _client.userRole = null;
     try {
       await _googleSignIn.signOut();
-    } catch (_) {
-      
-    }
+    } catch (_) {}
   }
 
   Future<String?> login({
@@ -145,7 +145,10 @@ class AuthService {
   }
 
   /// Send the chosen verification challenge using [verifyToken].
-  Future<void> requestVerification(VerifyMethod method, String verifyToken) async {
+  Future<void> requestVerification(
+    VerifyMethod method,
+    String verifyToken,
+  ) async {
     final endpoint = method == VerifyMethod.emailLink
         ? ApiConfig.sendEmailLink
         : ApiConfig.sendOtp;
@@ -169,7 +172,10 @@ class AuthService {
     return false;
   }
 
-  Future<void> verifyOtp({required String verifyToken, required String code}) async {
+  Future<void> verifyOtp({
+    required String verifyToken,
+    required String code,
+  }) async {
     final response = await _client.post(
       ApiConfig.verifyOtp,
       body: {'verifyToken': verifyToken, 'otpCode': code},

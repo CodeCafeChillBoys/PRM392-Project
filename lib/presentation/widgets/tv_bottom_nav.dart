@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_effects.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import 'glass_surface.dart';
 import 'tv_icon.dart';
 
 /// One entry in the [TvBottomNav].
@@ -32,14 +33,52 @@ class TvBottomNav extends StatelessWidget {
     required this.items,
     required this.activeIndex,
     this.onChanged,
+    this.floating = false,
   });
 
   final List<TvNavItem> items;
   final int activeIndex;
   final ValueChanged<int>? onChanged;
 
+  /// `true` (VOID CYAN, khu khách): thanh nav NỔI — pill kính bo tròn cách mép.
+  /// `false` (staff/admin): thanh full-width bám đáy như cũ.
+  final bool floating;
+
   @override
   Widget build(BuildContext context) {
+    final row = Row(
+      children: [
+        for (var i = 0; i < items.length; i++)
+          Expanded(
+            child: _NavButton(
+              item: items[i],
+              active: i == activeIndex,
+              onTap: () {
+                if (i != activeIndex) HapticFeedback.selectionClick();
+                onChanged?.call(i);
+              },
+            ),
+          ),
+      ],
+    );
+
+    // Floating pill (Green-SM): SafeArea + margin ngang + GlassSurface bo tròn.
+    // Vẫn nằm ở Scaffold.bottomNavigationBar nên extendBody tự chừa padding đáy.
+    if (floating) {
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+          child: GlassSurface(
+            borderRadius: BorderRadius.circular(AppRadii.xxl),
+            sigma: 18,
+            topHighlight: false,
+            child: SizedBox(height: AppSpacing.bottomNavHeight, child: row),
+          ),
+        ),
+      );
+    }
+
     final bar = DecoratedBox(
       decoration: BoxDecoration(
         color: AppEffects.kGlassEnabled
@@ -49,23 +88,7 @@ class TvBottomNav extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          height: AppSpacing.bottomNavHeight,
-          child: Row(
-            children: [
-              for (var i = 0; i < items.length; i++)
-                Expanded(
-                    child: _NavButton(
-                  item: items[i],
-                  active: i == activeIndex,
-                  onTap: () {
-                    if (i != activeIndex) HapticFeedback.selectionClick();
-                    onChanged?.call(i);
-                  },
-                )),
-            ],
-          ),
-        ),
+        child: SizedBox(height: AppSpacing.bottomNavHeight, child: row),
       ),
     );
 
@@ -83,8 +106,11 @@ class TvBottomNav extends StatelessWidget {
 }
 
 class _NavButton extends StatelessWidget {
-  const _NavButton(
-      {required this.item, required this.active, required this.onTap});
+  const _NavButton({
+    required this.item,
+    required this.active,
+    required this.onTap,
+  });
 
   final TvNavItem item;
   final bool active;

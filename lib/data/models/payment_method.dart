@@ -19,9 +19,9 @@ class PaymentMethod {
   bool get isGateway => value == 'VNPay';
 
   factory PaymentMethod.fromJson(Map<String, dynamic> json) => PaymentMethod(
-        value: json['value'] as String? ?? '',
-        iconName: json['icon'] as String? ?? 'credit-card',
-        title: json['title'] as String? ?? '',
-        subtitle: json['subtitle'] as String? ?? '',
-      );
+    value: json['value'] as String? ?? '',
+    iconName: json['icon'] as String? ?? 'credit-card',
+    title: json['title'] as String? ?? '',
+    subtitle: json['subtitle'] as String? ?? '',
+  );
 }

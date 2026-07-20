@@ -1,18 +1,58 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Clipboard, HapticFeedback
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../data/services/chat_history_service.dart';
 import '../../../data/services/chat_service.dart';
 import '../../widgets/widgets.dart';
 
 /// 1 dòng chat — user hoặc bot, kèm mốc thời gian gửi.
+///
+/// [isError]: bong bóng lỗi phía bot → hiện nút "Thử lại". [failedQuery]: câu
+/// user vừa gửi hỏng, giữ lại để gửi lại đúng câu đó.
 class _ChatEntry {
-  _ChatEntry({required this.text, required this.fromUser, required this.at});
+  _ChatEntry({
+    required this.text,
+    required this.fromUser,
+    required this.at,
+    this.isError = false,
+    this.failedQuery,
+  });
+
   final String text;
   final bool fromUser;
   final DateTime at;
+  final bool isError;
+  final String? failedQuery;
+
+  Map<String, dynamic> toJson() => {
+    'text': text,
+    'fromUser': fromUser,
+    'at': at.toIso8601String(),
+    if (isError) 'isError': true,
+    if (failedQuery != null) 'failedQuery': failedQuery,
+  };
+
+  /// Dựng lại từ JSON đã lưu; thiếu trường bắt buộc → null (bỏ qua tin hỏng).
+  static _ChatEntry? fromJson(Map<String, dynamic> json) {
+    final text = json['text'];
+    final fromUser = json['fromUser'];
+    if (text is! String || fromUser is! bool) return null;
+    return _ChatEntry(
+      text: text,
+      fromUser: fromUser,
+      at: DateTime.tryParse(json['at']?.toString() ?? '') ?? DateTime.now(),
+      isError: json['isError'] == true,
+      failedQuery: json['failedQuery'] is String
+          ? json['failedQuery'] as String
+          : null,
+    );
+  }
 }
 
 /// Màn chat AI "Trợ lý TechStore" (`POST /api/Chat`, Gemini phía BE) — pushed
@@ -43,21 +83,43 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     'iPhone còn hàng không?',
   ];
 
+  static const _greetingText =
+      'Xin chào! Mình là trợ lý AI của TechStore. Bạn cần tìm sản phẩm '
+      'hay có câu hỏi gì cứ nhắn mình nhé 🤖';
+
+  _ChatEntry _greetingEntry() =>
+      _ChatEntry(text: _greetingText, fromUser: false, at: DateTime.now());
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _messages.add(_ChatEntry(
-      text: 'Xin chào! Mình là trợ lý AI của TechStore. Bạn cần tìm sản phẩm '
-          'hay có câu hỏi gì cứ nhắn mình nhé 🤖',
-      fromUser: false,
-      at: DateTime.now(),
-    ));
-    // Mở từ trang sản phẩm → tự gửi câu hỏi mồi sau khi màn dựng xong.
-    final seed = widget.seedQuestion?.trim();
-    if (seed != null && seed.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _send(seed));
+    // Greeting hiển thị ngay khung hình đầu; lịch sử (nếu có) nạp async sau đó.
+    _messages.add(_greetingEntry());
+    _bootstrap();
+  }
+
+  /// Khôi phục lịch sử local rồi mới gửi câu hỏi mồi (nếu mở từ trang sản phẩm).
+  Future<void> _bootstrap() async {
+    final saved = await ChatHistoryService.instance.load();
+    if (!mounted) return;
+    if (saved.isNotEmpty) {
+      final restored = saved
+          .map(_ChatEntry.fromJson)
+          .whereType<_ChatEntry>()
+          .toList();
+      if (restored.isNotEmpty) {
+        setState(() {
+          _messages
+            ..clear()
+            ..addAll(restored);
+        });
+        _scrollToBottom();
+      }
     }
+    // Mở từ trang sản phẩm → tự gửi câu hỏi mồi, tiếp nối hội thoại đã khôi phục.
+    final seed = widget.seedQuestion?.trim();
+    if (seed != null && seed.isNotEmpty) _send(seed);
   }
 
   @override
@@ -71,7 +133,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     final inset =
-        WidgetsBinding.instance.platformDispatcher.implicitView?.viewInsets.bottom ?? 0;
+        WidgetsBinding
+            .instance
+            .platformDispatcher
+            .implicitView
+            ?.viewInsets
+            .bottom ??
+        0;
     // Bàn phím vừa mở → viewport co lại, cuộn theo để tin mới nhất không bị che.
     if (inset > _lastBottomInset) _scrollToBottom();
     _lastBottomInset = inset;
@@ -87,30 +155,85 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       if (presetText == null) _controller.clear();
       _waiting = true;
     });
+    _persist();
     _scrollToBottom();
+    await _dispatch(text);
+  }
+
+  /// Gọi BE với [query] rồi nối câu trả lời / bong bóng lỗi. KHÔNG tự thêm bong
+  /// bóng user (đã có sẵn) — dùng chung cho gửi mới và "Thử lại".
+  Future<void> _dispatch(String query) async {
     try {
-      final reply = await _service.sendMessage(text);
+      final reply = await _service.sendMessage(query);
       if (!mounted) return;
       setState(() {
-        _messages
-            .add(_ChatEntry(text: reply, fromUser: false, at: DateTime.now()));
+        _messages.add(
+          _ChatEntry(text: reply, fromUser: false, at: DateTime.now()),
+        );
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _messages.add(_ChatEntry(
-          text: 'Xin lỗi, mình đang mất kết nối. Bạn thử gửi lại nhé.',
-          fromUser: false,
-          at: DateTime.now(),
-        ));
-        if (presetText == null && _controller.text.trim().isEmpty) {
-          _controller.text = text;
-        }
+        _messages.add(
+          _ChatEntry(
+            text: 'Xin lỗi, mình đang mất kết nối. Bạn thử gửi lại nhé.',
+            fromUser: false,
+            at: DateTime.now(),
+            isError: true,
+            failedQuery: query,
+          ),
+        );
       });
     } finally {
-      if (mounted) setState(() => _waiting = false);
+      if (mounted) {
+        setState(() => _waiting = false);
+        _persist();
+      }
       _scrollToBottom();
     }
+  }
+
+  /// Nhấn "Thử lại" trên bong bóng lỗi → bỏ bong bóng đó, gửi lại đúng câu fail.
+  Future<void> _retry(_ChatEntry errorEntry) async {
+    final query = errorEntry.failedQuery;
+    if (_waiting || query == null || query.isEmpty) return;
+    setState(() {
+      _messages.remove(errorEntry);
+      _waiting = true;
+    });
+    _persist();
+    _scrollToBottom();
+    await _dispatch(query);
+  }
+
+  /// Ghi toàn bộ hội thoại xuống local (fire-and-forget).
+  void _persist() {
+    unawaited(
+      ChatHistoryService.instance.save(
+        _messages.map((m) => m.toJson()).toList(growable: false),
+      ),
+    );
+  }
+
+  /// Nhấn giữ bong bóng → sao chép nội dung.
+  void _copy(String text) {
+    unawaited(Clipboard.setData(ClipboardData(text: text)));
+    unawaited(HapticFeedback.selectionClick());
+    TvToast.show(context, 'Đã sao chép');
+  }
+
+  /// Xoá lịch sử: xoá prefs + reset về mỗi greeting.
+  Future<void> _clearHistory() async {
+    await ChatHistoryService.instance.clear();
+    if (!mounted) return;
+    setState(() {
+      _controller.clear();
+      _messages
+        ..clear()
+        ..add(_greetingEntry());
+    });
+    _scrollToBottom();
+    TvToast.show(context, 'Đã xoá lịch sử trò chuyện');
   }
 
   void _scrollToBottom() {
@@ -142,6 +265,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               padding: EdgeInsets.only(left: 6, right: 2),
               child: TvBadge('AI', variant: TvBadgeVariant.glass),
             ),
+            actions: [
+              TvIconButton(
+                icon: const TvIcon('trash-2'),
+                tooltip: 'Xoá lịch sử',
+                enabled: !_waiting,
+                onPressed: _clearHistory,
+              ),
+            ],
           ),
           Expanded(child: _buildList()),
           if (_showSuggestions) _buildSuggestions(),
@@ -161,21 +292,42 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         if (_waiting && i == itemCount - 1) {
           return const Padding(
             padding: EdgeInsets.only(bottom: 12),
-            child: Align(alignment: Alignment.centerLeft, child: _TypingBubble()),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _TypingBubble(),
+            ),
           );
         }
         final m = _messages[i];
+        // Nhấn giữ bất kỳ bong bóng → sao chép nội dung.
+        Widget content = GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onLongPress: () => _copy(m.text),
+          child: TvChatBubble(
+            from: m.fromUser ? ChatFrom.user : ChatFrom.agent,
+            message: m.text,
+            time: _fmtTime(m.at),
+          ),
+        );
+        // Bong bóng lỗi → gắn nút "Thử lại" ngay dưới, gửi lại đúng câu vừa fail.
+        if (m.isError && m.failedQuery != null) {
+          content = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              content,
+              const SizedBox(height: 6),
+              _RetryButton(onTap: _waiting ? null : () => _retry(m)),
+            ],
+          );
+        }
         // Key ổn định theo index để entrance chỉ chạy 1 lần cho bubble MỚI
         // (không replay toàn bộ lịch sử mỗi lần setState).
         return KeyedSubtree(
           key: ValueKey('msg-$i'),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: TvChatBubble(
-              from: m.fromUser ? ChatFrom.user : ChatFrom.agent,
-              message: m.text,
-              time: _fmtTime(m.at),
-            )
+            child: content
                 .animate()
                 .fadeIn(
                   duration: const Duration(milliseconds: 250),
@@ -199,21 +351,22 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
-        children: <Widget>[
-          for (final s in _suggestions)
-            _SuggestionChip(label: s, onTap: () => _send(s)),
-        ]
-            .animate(interval: AppEffects.staggerStep)
-            .fadeIn(
-              duration: AppEffects.durEnter,
-              curve: AppEffects.easeStandard,
-            )
-            .moveY(
-              begin: 12,
-              end: 0,
-              duration: AppEffects.durEnter,
-              curve: AppEffects.easeStandard,
-            ),
+        children:
+            <Widget>[
+                  for (final s in _suggestions)
+                    _SuggestionChip(label: s, onTap: () => _send(s)),
+                ]
+                .animate(interval: AppEffects.staggerStep)
+                .fadeIn(
+                  duration: AppEffects.durEnter,
+                  curve: AppEffects.easeStandard,
+                )
+                .moveY(
+                  begin: 12,
+                  end: 0,
+                  duration: AppEffects.durEnter,
+                  curve: AppEffects.easeStandard,
+                ),
       ),
     );
   }
@@ -275,8 +428,52 @@ class _SuggestionChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: AppText.label(AppColors.textSecondary)
-              .copyWith(fontSize: 12.5, letterSpacing: 0.25),
+          style: AppText.label(
+            AppColors.textSecondary,
+          ).copyWith(fontSize: 12.5, letterSpacing: 0.25),
+        ),
+      ),
+    );
+  }
+}
+
+/// Nút "Thử lại" dưới bong bóng lỗi — tint danger, gửi lại câu vừa fail.
+/// [onTap] null (đang chờ trả lời) → mờ đi và không bấm được.
+class _RetryButton extends StatelessWidget {
+  const _RetryButton({this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: onTap == null ? 0.5 : 1,
+      child: PressableScale(
+        scale: 0.95,
+        haptic: PressHaptic.selection,
+        onTap: onTap,
+        child: Container(
+          height: 32,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: AppColors.dangerSoft,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: AppColors.dangerLine),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TvIcon('refresh-cw', size: 14, color: AppColors.dangerStrong),
+              const SizedBox(width: 6),
+              Text(
+                'Thử lại',
+                style: AppText.label(
+                  AppColors.dangerStrong,
+                ).copyWith(fontSize: 11.5, letterSpacing: 0.4),
+              ),
+            ],
+          ),
         ),
       ),
     );

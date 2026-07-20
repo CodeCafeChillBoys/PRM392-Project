@@ -34,11 +34,15 @@ class AdminRevenueChart extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text('Đỉnh: ${formatVnd(maxRevenue)}',
-                style: AppText.xs(AppColors.textTertiary)),
+            Text(
+              'Đỉnh: ${formatVnd(maxRevenue)}',
+              style: AppText.xs(AppColors.textTertiary),
+            ),
             const Spacer(),
-            Text('${points.length} ngày',
-                style: AppText.xs(AppColors.textTertiary)),
+            Text(
+              '${points.length} ngày',
+              style: AppText.xs(AppColors.textTertiary),
+            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -55,10 +59,10 @@ class AdminRevenueChart extends StatelessWidget {
                 maxRevenue: maxRevenue,
                 progress: t,
                 barColorTop: AppColors.isLight
-                    ? const Color(0xFF2E2921)
+                    ? const Color(0xFF2DCCD3)
                     : AppColors.gold400,
                 barColorBottom: AppColors.isLight
-                    ? const Color(0xFF14110C)
+                    ? const Color(0xFF008A98)
                     : AppColors.gold600,
                 gridColor: AppColors.borderSubtle,
                 labelColor: AppColors.textTertiary,
@@ -76,10 +80,16 @@ class AdminRevenueChart extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.bar_chart_rounded, size: 40, color: AppColors.textTertiary),
+          Icon(
+            Icons.bar_chart_rounded,
+            size: 40,
+            color: AppColors.textTertiary,
+          ),
           const SizedBox(height: 10),
-          Text('Chưa có doanh thu trong khoảng này',
-              style: AppText.sm(AppColors.textSecondary)),
+          Text(
+            'Chưa có doanh thu trong khoảng này',
+            style: AppText.sm(AppColors.textSecondary),
+          ),
         ],
       ),
     );
@@ -144,11 +154,14 @@ class _RevenueBarsPainter extends CustomPainter {
           topRight: const Radius.circular(6),
         );
         final paint = Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [barColorTop, barColorBottom],
-          ).createShader(Rect.fromLTWH(cx - barW / 2, baseY - barH, barW, barH));
+          ..shader =
+              LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [barColorTop, barColorBottom],
+              ).createShader(
+                Rect.fromLTWH(cx - barW / 2, baseY - barH, barW, barH),
+              );
         canvas.drawRRect(rect, paint);
       }
 

@@ -29,7 +29,10 @@ class RecentlyViewedService {
   /// Ghi nhận vừa xem [productId] — đẩy lên đầu, khử trùng, cắt bớt đuôi.
   Future<void> add(String productId) async {
     if (productId.isEmpty) return;
-    _ids = [productId, ..._ids.where((e) => e != productId)].take(_max).toList();
+    _ids = [
+      productId,
+      ..._ids.where((e) => e != productId),
+    ].take(_max).toList();
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList(_key, _ids);

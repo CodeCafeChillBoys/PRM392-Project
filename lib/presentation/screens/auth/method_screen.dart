@@ -44,50 +44,56 @@ class MethodScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 12),
-                  Text('Xác thực đăng nhập', style: AppText.h1()),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Chọn một phương thức để hoàn tất bảo mật cho tài khoản của bạn.',
-                    style: AppText.body(
-                      AppColors.textSecondary,
-                    ).copyWith(fontSize: 14),
-                  ),
-                  const SizedBox(height: 28),
-                  _MethodCard(
-                    primary: true,
-                    iconName: 'mail-check',
-                    title: 'Xác thực qua Email Link',
-                    description:
-                        'Gửi một đường link an toàn tới email — bấm để đăng nhập tức thì.',
-                    onTap: () => choose(
-                      VerifyMethod.emailLink,
-                      EmailWaitScreen(email: email, verifyToken: verifyToken),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  _MethodCard(
-                    primary: false,
-                    iconName: 'shield-check',
-                    title: 'Xác thực qua mã OTP',
-                    description: 'Nhập mã 6 số được gửi tới email của bạn.',
-                    onTap: () => choose(
-                      VerifyMethod.otp,
-                      OtpScreen(email: email, verifyToken: verifyToken),
-                    ),
-                  ),
-                ]
-                    .animate(interval: AppEffects.staggerStep)
-                    .fadeIn(
-                        duration: AppEffects.durEnter,
-                        curve: AppEffects.easeStandard)
-                    .moveY(
-                      begin: AppEffects.entranceRise,
-                      end: 0,
-                      duration: AppEffects.durEnter,
-                      curve: AppEffects.easeStandard,
-                    ),
+                children:
+                    [
+                          const SizedBox(height: 12),
+                          Text('Xác thực đăng nhập', style: AppText.h1()),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Chọn một phương thức để hoàn tất bảo mật cho tài khoản của bạn.',
+                            style: AppText.body(
+                              AppColors.textSecondary,
+                            ).copyWith(fontSize: 14),
+                          ),
+                          const SizedBox(height: 28),
+                          _MethodCard(
+                            primary: true,
+                            iconName: 'mail-check',
+                            title: 'Xác thực qua Email Link',
+                            description:
+                                'Gửi một đường link an toàn tới email — bấm để đăng nhập tức thì.',
+                            onTap: () => choose(
+                              VerifyMethod.emailLink,
+                              EmailWaitScreen(
+                                email: email,
+                                verifyToken: verifyToken,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          _MethodCard(
+                            primary: false,
+                            iconName: 'shield-check',
+                            title: 'Xác thực qua mã OTP',
+                            description:
+                                'Nhập mã 6 số được gửi tới email của bạn.',
+                            onTap: () => choose(
+                              VerifyMethod.otp,
+                              OtpScreen(email: email, verifyToken: verifyToken),
+                            ),
+                          ),
+                        ]
+                        .animate(interval: AppEffects.staggerStep)
+                        .fadeIn(
+                          duration: AppEffects.durEnter,
+                          curve: AppEffects.easeStandard,
+                        )
+                        .moveY(
+                          begin: AppEffects.entranceRise,
+                          end: 0,
+                          duration: AppEffects.durEnter,
+                          curve: AppEffects.easeStandard,
+                        ),
               ),
             ),
           ),
@@ -167,11 +173,7 @@ class _MethodCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            TvIcon(
-              'chevron-right',
-              size: 20,
-              color: AppColors.textTertiary,
-            ),
+            TvIcon('chevron-right', size: 20, color: AppColors.textTertiary),
           ],
         ),
       ),

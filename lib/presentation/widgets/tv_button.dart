@@ -35,58 +35,62 @@ class TvButton extends StatelessWidget {
   final Widget? trailingIcon;
 
   double get _height => switch (size) {
-        TvButtonSize.sm => 36,
-        TvButtonSize.md => 44,
-        TvButtonSize.lg => 52,
-      };
+    TvButtonSize.sm => 36,
+    TvButtonSize.md => 44,
+    TvButtonSize.lg => 52,
+  };
 
   double get _hPad => switch (size) {
-        TvButtonSize.sm => 16,
-        TvButtonSize.md => 20,
-        TvButtonSize.lg => 24,
-      };
+    TvButtonSize.sm => 16,
+    TvButtonSize.md => 20,
+    TvButtonSize.lg => 24,
+  };
 
   double get _fontSize => switch (size) {
-        TvButtonSize.sm => 13,
-        TvButtonSize.md => 15,
-        TvButtonSize.lg => 16,
-      };
+    TvButtonSize.sm => 13,
+    TvButtonSize.md => 15,
+    TvButtonSize.lg => 16,
+  };
 
   @override
   Widget build(BuildContext context) {
     final disabled = onPressed == null || loading;
 
-    final (Color? bg, Gradient? grad, Color fg, BoxBorder? border,
-            List<BoxShadow>? shadow) =
-        switch (variant) {
+    final (
+      Color? bg,
+      Gradient? grad,
+      Color fg,
+      BoxBorder? border,
+      List<BoxShadow>? shadow,
+    ) = switch (variant) {
       TvButtonVariant.gradient => (
-          null,
-          AppColors.gradientCta,
-          AppColors.textOnAccent,
-          null,
-          AppEffects.glowCta
-        ),
+        null,
+        AppColors.gradientCta,
+        AppColors.textOnAccent,
+        null,
+        AppEffects.glowCta,
+      ),
       TvButtonVariant.accent => (
-          AppColors.accent,
-          null,
-          AppColors.textOnAccent,
-          null,
-          AppEffects.glowAccentSm
-        ),
+        AppColors.accent,
+        null,
+        AppColors.textOnAccent,
+        null,
+        AppEffects.glowAccentSm,
+      ),
       TvButtonVariant.secondary => (
-          Colors.transparent,
-          null,
-          AppColors.textAccent,
-          Border.all(color: AppColors.accentSoftLine, width: 1.5),
-          null
-        ),
+        Colors.transparent,
+        null,
+        AppColors.textAccent,
+        Border.all(color: AppColors.accentSoftLine, width: 1.5),
+        null,
+      ),
       TvButtonVariant.ghost => (
-          AppColors.bgElevated,
-          null,
-          AppColors.textPrimary,
-          Border.all(color: AppColors.borderDefault),
-          null
-        ),
+        AppColors.bgElevated,
+        null,
+        AppColors.textPrimary,
+        Border.all(color: AppColors.borderDefault),
+        null,
+      ),
     };
 
     final content = loading
@@ -101,7 +105,9 @@ class TvButton extends StatelessWidget {
             children: [
               if (leadingIcon != null) ...[
                 IconTheme.merge(
-                    data: IconThemeData(color: fg, size: 18), child: leadingIcon!),
+                  data: IconThemeData(color: fg, size: 18),
+                  child: leadingIcon!,
+                ),
                 const SizedBox(width: 10),
               ],
               Flexible(
@@ -115,7 +121,9 @@ class TvButton extends StatelessWidget {
               if (trailingIcon != null) ...[
                 const SizedBox(width: 10),
                 IconTheme.merge(
-                    data: IconThemeData(color: fg, size: 18), child: trailingIcon!),
+                  data: IconThemeData(color: fg, size: 18),
+                  child: trailingIcon!,
+                ),
               ],
             ],
           );

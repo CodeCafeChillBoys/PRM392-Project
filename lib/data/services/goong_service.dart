@@ -22,10 +22,7 @@ class GoongService {
   Future<List<PlaceSuggestion>> autocomplete(String input) async {
     if (input.trim().length < 3) return const [];
     final uri = Uri.parse('${GoongConfig.restBase}/Place/AutoComplete').replace(
-      queryParameters: {
-        'api_key': GoongConfig.restApiKey,
-        'input': input,
-      },
+      queryParameters: {'api_key': GoongConfig.restApiKey, 'input': input},
     );
     final res = await _client.get(uri).timeout(const Duration(seconds: 15));
     if (res.statusCode != 200) return const [];
@@ -39,10 +36,7 @@ class GoongService {
 
   Future<LatLng?> placeLatLng(String placeId) async {
     final uri = Uri.parse('${GoongConfig.restBase}/Place/Detail').replace(
-      queryParameters: {
-        'api_key': GoongConfig.restApiKey,
-        'place_id': placeId,
-      },
+      queryParameters: {'api_key': GoongConfig.restApiKey, 'place_id': placeId},
     );
     final res = await _client.get(uri).timeout(const Duration(seconds: 15));
     if (res.statusCode != 200) return null;
@@ -60,17 +54,15 @@ class GoongService {
   Future<LatLng?> geocodeAddress(String address) async {
     if (address.trim().isEmpty) return null;
     final uri = Uri.parse('${GoongConfig.restBase}/Geocode').replace(
-      queryParameters: {
-        'api_key': GoongConfig.restApiKey,
-        'address': address,
-      },
+      queryParameters: {'api_key': GoongConfig.restApiKey, 'address': address},
     );
     final res = await _client.get(uri).timeout(const Duration(seconds: 15));
     if (res.statusCode != 200) return null;
     final json = jsonDecode(res.body) as Map<String, dynamic>;
     final results = json['results'] as List?;
     if (results == null || results.isEmpty) return null;
-    final loc = (results.first as Map<String, dynamic>)['geometry']?['location'];
+    final loc =
+        (results.first as Map<String, dynamic>)['geometry']?['location'];
     if (loc is Map) {
       final lat = (loc['lat'] as num?)?.toDouble();
       final lng = (loc['lng'] as num?)?.toDouble();
@@ -107,10 +99,10 @@ class GoongService {
         points: (points == null || points.isEmpty)
             ? const []
             : decodePolyline(points),
-        durationSeconds:
-            ((leg0?['duration'] as Map?)?['value'] as num?)?.toInt(),
-        distanceMeters:
-            ((leg0?['distance'] as Map?)?['value'] as num?)?.toInt(),
+        durationSeconds: ((leg0?['duration'] as Map?)?['value'] as num?)
+            ?.toInt(),
+        distanceMeters: ((leg0?['distance'] as Map?)?['value'] as num?)
+            ?.toInt(),
       );
     } catch (_) {
       return RouteResult.empty;

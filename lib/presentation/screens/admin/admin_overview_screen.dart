@@ -77,13 +77,16 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         TvAppBar(
           mode: TvAppBarMode.page,
           title: 'Tổng quan',
-          actions: AdminActions.appBar(context, extra: [
-            TvIconButton(
-              icon: TvIcon('refresh-cw', color: AppColors.textAccent),
-              tooltip: 'Tải lại',
-              onPressed: _load,
-            ),
-          ]),
+          actions: AdminActions.appBar(
+            context,
+            extra: [
+              TvIconButton(
+                icon: TvIcon('refresh-cw', color: AppColors.textAccent),
+                tooltip: 'Tải lại',
+                onPressed: _load,
+              ),
+            ],
+          ),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -107,22 +110,25 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
           baseColor: AppColors.skeletonBase,
           highlightColor: AppColors.skeletonHighlight,
         ),
-        child: _content(const AdminStats(
-          totalRevenue: 128000000,
-          orderCount: 42,
-          newCustomers: 12,
-          lowStockCount: 3,
-          shippingFeeTotal: 640000,
-          statusCounts: [
-            StatusCount(status: 'Delivered', count: 28),
-            StatusCount(status: 'Pending', count: 9),
-            StatusCount(status: 'Cancelled', count: 5),
-          ],
-          paymentSplit: [
-            PaymentSplit(method: 'VNPay', count: 24, revenue: 80000000),
-            PaymentSplit(method: 'COD', count: 18, revenue: 48000000),
-          ],
-        ), animate: false),
+        child: _content(
+          const AdminStats(
+            totalRevenue: 128000000,
+            orderCount: 42,
+            newCustomers: 12,
+            lowStockCount: 3,
+            shippingFeeTotal: 640000,
+            statusCounts: [
+              StatusCount(status: 'Delivered', count: 28),
+              StatusCount(status: 'Pending', count: 9),
+              StatusCount(status: 'Cancelled', count: 5),
+            ],
+            paymentSplit: [
+              PaymentSplit(method: 'VNPay', count: 24, revenue: 80000000),
+              PaymentSplit(method: 'COD', count: 18, revenue: 48000000),
+            ],
+          ),
+          animate: false,
+        ),
       );
     }
     final stats = _stats;
@@ -144,47 +150,71 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
           .animate(delay: AppEffects.staggerStep * i)
           .fadeIn(duration: AppEffects.durEnter, curve: AppEffects.easeStandard)
           .moveY(
-              begin: AppEffects.entranceRise,
-              end: 0,
-              curve: AppEffects.easeStandard);
+            begin: AppEffects.entranceRise,
+            end: 0,
+            curve: AppEffects.easeStandard,
+          );
     }
 
     return ListView(
       key: ValueKey(_range),
-      padding:
-          EdgeInsets.fromLTRB(AppSpacing.gutter, 14, AppSpacing.gutter, 28),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.gutter,
+        14,
+        AppSpacing.gutter,
+        28,
+      ),
       children: [
         staggered(_revenueCard(stats), 0),
         const SizedBox(height: 12),
         staggered(
-          Row(children: [
-            Expanded(
-                child: _kpiCard('Số đơn tính', '${stats.orderCount}', 'package')),
-            const SizedBox(width: 10),
-            Expanded(
+          Row(
+            children: [
+              Expanded(
                 child: _kpiCard(
-                    'Khách mới', '${stats.newCustomers}', 'users')),
-          ]),
+                  'Số đơn tính',
+                  '${stats.orderCount}',
+                  'package',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _kpiCard('Khách mới', '${stats.newCustomers}', 'users'),
+              ),
+            ],
+          ),
           1,
         ),
         const SizedBox(height: 10),
         staggered(
-          Row(children: [
-            Expanded(
-                child: _kpiCard('Phí ship thu',
-                    formatVnd(stats.shippingFeeTotal), 'truck')),
-            const SizedBox(width: 10),
-            Expanded(
-                child: _kpiCard('Tồn thấp', '${stats.lowStockCount}',
-                    'circle-alert',
-                    warn: stats.lowStockCount > 0)),
-          ]),
+          Row(
+            children: [
+              Expanded(
+                child: _kpiCard(
+                  'Phí ship thu',
+                  formatVnd(stats.shippingFeeTotal),
+                  'truck',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _kpiCard(
+                  'Tồn thấp',
+                  '${stats.lowStockCount}',
+                  'circle-alert',
+                  warn: stats.lowStockCount > 0,
+                ),
+              ),
+            ],
+          ),
           2,
         ),
         const SizedBox(height: 22),
         staggered(
           const TvSectionHeader(
-              icon: TvIcon('trending-up'), title: 'Doanh thu theo ngày'),
+            icon: TvIcon('trending-up'),
+            title: 'Doanh thu theo ngày',
+          ),
           3,
         ),
         const SizedBox(height: 12),
@@ -195,7 +225,9 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         const SizedBox(height: 22),
         staggered(
           const TvSectionHeader(
-              icon: TvIcon('package'), title: 'Trạng thái đơn'),
+            icon: TvIcon('package'),
+            title: 'Trạng thái đơn',
+          ),
           5,
         ),
         const SizedBox(height: 12),
@@ -203,7 +235,9 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         const SizedBox(height: 22),
         staggered(
           const TvSectionHeader(
-              icon: TvIcon('credit-card'), title: 'Thanh toán'),
+            icon: TvIcon('credit-card'),
+            title: 'Thanh toán',
+          ),
           7,
         ),
         const SizedBox(height: 12),
@@ -219,21 +253,31 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('DOANH THU (${_range.label})',
-              style: AppText.label(AppColors.textSecondary)),
+          Text(
+            'DOANH THU (${_range.label})',
+            style: AppText.label(AppColors.textSecondary),
+          ),
           const SizedBox(height: 8),
-          Text(formatVnd(stats.totalRevenue),
-              style: AppText.price().copyWith(fontSize: 30)),
+          Text(
+            formatVnd(stats.totalRevenue),
+            style: AppText.price().copyWith(fontSize: 30),
+          ),
           const SizedBox(height: 6),
-          Text('${stats.orderCount} đơn được tính · gồm phí ship',
-              style: AppText.xs(AppColors.textTertiary)),
+          Text(
+            '${stats.orderCount} đơn được tính · gồm phí ship',
+            style: AppText.xs(AppColors.textTertiary),
+          ),
         ],
       ),
     );
   }
 
-  Widget _kpiCard(String label, String value, String icon,
-      {bool warn = false}) {
+  Widget _kpiCard(
+    String label,
+    String value,
+    String icon, {
+    bool warn = false,
+  }) {
     return TvCard(
       padding: 12,
       child: Column(
@@ -241,17 +285,21 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
         children: [
           Row(
             children: [
-              TvIcon(icon,
-                  size: 15,
-                  color:
-                      warn ? AppColors.warning500 : AppColors.textAccent),
+              TvIcon(
+                icon,
+                size: 15,
+                color: warn ? AppColors.warning500 : AppColors.textAccent,
+              ),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.label(AppColors.textSecondary)
-                        .copyWith(fontSize: 10)),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.label(
+                    AppColors.textSecondary,
+                  ).copyWith(fontSize: 10),
+                ),
               ),
             ],
           ),
@@ -261,8 +309,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppText.price(
-                    warn ? AppColors.warning500 : AppColors.textAccent)
-                .copyWith(fontSize: 18),
+              warn ? AppColors.warning500 : AppColors.textAccent,
+            ).copyWith(fontSize: 18),
           ),
         ],
       ),
@@ -273,8 +321,10 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
     final total = stats.statusTotal;
     if (stats.statusCounts.isEmpty || total == 0) {
       return TvCard(
-        child: Text('Chưa có đơn trong khoảng này',
-            style: AppText.sm(AppColors.textSecondary)),
+        child: Text(
+          'Chưa có đơn trong khoảng này',
+          style: AppText.sm(AppColors.textSecondary),
+        ),
       );
     }
     // Sắp xếp giảm dần theo số lượng để trạng thái phổ biến lên đầu.
@@ -302,8 +352,10 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
           children: [
             OrderStatusBadge(sc.status),
             const Spacer(),
-            Text('${sc.count} đơn · $pct%',
-                style: AppText.xs(AppColors.textSecondary)),
+            Text(
+              '${sc.count} đơn · $pct%',
+              style: AppText.xs(AppColors.textSecondary),
+            ),
           ],
         ),
         const SizedBox(height: 6),
@@ -323,8 +375,10 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
   Widget _paymentSplit(AdminStats stats) {
     if (stats.paymentSplit.isEmpty) {
       return TvCard(
-        child: Text('Chưa có thanh toán trong khoảng này',
-            style: AppText.sm(AppColors.textSecondary)),
+        child: Text(
+          'Chưa có thanh toán trong khoảng này',
+          style: AppText.sm(AppColors.textSecondary),
+        ),
       );
     }
     return Row(
@@ -344,11 +398,15 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TvBadge(isVnpay ? 'VNPay' : 'COD',
-              variant: isVnpay ? TvBadgeVariant.glass : TvBadgeVariant.neutral),
+          TvBadge(
+            isVnpay ? 'VNPay' : 'COD',
+            variant: isVnpay ? TvBadgeVariant.glass : TvBadgeVariant.neutral,
+          ),
           const SizedBox(height: 8),
-          Text(formatVnd(ps.revenue),
-              style: AppText.price().copyWith(fontSize: 16)),
+          Text(
+            formatVnd(ps.revenue),
+            style: AppText.price().copyWith(fontSize: 16),
+          ),
           const SizedBox(height: 2),
           Text('${ps.count} đơn', style: AppText.xs(AppColors.textTertiary)),
         ],
@@ -361,12 +419,19 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       children: [
         const SizedBox(height: 120),
         Center(
-            child:
-                TvIcon('circle-alert', size: 44, color: AppColors.textTertiary)),
+          child: TvIcon(
+            'circle-alert',
+            size: 44,
+            color: AppColors.textTertiary,
+          ),
+        ),
         const SizedBox(height: 12),
         Center(
-            child: Text('Không tải được thống kê',
-                style: AppText.body(AppColors.textSecondary))),
+          child: Text(
+            'Không tải được thống kê',
+            style: AppText.body(AppColors.textSecondary),
+          ),
+        ),
         const SizedBox(height: 16),
         Center(
           child: TvButton(

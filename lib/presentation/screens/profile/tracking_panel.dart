@@ -83,7 +83,9 @@ class TrackingPanel extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             'SẢN PHẨM (${order.itemCount ?? order.lines.length})',
-            style: AppText.label(AppColors.textTertiary).copyWith(fontSize: 10.5),
+            style: AppText.label(
+              AppColors.textTertiary,
+            ).copyWith(fontSize: 10.5),
           ),
           const SizedBox(height: 10),
           for (final line in order.lines) _itemRow(line),
@@ -113,7 +115,8 @@ class TrackingPanel extends StatelessWidget {
               TvIcon('x-circle', size: 14, color: AppColors.danger500),
               const SizedBox(width: 8),
               Expanded(
-                  child: Text(error!, style: AppText.xs(AppColors.danger500))),
+                child: Text(error!, style: AppText.xs(AppColors.dangerStrong)),
+              ),
             ],
           ),
         ],
@@ -146,12 +149,17 @@ class TrackingPanel extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Tài xế TechStore',
-                  style: AppText.sm().copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                'Tài xế TechStore',
+                style: AppText.sm().copyWith(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 2),
-              Text(staffCode,
-                  style: AppText.xs(AppColors.textTertiary)
-                      .copyWith(fontSize: 10.5)),
+              Text(
+                staffCode,
+                style: AppText.xs(
+                  AppColors.textTertiary,
+                ).copyWith(fontSize: 10.5),
+              ),
             ],
           ),
         ),
@@ -164,10 +172,10 @@ class TrackingPanel extends StatelessWidget {
     final (String icon, String label, Color color, bool pulse) = delivered
         ? ('check-circle', 'Đã giao', AppColors.success500, false)
         : waiting
-            ? ('clock', 'Chờ nhận đơn', AppColors.textSecondary, false)
-            : live
-                ? ('zap', 'Trực tiếp', AppColors.success500, true)
-                : ('clock', 'Đang kết nối…', AppColors.textSecondary, false);
+        ? ('clock', 'Chờ nhận đơn', AppColors.textSecondary, false)
+        : live
+        ? ('zap', 'Trực tiếp', AppColors.success500, true)
+        : ('clock', 'Đang kết nối…', AppColors.textSecondary, false);
 
     Widget dot = Container(
       width: 6,
@@ -177,7 +185,11 @@ class TrackingPanel extends StatelessWidget {
     if (pulse && AppEffects.motionScale(context) > 0) {
       dot = dot
           .animate(onPlay: (c) => c.repeat(reverse: true))
-          .fade(begin: 0.35, end: 1, duration: const Duration(milliseconds: 700));
+          .fade(
+            begin: 0.35,
+            end: 1,
+            duration: const Duration(milliseconds: 700),
+          );
     }
 
     return Container(
@@ -190,13 +202,19 @@ class TrackingPanel extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (pulse) ...[dot, const SizedBox(width: 6)] else ...[
+          if (pulse) ...[
+            dot,
+            const SizedBox(width: 6),
+          ] else ...[
             TvIcon(icon, size: 12, color: color),
             const SizedBox(width: 5),
           ],
-          Text(label,
-              style: AppText.xs(color)
-                  .copyWith(fontSize: 10.5, fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: AppText.xs(
+              color,
+            ).copyWith(fontSize: 10.5, fontWeight: FontWeight.w700),
+          ),
         ],
       ),
     );
@@ -220,8 +238,10 @@ class TrackingPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (etaMinutes != null && !delivered) ...[
-          Text('$etaMinutes',
-              style: AppText.display().copyWith(fontSize: 40, height: 1)),
+          Text(
+            '$etaMinutes',
+            style: AppText.display().copyWith(fontSize: 40, height: 1),
+          ),
           const SizedBox(width: 6),
           Padding(
             padding: const EdgeInsets.only(bottom: 5),
@@ -233,17 +253,25 @@ class TrackingPanel extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(sub,
-                  style: AppText.sm(
-                    delivered ? AppColors.success500 : AppColors.textSecondary,
-                  ).copyWith(
-                      fontWeight:
-                          delivered ? FontWeight.w700 : FontWeight.w500)),
+              Text(
+                sub,
+                style:
+                    AppText.sm(
+                      delivered
+                          ? AppColors.success500
+                          : AppColors.textSecondary,
+                    ).copyWith(
+                      fontWeight: delivered ? FontWeight.w700 : FontWeight.w500,
+                    ),
+              ),
               if (updatedAtIso != null && !delivered) ...[
                 const SizedBox(height: 2),
-                Text('Cập nhật ${formatRelativeFromIso(updatedAtIso!)}',
-                    style: AppText.xs(AppColors.textTertiary)
-                        .copyWith(fontSize: 10)),
+                Text(
+                  'Cập nhật ${formatRelativeFromIso(updatedAtIso!)}',
+                  style: AppText.xs(
+                    AppColors.textTertiary,
+                  ).copyWith(fontSize: 10),
+                ),
               ],
             ],
           ),
@@ -271,15 +299,15 @@ class TrackingPanel extends StatelessWidget {
           subtitle: delivered
               ? ''
               : live
-                  ? 'Realtime'
-                  : waiting
-                      ? 'Chờ shipper'
-                      : '',
+              ? 'Realtime'
+              : waiting
+              ? 'Chờ shipper'
+              : '',
           state: delivered
               ? _TlState.done
               : shipping
-                  ? _TlState.active
-                  : _TlState.pending,
+              ? _TlState.active
+              : _TlState.pending,
           showLine: true,
         ),
         _timelineRow(
@@ -319,7 +347,9 @@ class TrackingPanel extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: color.withValues(alpha: 0.14),
                   border: Border.all(
-                      color: color.withValues(alpha: 0.45), width: 1),
+                    color: color.withValues(alpha: 0.45),
+                    width: 1,
+                  ),
                 ),
                 child: state == _TlState.done
                     ? TvIcon('check', size: 12, color: color)
@@ -338,20 +368,25 @@ class TrackingPanel extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(title,
-                        style: AppText.sm().copyWith(
-                          fontWeight: state == _TlState.pending
-                              ? FontWeight.w500
-                              : FontWeight.w700,
-                          color: state == _TlState.pending
-                              ? AppColors.textTertiary
-                              : AppColors.textPrimary,
-                        )),
+                    child: Text(
+                      title,
+                      style: AppText.sm().copyWith(
+                        fontWeight: state == _TlState.pending
+                            ? FontWeight.w500
+                            : FontWeight.w700,
+                        color: state == _TlState.pending
+                            ? AppColors.textTertiary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
                   ),
                   if (subtitle.isNotEmpty)
-                    Text(subtitle,
-                        style: AppText.xs(AppColors.textTertiary)
-                            .copyWith(fontSize: 10.5)),
+                    Text(
+                      subtitle,
+                      style: AppText.xs(
+                        AppColors.textTertiary,
+                      ).copyWith(fontSize: 10.5),
+                    ),
                 ],
               ),
             ),
@@ -384,23 +419,32 @@ class TrackingPanel extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(line.productName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppText.sm().copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  line.productName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.sm().copyWith(fontWeight: FontWeight.w600),
+                ),
                 if (line.brand.isNotEmpty)
-                  Text(line.brand,
-                      style: AppText.xs(AppColors.textTertiary)
-                          .copyWith(fontSize: 10)),
+                  Text(
+                    line.brand,
+                    style: AppText.xs(
+                      AppColors.textTertiary,
+                    ).copyWith(fontSize: 10),
+                  ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          Text('x${line.quantity}',
-              style: AppText.mono(size: 11, color: AppColors.textSecondary)),
+          Text(
+            'x${line.quantity}',
+            style: AppText.mono(size: 11, color: AppColors.textSecondary),
+          ),
           const SizedBox(width: 10),
-          Text(formatVnd(line.unitPrice),
-              style: AppText.price().copyWith(fontSize: 13)),
+          Text(
+            formatVnd(line.unitPrice),
+            style: AppText.price().copyWith(fontSize: 13),
+          ),
         ],
       ),
     );

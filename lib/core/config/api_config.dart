@@ -66,6 +66,13 @@ class ApiConfig {
   static const String products = '/api/Products';
   static String productById(String id) => '/api/Products/$id';
   static const String categories = '/api/Category';
+
+  // ----------------------------------------------------------------------
+  // Đánh giá sản phẩm (Reviews). GET công khai; POST/PUT/DELETE cần token.
+  // ----------------------------------------------------------------------
+  static String productReviews(String productId) =>
+      '/api/products/$productId/reviews';
+  static String reviewById(String id) => '/api/reviews/$id';
   // ----------------------------------------------------------------------
   // Cart — mirrors "TechStoreAPI / Cart" (add / update-qty / remove).
   // ----------------------------------------------------------------------
@@ -87,6 +94,22 @@ class ApiConfig {
   static String vnpayGateway(String orderId) => '/payment/vnpay?order=$orderId';
 
   // ----------------------------------------------------------------------
+  // Ví điện tử (Wallet). Tất cả cần token. Envelope {success, message?, data}.
+  // ----------------------------------------------------------------------
+  static const String wallet = '/api/wallet';
+  static const String walletTransactions = '/api/wallet/transactions';
+  static const String walletTopUp = '/api/wallet/top-up';
+  static const String walletWithdraw = '/api/wallet/withdraw';
+
+  // Hoàn tiền (refund) — khách gửi (multipart Reason+Image?) + staff duyệt/từ chối.
+  static String orderRefundRequest(String orderId) =>
+      '/api/orders/$orderId/refund-request';
+  static String orderRefundApprove(String orderId) =>
+      '/api/orders/$orderId/refund-approve';
+  static String orderRefundReject(String orderId) =>
+      '/api/orders/$orderId/refund-reject';
+
+  // ----------------------------------------------------------------------
   // Shipping (Goong qua BE) — tính phí theo khoảng cách thực tế.
   // ----------------------------------------------------------------------
   static const String shippingCalculate = '/api/shipping/calculate';
@@ -98,22 +121,26 @@ class ApiConfig {
   static const String trackingHub = '/trackingHub';
 
   /// Lấy vị trí shipper hiện tại của 1 đơn (gọi lần đầu khi mở map).
-  static String trackingByOrder(String orderId) => '/api/tracking/order/$orderId';
+  static String trackingByOrder(String orderId) =>
+      '/api/tracking/order/$orderId';
 
   /// Shipper cập nhật vị trí của mình.
   static const String trackingLocation = '/api/tracking/location';
 
   /// Gán shipper cho đơn (Staff) — kèm `?staffId=<guid>`.
-  static String assignShipper(String orderId) => '/api/orders/$orderId/assign-shipper';
+  static String assignShipper(String orderId) =>
+      '/api/orders/$orderId/assign-shipper';
 
   /// Xác nhận giao hàng + ảnh (Staff, multipart).
-  static String confirmDelivery(String orderId) => '/api/orders/$orderId/confirm-delivery';
+  static String confirmDelivery(String orderId) =>
+      '/api/orders/$orderId/confirm-delivery';
 
   // ----------------------------------------------------------------------
   // Notifications.
   // ----------------------------------------------------------------------
   static const String notifications = '/api/notifications';
-  static String markNotificationRead(String id) => '/api/notifications/$id/read';
+  static String markNotificationRead(String id) =>
+      '/api/notifications/$id/read';
   static const String markAllNotificationsRead = '/api/notifications/read-all';
 
   // ----------------------------------------------------------------------

@@ -107,6 +107,15 @@ class AppIcons {
     'refresh-cw': LucideIcons.refreshCw,
     'boxes': LucideIcons.boxes,
     'circle-alert': LucideIcons.circleAlert,
+    // Bổ sung cho ví / hoàn tiền / chi tiết đơn / SP liên quan / lọc.
+    'alert-circle': LucideIcons.circleAlert,
+    'layout-grid': LucideIcons.layoutGrid,
+    'receipt': LucideIcons.receipt,
+    'image-plus': LucideIcons.imagePlus,
+    'rotate-ccw': LucideIcons.rotateCcw,
+    'plus-circle': LucideIcons.circlePlus,
+    'arrow-up-right': LucideIcons.arrowUpRight,
+    'x': LucideIcons.x,
   };
 
   /// Resolve a Lucide name to an [IconData], falling back to a neutral glyph.

@@ -27,7 +27,8 @@ class ProductService {
       return MockData.categories;
     }
     final json = await _client.get(ApiConfig.categories);
-    final List<dynamic> list = (json is Map<String, dynamic> && json['data'] is List)
+    final List<dynamic> list =
+        (json is Map<String, dynamic> && json['data'] is List)
         ? (json['data'] as List)
         : (json is List ? json : []);
     final names = list.map((e) => e['name'] as String).toList();
@@ -45,7 +46,8 @@ class ProductService {
       ];
     }
     final json = await _client.get(ApiConfig.categories);
-    final List<dynamic> list = (json is Map<String, dynamic> && json['data'] is List)
+    final List<dynamic> list =
+        (json is Map<String, dynamic> && json['data'] is List)
         ? (json['data'] as List)
         : (json is List ? json : []);
     return list
@@ -82,17 +84,23 @@ class ProductService {
       _mockCreated.insert(0, created);
       return created;
     }
-    final json = await _client.sendMultipart('POST', ApiConfig.products,
-        fields: _productFields(
-          name: name, brand: brand, price: price,
-          stockQuantity: stockQuantity, categoryId: categoryId,
-          description: description,
-        ),
-        filePath: imagePath);
+    final json = await _client.sendMultipart(
+      'POST',
+      ApiConfig.products,
+      fields: _productFields(
+        name: name,
+        brand: brand,
+        price: price,
+        stockQuantity: stockQuantity,
+        categoryId: categoryId,
+        description: description,
+      ),
+      filePath: imagePath,
+    );
     final Map<String, dynamic> data =
         (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
-            ? (json['data'] as Map<String, dynamic>)
-            : (json is Map<String, dynamic> ? json : {});
+        ? (json['data'] as Map<String, dynamic>)
+        : (json is Map<String, dynamic> ? json : {});
     return Product.fromJson(data);
   }
 
@@ -112,8 +120,8 @@ class ProductService {
     if (AppConfig.useMockData) {
       await Future.delayed(AppConfig.mockLatency);
       final all = [..._mockCreated, ...MockData.products];
-      final old = _mockOverrides[id] ??
-          all.where((p) => p.id == id).firstOrNull;
+      final old =
+          _mockOverrides[id] ?? all.where((p) => p.id == id).firstOrNull;
       _mockOverrides[id] = Product(
         id: id,
         name: name,
@@ -130,13 +138,19 @@ class ProductService {
       );
       return;
     }
-    await _client.sendMultipart('PUT', ApiConfig.productById(id),
-        fields: _productFields(
-          name: name, brand: brand, price: price,
-          stockQuantity: stockQuantity, categoryId: categoryId,
-          description: description,
-        ),
-        filePath: imagePath);
+    await _client.sendMultipart(
+      'PUT',
+      ApiConfig.productById(id),
+      fields: _productFields(
+        name: name,
+        brand: brand,
+        price: price,
+        stockQuantity: stockQuantity,
+        categoryId: categoryId,
+        description: description,
+      ),
+      filePath: imagePath,
+    );
   }
 
   /// Field form-data chung cho POST/PUT — tên viết hoa khớp DTO bên BE.
@@ -148,32 +162,36 @@ class ProductService {
     required int stockQuantity,
     required String categoryId,
     String? description,
-  }) =>
-      {
-        'Name': name,
-        'Brand': brand,
-        'Price': price.toStringAsFixed(0),
-        'StockQuantity': '$stockQuantity',
-        'CategoryId': categoryId,
-        if (description != null && description.isNotEmpty)
-          'Description': description,
-      };
+  }) => {
+    'Name': name,
+    'Brand': brand,
+    'Price': price.toStringAsFixed(0),
+    'StockQuantity': '$stockQuantity',
+    'CategoryId': categoryId,
+    if (description != null && description.isNotEmpty)
+      'Description': description,
+  };
 
   /// All products, optionally filtered by [category] and a free-text [query]
   /// (name + brand). The same filtering the backend `?category=&q=` would do.
   Future<List<Product>> fetchProducts({String? category, String? query}) async {
     if (AppConfig.useMockData) {
       await Future.delayed(AppConfig.mockLatency);
-      final base = [..._mockCreated, ...MockData.products]
-          .map((p) => _mockOverrides[p.id] ?? p)
-          .toList();
+      final base = [
+        ..._mockCreated,
+        ...MockData.products,
+      ].map((p) => _mockOverrides[p.id] ?? p).toList();
       return _filter(base, category: category, query: query);
     }
-    final json = await _client.get(ApiConfig.products, query: {
-      if (category != null && category != 'Tất cả') 'category': category,
-      if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
-    });
-    final List<dynamic> list = (json is Map<String, dynamic> && json['data'] is List)
+    final json = await _client.get(
+      ApiConfig.products,
+      query: {
+        if (category != null && category != 'Tất cả') 'category': category,
+        if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
+      },
+    );
+    final List<dynamic> list =
+        (json is Map<String, dynamic> && json['data'] is List)
         ? (json['data'] as List)
         : (json is List ? json : []);
     return list
@@ -187,18 +205,24 @@ class ProductService {
       return MockData.products.firstWhere((p) => p.id == id);
     }
     final json = await _client.get(ApiConfig.productById(id));
-    final Map<String, dynamic> data = (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
+    final Map<String, dynamic> data =
+        (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
         ? (json['data'] as Map<String, dynamic>)
         : (json is Map<String, dynamic> ? json : {});
     return Product.fromJson(data);
   }
 
-  List<Product> _filter(List<Product> source,
-      {String? category, String? query}) {
+  List<Product> _filter(
+    List<Product> source, {
+    String? category,
+    String? query,
+  }) {
     final q = (query ?? '').trim().toLowerCase();
     return source.where((p) {
       final matchesCat =
-          category == null || category == 'Tất cả' || p.categoryName == category;
+          category == null ||
+          category == 'Tất cả' ||
+          p.categoryName == category;
       final matchesQuery =
           q.isEmpty || '${p.name} ${p.brand}'.toLowerCase().contains(q);
       return matchesCat && matchesQuery;

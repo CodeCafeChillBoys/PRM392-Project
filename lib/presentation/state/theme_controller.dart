@@ -51,8 +51,7 @@ class ThemeController extends ChangeNotifier {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isLight ? Brightness.dark : Brightness.light,
+        statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
         statusBarBrightness: isLight ? Brightness.light : Brightness.dark,
       ),
     );

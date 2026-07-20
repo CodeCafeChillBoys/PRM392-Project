@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+import '../../../core/config/api_config.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -85,7 +86,10 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
   Future<void> _startDelivery(OrderModel o) async {
     final staffId = apiClient.userId;
     if (staffId == null) {
-      TvToast.show(context, 'Không xác định được nhân viên. Hãy đăng nhập lại.');
+      TvToast.show(
+        context,
+        'Không xác định được nhân viên. Hãy đăng nhập lại.',
+      );
       return;
     }
     setState(() => _busyId = o.id);
@@ -106,7 +110,8 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     final ok = await showTvConfirm(
       context,
       title: 'Huỷ đơn hàng?',
-      message: 'Đơn #${_shortId(o.id)} sẽ chuyển sang "Đã huỷ". '
+      message:
+          'Đơn #${_shortId(o.id)} sẽ chuyển sang "Đã huỷ". '
           'Hành động này không thể hoàn tác.',
       confirmLabel: 'Huỷ đơn',
     );
@@ -134,7 +139,9 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     }
     if (perm == LocationPermission.denied ||
         perm == LocationPermission.deniedForever) {
-      if (mounted) TvToast.show(context, 'Ứng dụng cần quyền vị trí để gửi GPS.');
+      if (mounted) {
+        TvToast.show(context, 'Ứng dụng cần quyền vị trí để gửi GPS.');
+      }
       return false;
     }
     return true;
@@ -162,8 +169,7 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     });
     await _sendOnce(o.id, staffId);
     _gpsTimer?.cancel();
-    _gpsTimer = Timer.periodic(
-        _gpsInterval, (_) => _sendOnce(o.id, staffId));
+    _gpsTimer = Timer.periodic(_gpsInterval, (_) => _sendOnce(o.id, staffId));
     if (mounted) {
       TvToast.show(context, 'Đang gửi vị trí cho đơn #${_shortId(o.id)}.');
     }
@@ -185,7 +191,9 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
       });
       try {
         _mapController.move(_lastPos!, 15);
-      } catch (_) {/* map chưa sẵn sàng */}
+      } catch (_) {
+        /* map chưa sẵn sàng */
+      }
     } catch (_) {
       // bỏ qua 1 nhịp lỗi, vòng sau thử lại
     }
@@ -215,13 +223,69 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     setState(() => _busyId = o.id);
     try {
       await _service.confirmDelivery(o.id, photo.path);
-      if (_trackingOrderId == o.id) _stopTracking(); // đang gửi GPS đơn này → dừng
+      if (_trackingOrderId == o.id) {
+        _stopTracking(); // đang gửi GPS đơn này → dừng
+      }
       await _load(); // đơn chuyển sang "Xong"
       if (mounted) {
         TvToast.show(context, 'Đã giao thành công đơn #${_shortId(o.id)}.');
       }
     } catch (_) {
       if (mounted) TvToast.show(context, 'Xác nhận giao thất bại.');
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
+  // ── Duyệt / từ chối hoàn tiền ─────────────────────────────────────────────
+  Future<void> _approveRefund(OrderModel o) async {
+    if (_busyId == o.id) return;
+    final ok = await showTvConfirm(
+      context,
+      title: 'Duyệt hoàn tiền?',
+      message:
+          'Tiền sẽ được hoàn về ví của khách. Hành động này không thể hoàn tác.',
+      confirmLabel: 'Duyệt',
+    );
+    if (ok != true) return;
+    setState(() => _busyId = o.id);
+    try {
+      await _service.approveRefund(o.id);
+      await _load();
+      if (mounted) {
+        TvToast.show(
+          context,
+          'Đã hoàn tiền vào ví khách · đơn #${_shortId(o.id)}.',
+        );
+      }
+    } catch (_) {
+      if (mounted) TvToast.show(context, 'Duyệt hoàn tiền thất bại.');
+    } finally {
+      if (mounted) setState(() => _busyId = null);
+    }
+  }
+
+  Future<void> _rejectRefund(OrderModel o) async {
+    if (_busyId == o.id) return;
+    final ok = await showTvConfirm(
+      context,
+      title: 'Từ chối hoàn tiền?',
+      message: 'Đơn sẽ quay lại trạng thái đã thanh toán, không hoàn tiền.',
+      confirmLabel: 'Từ chối',
+    );
+    if (ok != true) return;
+    setState(() => _busyId = o.id);
+    try {
+      await _service.rejectRefund(o.id);
+      await _load();
+      if (mounted) {
+        TvToast.show(
+          context,
+          'Đã từ chối yêu cầu hoàn tiền đơn #${_shortId(o.id)}.',
+        );
+      }
+    } catch (_) {
+      if (mounted) TvToast.show(context, 'Từ chối hoàn tiền thất bại.');
     } finally {
       if (mounted) setState(() => _busyId = null);
     }
@@ -240,8 +304,10 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 12),
-            Text('Ảnh xác nhận giao hàng',
-                style: AppText.h3().copyWith(fontSize: 15)),
+            Text(
+              'Ảnh xác nhận giao hàng',
+              style: AppText.h3().copyWith(fontSize: 15),
+            ),
             const SizedBox(height: 6),
             ListTile(
               leading: TvIcon('camera', color: AppColors.textAccent),
@@ -289,8 +355,10 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
           actions: [
             // Toggle theme light/dark cho khu staff (khách toggle ở Cá nhân).
             TvIconButton(
-              icon: TvIcon(AppColors.isLight ? 'moon' : 'sun',
-                  color: AppColors.textAccent),
+              icon: TvIcon(
+                AppColors.isLight ? 'moon' : 'sun',
+                color: AppColors.textAccent,
+              ),
               tooltip: 'Đổi giao diện',
               onPressed: () => context.read<ThemeController>().toggle(),
             ),
@@ -308,7 +376,8 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
             value: _tab.name,
             tabs: [for (final t in StaffTab.values) TvTab(t.name, t.label)],
             onChanged: (v) => setState(
-                () => _tab = StaffTab.values.firstWhere((t) => t.name == v)),
+              () => _tab = StaffTab.values.firstWhere((t) => t.name == v),
+            ),
           ),
         ),
         Expanded(child: _list()),
@@ -340,7 +409,11 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
         ),
         child: ListView.separated(
           padding: EdgeInsets.fromLTRB(
-              AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+            AppSpacing.gutter,
+            14,
+            AppSpacing.gutter,
+            24,
+          ),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 4,
           separatorBuilder: (_, _) => const SizedBox(height: 12),
@@ -359,14 +432,19 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
               // Key theo tab → đổi bộ lọc là stagger chạy lại.
               key: ValueKey(_tab),
               padding: EdgeInsets.fromLTRB(
-                  AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+                AppSpacing.gutter,
+                14,
+                AppSpacing.gutter,
+                24,
+              ),
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (_, i) => _orderCard(items[i])
                   .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
                   .fadeIn(
-                      duration: AppEffects.durEnter,
-                      curve: AppEffects.easeStandard)
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  )
                   .moveY(
                     begin: AppEffects.entranceRise,
                     end: 0,
@@ -381,12 +459,13 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
     return ListView(
       children: [
         const SizedBox(height: 120),
-        Center(
-            child: TvIcon('inbox', size: 44, color: AppColors.textTertiary)),
+        Center(child: TvIcon('inbox', size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(
-          child: Text('Không có đơn ở mục này',
-              style: AppText.body(AppColors.textSecondary)),
+          child: Text(
+            'Không có đơn ở mục này',
+            style: AppText.body(AppColors.textSecondary),
+          ),
         ),
       ],
     );
@@ -403,33 +482,41 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('#${_shortId(o.id)}',
-                  style: AppText.mono(size: 12, color: AppColors.textTertiary)),
+              Text(
+                '#${_shortId(o.id)}',
+                style: AppText.mono(size: 12, color: AppColors.textTertiary),
+              ),
               OrderStatusBadge(o.status),
             ],
           ),
           const SizedBox(height: 8),
-          Text(o.customerName.isEmpty ? 'Khách' : o.customerName,
-              style: AppText.h3().copyWith(fontSize: 15)),
+          Text(
+            o.customerName.isEmpty ? 'Khách' : o.customerName,
+            style: AppText.h3().copyWith(fontSize: 15),
+          ),
           if (meta != null) ...[
             const SizedBox(height: 2),
             Text(meta, style: AppText.xs(AppColors.textTertiary)),
           ],
           const SizedBox(height: 6),
-          Text(o.shippingAddress,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style:
-                  AppText.body(AppColors.textSecondary).copyWith(fontSize: 13)),
+          Text(
+            o.shippingAddress,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.body(AppColors.textSecondary).copyWith(fontSize: 13),
+          ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                  '${o.paymentMethod} · ${o.paymentStatus == 'Paid' ? 'Đã thanh toán' : 'Chưa TT'}',
-                  style: AppText.xs(AppColors.textTertiary)),
-              Text(formatVnd(o.totalAmount),
-                  style: AppText.price().copyWith(fontSize: 15)),
+                '${o.paymentMethod} · ${o.paymentStatus == 'Paid' ? 'Đã thanh toán' : 'Chưa TT'}',
+                style: AppText.xs(AppColors.textTertiary),
+              ),
+              Text(
+                formatVnd(o.totalAmount),
+                style: AppText.price().copyWith(fontSize: 15),
+              ),
             ],
           ),
           ..._actions(o, busy),
@@ -539,7 +626,92 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
         ),
       ];
     }
+    // Đơn đã giao có yêu cầu hoàn tiền → staff duyệt / từ chối.
+    if (o.paymentStatus.toLowerCase() == 'refundrequested') {
+      return _refundActions(o, busy);
+    }
     return const [];
+  }
+
+  /// Khối duyệt hoàn tiền (chỉ hiện ở đơn `RefundRequested`): lý do + ảnh minh
+  /// chứng của khách + 2 nút Duyệt / Từ chối.
+  List<Widget> _refundActions(OrderModel o, bool busy) {
+    final img = o.refundImageUrl;
+    return [
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.warning500.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          border: Border.all(
+            color: AppColors.warning500.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                TvIcon('rotate-ccw', size: 15, color: AppColors.warning500),
+                const SizedBox(width: 7),
+                Text(
+                  'Yêu cầu hoàn tiền',
+                  style: AppText.sm(
+                    AppColors.textPrimary,
+                  ).copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            if (o.refundReason != null && o.refundReason!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Lý do: ${o.refundReason}',
+                style: AppText.sm(AppColors.textSecondary),
+              ),
+            ],
+            if (img != null && img.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  '${ApiConfig.baseUrl}$img',
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: 10),
+      Row(
+        children: [
+          Expanded(
+            child: TvButton(
+              label: 'Duyệt hoàn',
+              size: TvButtonSize.md,
+              fullWidth: true,
+              loading: busy,
+              leadingIcon: const TvIcon('check', size: 16),
+              onPressed: busy ? null : () => _approveRefund(o),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: TvButton(
+              label: 'Từ chối',
+              variant: TvButtonVariant.ghost,
+              size: TvButtonSize.md,
+              fullWidth: true,
+              onPressed: busy ? null : () => _rejectRefund(o),
+            ),
+          ),
+        ],
+      ),
+    ];
   }
 
   Widget _liveMap() {
@@ -553,8 +725,9 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
           options: MapOptions(
             initialCenter: pos ?? _fallbackCenter,
             initialZoom: 15,
-            interactionOptions:
-                const InteractionOptions(flags: InteractiveFlag.none),
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
+            ),
           ),
           children: [
             const TvMapTiles(),
@@ -569,12 +742,17 @@ class _StaffOrdersScreenState extends State<StaffOrdersScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.bgBase,
                         shape: BoxShape.circle,
-                        border:
-                            Border.all(color: AppColors.success500, width: 2),
+                        border: Border.all(
+                          color: AppColors.success500,
+                          width: 2,
+                        ),
                       ),
                       alignment: Alignment.center,
-                      child: const TvIcon('truck',
-                          size: 18, color: AppColors.success500),
+                      child: const TvIcon(
+                        'truck',
+                        size: 18,
+                        color: AppColors.success500,
+                      ),
                     ),
                   ),
                 ],

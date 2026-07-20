@@ -87,34 +87,34 @@ class MockData {
 
   /// Seed cart (CartResponseDTO shape).
   static List<CartItem> get cart => const [
-        CartItem(
-          id: 'c1',
-          productId: 'ip15pm',
-          productName: 'iPhone 15 Pro Max',
-          brand: 'Apple',
-          productImageUrl: 'assets/products/iphone-list.png',
-          unitPrice: 34990000,
-          quantity: 1,
-        ),
-        CartItem(
-          id: 'c2',
-          productId: 'ipadpro',
-          productName: 'iPad Pro M2 12.9"',
-          brand: 'Apple',
-          productImageUrl: 'assets/products/ipad-list.png',
-          unitPrice: 26490000,
-          quantity: 1,
-        ),
-        CartItem(
-          id: 'c3',
-          productId: 'sony',
-          productName: 'Sony WH-1000XM5',
-          brand: 'Sony',
-          productImageUrl: 'assets/products/iphone-cart.png',
-          unitPrice: 8490000,
-          quantity: 1,
-        ),
-      ];
+    CartItem(
+      id: 'c1',
+      productId: 'ip15pm',
+      productName: 'iPhone 15 Pro Max',
+      brand: 'Apple',
+      productImageUrl: 'assets/products/iphone-list.png',
+      unitPrice: 34990000,
+      quantity: 1,
+    ),
+    CartItem(
+      id: 'c2',
+      productId: 'ipadpro',
+      productName: 'iPad Pro M2 12.9"',
+      brand: 'Apple',
+      productImageUrl: 'assets/products/ipad-list.png',
+      unitPrice: 26490000,
+      quantity: 1,
+    ),
+    CartItem(
+      id: 'c3',
+      productId: 'sony',
+      productName: 'Sony WH-1000XM5',
+      brand: 'Sony',
+      productImageUrl: 'assets/products/iphone-cart.png',
+      unitPrice: 8490000,
+      quantity: 1,
+    ),
+  ];
 
   static const List<PaymentMethod> paymentMethods = [
     PaymentMethod(
@@ -122,6 +122,12 @@ class MockData {
       iconName: 'qr-code',
       title: 'Ví VNPay',
       subtitle: 'Khuyên dùng · QR / thẻ ATM nội địa',
+    ),
+    PaymentMethod(
+      value: 'Wallet',
+      iconName: 'wallet',
+      title: 'Ví TECH_VOID',
+      subtitle: 'Trả bằng số dư ví — không qua cổng',
     ),
     PaymentMethod(
       value: 'CreditCard',

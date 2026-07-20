@@ -9,12 +9,19 @@ import '../../../data/services/auth_service.dart';
 import '../../state/theme_controller.dart';
 import '../../widgets/widgets.dart';
 import '../auth/login_screen.dart';
+import '../wallet/wallet_screen.dart';
+import 'account_screen.dart';
 import 'my_orders_screen.dart';
+import 'support_screen.dart';
 
 /// Tab Hồ sơ: thông tin tài khoản + lối vào "Đơn hàng của tôi" + Đăng xuất.
 /// Là tab page (không Scaffold riêng — RootShell đã bọc).
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  void _openAccount(BuildContext context) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => const AccountScreen()));
 
   Future<void> _logout(BuildContext context) async {
     final ok = await showTvConfirm(
@@ -41,15 +48,47 @@ class ProfileScreen extends StatelessWidget {
         const TvAppBar(mode: TvAppBarMode.page, title: 'Hồ sơ'),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+            // +padding.bottom: chừa chỗ cho nav nổi (extendBody bơm chiều cao
+            // nav vào đây) để tile Đăng xuất không bị nav che khi list dài.
+            padding: EdgeInsets.fromLTRB(
+              16,
+              20,
+              16,
+              24 + MediaQuery.of(context).padding.bottom,
+            ),
             children: [
-              _header(name, email),
+              PressableScale(
+                onTap: () => _openAccount(context),
+                child: _header(name, email),
+              ),
               const SizedBox(height: 24),
               _menuTile(
                 icon: 'package',
                 label: 'Đơn hàng của tôi',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const MyOrdersScreen()),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _menuTile(
+                icon: 'wallet',
+                label: 'Ví của tôi',
+                onTap: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const WalletScreen())),
+              ),
+              const SizedBox(height: 12),
+              _menuTile(
+                icon: 'user-cog',
+                label: 'Thông tin tài khoản',
+                onTap: () => _openAccount(context),
+              ),
+              const SizedBox(height: 12),
+              _menuTile(
+                icon: 'headphones',
+                label: 'Trung tâm hỗ trợ',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SupportScreen()),
                 ),
               ),
               const SizedBox(height: 12),
@@ -87,9 +126,10 @@ class ProfileScreen extends StatelessWidget {
         Text(name, style: AppText.h2()),
         if (email != null && email.isNotEmpty) ...[
           const SizedBox(height: 4),
-          Text(email,
-              style:
-                  AppText.body(AppColors.textSecondary).copyWith(fontSize: 13)),
+          Text(
+            email,
+            style: AppText.body(AppColors.textSecondary).copyWith(fontSize: 13),
+          ),
         ],
       ],
     );
@@ -106,8 +146,11 @@ class ProfileScreen extends StatelessWidget {
         padding: 16,
         child: Row(
           children: [
-            TvIcon(isLight ? 'sun' : 'moon',
-                size: 20, color: AppColors.textAccent),
+            TvIcon(
+              isLight ? 'sun' : 'moon',
+              size: 20,
+              color: AppColors.textAccent,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -122,7 +165,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    isLight ? 'VOID PAPER · chạm để về Tối' : 'VOID LUXE · chạm để sang Sáng',
+                    isLight
+                        ? 'VOID PAPER · chạm để về Tối'
+                        : 'VOID LUXE · chạm để sang Sáng',
                     style: AppText.xs(AppColors.textTertiary),
                   ),
                 ],
@@ -135,8 +180,7 @@ class ProfileScreen extends StatelessWidget {
               width: 44,
               height: 26,
               padding: const EdgeInsets.all(3),
-              alignment:
-                  isLight ? Alignment.centerRight : Alignment.centerLeft,
+              alignment: isLight ? Alignment.centerRight : Alignment.centerLeft,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(999),
                 color: isLight ? AppColors.accentSoft : AppColors.bgOverlay,
@@ -187,8 +231,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             if (!danger)
-              TvIcon('chevron-right',
-                  size: 20, color: AppColors.textTertiary),
+              TvIcon('chevron-right', size: 20, color: AppColors.textTertiary),
           ],
         ),
       ),

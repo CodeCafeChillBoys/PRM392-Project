@@ -81,9 +81,9 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
   }
 
   Future<void> _openAdd() async {
-    final created = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const AddProductScreen()),
-    );
+    final created = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const AddProductScreen()));
     if (created == true && mounted) {
       TvToast.show(context, 'Đã thêm sản phẩm.');
       await _load();
@@ -182,7 +182,11 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
         ),
         child: ListView.separated(
           padding: EdgeInsets.fromLTRB(
-              AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+            AppSpacing.gutter,
+            14,
+            AppSpacing.gutter,
+            24,
+          ),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 6,
           separatorBuilder: (_, _) => const SizedBox(height: 10),
@@ -200,14 +204,19 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
           : ListView.separated(
               key: ValueKey('$_category|$_query'),
               padding: EdgeInsets.fromLTRB(
-                  AppSpacing.gutter, 14, AppSpacing.gutter, 24),
+                AppSpacing.gutter,
+                14,
+                AppSpacing.gutter,
+                24,
+              ),
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (_, i) => _productCard(items[i])
                   .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
                   .fadeIn(
-                      duration: AppEffects.durEnter,
-                      curve: AppEffects.easeStandard)
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  )
                   .moveY(
                     begin: AppEffects.entranceRise,
                     end: 0,
@@ -224,7 +233,8 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
       children: [
         const SizedBox(height: 120),
         Center(
-            child: TvIcon('package', size: 44, color: AppColors.textTertiary)),
+          child: TvIcon('package', size: 44, color: AppColors.textTertiary),
+        ),
         const SizedBox(height: 12),
         Center(
           child: Text(
@@ -260,21 +270,27 @@ class _StaffProductsScreenState extends State<StaffProductsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(p.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.bodyStrong()),
+                  Text(
+                    p.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.bodyStrong(),
+                  ),
                   const SizedBox(height: 2),
-                  Text('${p.brand} · ${p.categoryName}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.xs(AppColors.textTertiary)),
+                  Text(
+                    '${p.brand} · ${p.categoryName}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.xs(AppColors.textTertiary),
+                  ),
                   const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(formatVnd(p.price),
-                          style: AppText.price().copyWith(fontSize: 14)),
+                      Text(
+                        formatVnd(p.price),
+                        style: AppText.price().copyWith(fontSize: 14),
+                      ),
                       ProductStockBadge(p.stockQuantity),
                     ],
                   ),

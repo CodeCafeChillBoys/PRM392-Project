@@ -66,6 +66,7 @@ flutter:
 
   assets:
     - assets/products/
+    - assets/images/
     - assets/fonts/
     # Be Vietnam Pro statics: google_fonts package tự nhận bundle này thay vì
     # fetch mạng (đúng naming BeVietnamPro-<Weight>.ttf) -> hết flash-of-font.

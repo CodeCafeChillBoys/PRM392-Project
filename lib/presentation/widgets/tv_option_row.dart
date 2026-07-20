@@ -78,10 +78,11 @@ class TvOptionRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle!,
-                      style: AppText.sm(selected
-                              ? AppColors.textAccent
-                              : AppColors.textSecondary)
-                          .copyWith(fontSize: 12.5),
+                      style: AppText.sm(
+                        selected
+                            ? AppColors.textAccent
+                            : AppColors.textSecondary,
+                      ).copyWith(fontSize: 12.5),
                     ),
                   ],
                 ],
@@ -91,7 +92,10 @@ class TvOptionRow extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 trailing!,
-                style: AppText.body().copyWith(fontWeight: FontWeight.w700, fontSize: 14),
+                style: AppText.body().copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
             ],
             if (showRadio) ...[

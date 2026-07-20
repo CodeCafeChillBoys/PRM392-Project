@@ -67,29 +67,29 @@ class AppColors {
   // 950=nền trang · 900=hõm chìm (ô ảnh) · 850=card · 800=input/elevated ·
   // 700=hover/overlay · 400..000=thang chữ (000 = chữ chính).
   static Color get ink950 =>
-      _isLight ? const Color(0xFFF7F4EF) : const Color(0xFF050505);
+      _isLight ? const Color(0xFFF5F8F8) : const Color(0xFF050505);
   static Color get ink900 =>
-      _isLight ? const Color(0xFFF0EBE2) : const Color(0xFF0A0A0C);
+      _isLight ? const Color(0xFFE9F1F1) : const Color(0xFF0A0A0C);
   static Color get ink850 =>
       _isLight ? const Color(0xFFFFFFFF) : const Color(0xFF101013);
   static Color get ink800 =>
-      _isLight ? const Color(0xFFFFFFFF) : const Color(0xFF17171B);
+      _isLight ? const Color(0xFFEEF4F4) : const Color(0xFF17171B);
   static Color get ink700 =>
-      _isLight ? const Color(0xFFF2EDE5) : const Color(0xFF1E1E23);
+      _isLight ? const Color(0xFFE4EDED) : const Color(0xFF1E1E23);
   static Color get ink600 =>
-      _isLight ? const Color(0xFFE9E4DB) : const Color(0xFF28282E);
+      _isLight ? const Color(0xFFDCE8E8) : const Color(0xFF28282E);
   static Color get ink500 =>
-      _isLight ? const Color(0xFFD8D2C6) : const Color(0xFF38383F);
+      _isLight ? const Color(0xFFC6D5D5) : const Color(0xFF38383F);
   static Color get ink400 =>
-      _isLight ? const Color(0xFF8A8378) : const Color(0xFF5D5D66);
+      _isLight ? const Color(0xFF929B9B) : const Color(0xFF5D5D66);
   static Color get ink300 =>
-      _isLight ? const Color(0xFF6E675C) : const Color(0xFF9A9AA1);
+      _isLight ? const Color(0xFF687373) : const Color(0xFF9A9AA1);
   static Color get ink200 =>
-      _isLight ? const Color(0xFF4B453C) : const Color(0xFFC8C8CC);
+      _isLight ? const Color(0xFF3E4747) : const Color(0xFFC8C8CC);
   static Color get ink100 =>
-      _isLight ? const Color(0xFF2B261F) : const Color(0xFFEAE9E6);
+      _isLight ? const Color(0xFF232B2B) : const Color(0xFFEAE9E6);
   static Color get ink000 =>
-      _isLight ? const Color(0xFF1A1712) : const Color(0xFFF6F4EF);
+      _isLight ? const Color(0xFF141919) : const Color(0xFFF6F4EF);
 
   // ===== SEMANTIC ALIASES (theo theme) =====
   // Surfaces
@@ -104,56 +104,65 @@ class AppColors {
   static Color get textSecondary => ink300;
   static Color get textTertiary => ink400;
 
-  /// Chữ/icon accent: dark = gold sáng; light = bronze đậm (đủ tương phản).
-  static Color get textAccent => _isLight ? gold700 : gold400;
+  /// Chữ/icon accent: dark = gold sáng; light = cyan đậm (AA ~4.1:1 trên trắng).
+  /// Đây là "núm" giá tiền/eyebrow/accent-icon — đổi 1 chỗ là mọi giá đổi.
+  static Color get textAccent => _isLight ? const Color(0xFF008A98) : gold400;
 
-  /// Chữ trên fill đậm: dark = espresso trên gold; light = trắng ấm trên ĐEN.
+  /// Chữ trên fill đậm: dark = espresso trên gold; light = trắng trên ĐEN mát.
   static Color get textOnAccent =>
-      _isLight ? const Color(0xFFFDF9F0) : const Color(0xFF161006);
+      _isLight ? const Color(0xFFFFFFFF) : const Color(0xFF161006);
   static Color get textOnViolet => const Color(0xFFFFFFFF);
 
   // Borders (dark: translucent-white · light: translucent-black ấm)
   static Color get borderSubtle =>
-      _isLight ? const Color(0x14201A10) : const Color(0x12FFFFFF);
+      _isLight ? const Color(0xFFE8EEEE) : const Color(0x12FFFFFF);
   static Color get borderDefault =>
-      _isLight ? const Color(0x1F201A10) : const Color(0x1FFFFFFF);
+      _isLight ? const Color(0xFFDDE8E8) : const Color(0x1FFFFFFF);
   static Color get borderStrong =>
-      _isLight ? const Color(0x33201A10) : const Color(0x33FFFFFF);
-  static Color get borderAccent => _isLight ? gold600 : gold500;
+      _isLight ? const Color(0xFFC6D5D5) : const Color(0x33FFFFFF);
+  static Color get borderAccent => _isLight ? const Color(0xFF2DCCD3) : gold500;
   static Color get edgeTop =>
-      _isLight ? const Color(0x0D201A10) : const Color(0x0DFFFFFF);
+      _isLight ? const Color(0x0DFFFFFF) : const Color(0x0DFFFFFF);
 
-  // Brand fills / tints
-  static Color get accent => _isLight ? gold600 : gold500;
-  static Color get accentHover => _isLight ? gold500 : gold400;
-  static Color get accentPress => _isLight ? gold700 : gold600;
+  // Brand fills / tints (light = cyan brand)
+  static Color get accent => _isLight ? const Color(0xFF2DCCD3) : gold500;
+  static Color get accentHover => _isLight ? const Color(0xFF4DD8DE) : gold400;
+  static Color get accentPress => _isLight ? const Color(0xFF008A98) : gold600;
   static Color get accentSoft =>
-      _isLight ? const Color(0x24CDAA62) : const Color(0x1FCDAA62);
+      _isLight ? const Color(0x242DCCD3) : const Color(0x1FCDAA62);
   static Color get accentSoftLine =>
-      _isLight ? const Color(0x59AE8A47) : const Color(0x4DCDAA62);
+      _isLight ? const Color(0x5C2DCCD3) : const Color(0x4DCDAA62);
 
-  // Giữ tên cũ cho call-site (gold ramp tints)
+  // Giữ tên cũ cho call-site (giờ trỏ về cyan tint ở light)
   static Color get goldSoft => accentSoft;
   static Color get goldSoftLine => accentSoftLine;
   static Color get glassGold =>
-      _isLight ? const Color(0x24CDAA62) : const Color(0x29CDAA62);
+      _isLight ? const Color(0x242DCCD3) : const Color(0x29CDAA62);
 
   // Tints reused by components
   static Color get glassCyan =>
-      _isLight ? const Color(0x29028E9C) : const Color(0x2900F0FF);
+      _isLight ? const Color(0x292DCCD3) : const Color(0x2900F0FF);
   static Color get violetSoft =>
-      _isLight ? const Color(0x1FAE8A47) : const Color(0x24AE8A47);
+      _isLight ? const Color(0x1F9D6BFF) : const Color(0x24AE8A47);
+
   /// Skeleton loading (skeletonizer): base/highlight phải tách nhau và tách
   /// khỏi nền card ở CẢ 2 theme (light: card trắng nên base là giấy sẫm).
   static Color get skeletonBase =>
-      _isLight ? const Color(0xFFECE7DE) : const Color(0xFF17171B);
+      _isLight ? const Color(0xFFE7EEEE) : const Color(0xFF17171B);
   static Color get skeletonHighlight =>
-      _isLight ? const Color(0xFFF6F2EB) : const Color(0xFF1E1E23);
+      _isLight ? const Color(0xFFF3F8F8) : const Color(0xFF1E1E23);
 
   static Color get successSoft => const Color(0x2922E0A1);
   static Color get successLine => const Color(0x4D22E0A1);
   static Color get dangerSoft => const Color(0x29FF4D6D);
   static Color get dangerLine => const Color(0x4DFF4D6D);
+
+  /// Bản "đậm" cho CHỮ NHỎ trên nền trắng (semantic 500 neon fail AA trên
+  /// light). Light dùng sắc đậm hơn; dark giữ 500 (đã đủ tương phản trên nền tối).
+  static Color get successStrong =>
+      _isLight ? const Color(0xFF18A979) : success500;
+  static Color get dangerStrong =>
+      _isLight ? const Color(0xFFE54850) : danger500;
 
   // ===== Signature gradients (theo theme) =====
   /// CTA chính. Dark = champagne brushed-metal. Light = ĐEN ấm kiểu Musinsa
@@ -162,7 +171,7 @@ class AppColors {
       ? const LinearGradient(
           begin: Alignment(-0.88, -0.47),
           end: Alignment(0.88, 0.47),
-          colors: [Color(0xFF2E2921), Color(0xFF17140E)],
+          colors: [Color(0xFF1F282B), Color(0xFF10171A)],
         )
       : const LinearGradient(
           begin: Alignment(-0.88, -0.47),
@@ -176,7 +185,7 @@ class AppColors {
       ? const LinearGradient(
           begin: Alignment(-0.88, -0.47),
           end: Alignment(0.88, 0.47),
-          colors: [Color(0x1A2E2921), Color(0x1A17140E)],
+          colors: [Color(0x1A1F282B), Color(0x1A10171A)],
         )
       : const LinearGradient(
           begin: Alignment(-0.88, -0.47),
@@ -189,7 +198,7 @@ class AppColors {
       ? const LinearGradient(
           begin: Alignment(-0.87, -0.5),
           end: Alignment(0.87, 0.5),
-          colors: [Color(0xFF2E2921), Color(0xFF14110C)],
+          colors: [Color(0xFF1F282B), Color(0xFF0F1518)],
         )
       : const LinearGradient(
           begin: Alignment(-0.87, -0.5),
@@ -202,7 +211,7 @@ class AppColors {
       ? const RadialGradient(
           center: Alignment(0, -0.2),
           radius: 0.9,
-          colors: [Color(0x1ACDAA62), Color(0x00CDAA62)],
+          colors: [Color(0x142DCCD3), Color(0x002DCCD3)],
         )
       : const RadialGradient(
           center: Alignment(0, -0.2),

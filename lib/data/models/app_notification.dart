@@ -52,7 +52,8 @@ class AppNotification {
     );
   }
 
-  factory AppNotification.fromJson(Map<String, dynamic> json) => AppNotification(
+  factory AppNotification.fromJson(Map<String, dynamic> json) =>
+      AppNotification(
         id: json['id'] as String? ?? json['_id'] as String? ?? '',
         iconName: json['icon'] as String? ?? 'bell',
         tone: _toneFromString(json['tone'] as String?),

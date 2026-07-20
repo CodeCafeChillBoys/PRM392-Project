@@ -5,15 +5,16 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_effects.dart';
-import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../data/models/product.dart';
 import '../../../data/services/recently_viewed_service.dart';
 import '../../state/app_nav.dart';
 import '../../state/cart_controller.dart';
+import '../../state/catalog_controller.dart';
 import '../../widgets/widgets.dart';
 import '../chat/chat_screen.dart';
+import 'product_reviews_section.dart';
 
 /// Product detail — VOID LUXE editorial: hero parallax trên nền glow gold,
 /// eyebrow bronze, tên sản phẩm cỡ display, nội dung vào màn theo cascade,
@@ -75,8 +76,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           TvAppBar(
             mode: TvAppBarMode.brand,
             leading: TvIconButton(
-              icon: TvIcon('arrow-left',
-                  size: 22, color: AppColors.textPrimary),
+              icon: TvIcon(
+                'arrow-left',
+                size: 22,
+                color: AppColors.textPrimary,
+              ),
               onPressed: () => Navigator.pop(context),
               tooltip: 'Quay lại',
             ),
@@ -109,7 +113,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       const SizedBox(height: 22),
       Text(
         '${_p.brand} · ${_p.categoryName}'.toUpperCase(),
-        style: AppText.label(AppColors.gold700).copyWith(fontSize: 12),
+        style: AppText.label(AppColors.textAccent).copyWith(fontSize: 12),
       ),
       const SizedBox(height: 8),
       Text(
@@ -128,20 +132,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       TvTabs(
         value: _tab,
         onChanged: (v) => setState(() => _tab = v),
-        tabs: const [
-          TvTab('desc', 'Mô tả'),
-          TvTab('reviews', 'Đánh giá'),
-        ],
+        tabs: const [TvTab('desc', 'Mô tả'), TvTab('reviews', 'Đánh giá')],
       ),
       const SizedBox(height: 16),
       if (_tab == 'desc')
         Text(
           _p.description,
-          style: AppText.body(AppColors.textSecondary)
-              .copyWith(fontSize: 14.5, height: 1.65),
+          style: AppText.body(
+            AppColors.textSecondary,
+          ).copyWith(fontSize: 14.5, height: 1.65),
         )
       else
-        _buildReviewsEmpty(),
+        ProductReviewsSection(productId: _p.id, productName: _p.name),
+      _RelatedProducts(product: _p),
       const SizedBox(height: 24),
     ];
 
@@ -195,11 +198,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: soldOut
                 ? const TvBadge('Hết hàng', variant: TvBadgeVariant.neutral)
                 : lowStock
-                    // Variant warning mới — glass giờ chỉ dành badge AI cyan.
-                    ? TvBadge('Sắp hết · còn ${_p.stockQuantity}',
-                        variant: TvBadgeVariant.warning)
-                    : const TvBadge('Còn hàng',
-                        variant: TvBadgeVariant.success),
+                // Variant warning mới — glass giờ chỉ dành badge AI cyan.
+                ? TvBadge(
+                    'Sắp hết · còn ${_p.stockQuantity}',
+                    variant: TvBadgeVariant.warning,
+                  )
+                : const TvBadge('Còn hàng', variant: TvBadgeVariant.success),
           ),
         ],
       ),
@@ -218,30 +222,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         child: hero,
       ),
     );
-  }
-
-  /// Empty state thật cho tab Đánh giá (thay string cứng "hãy là người đầu
-  /// tiên" trơ trọi) — trung thực và có chủ đích.
-  Widget _buildReviewsEmpty() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 28),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(AppIcons.get('star'),
-                size: 36, color: AppColors.textTertiary),
-            const SizedBox(height: 12),
-            Text('Chưa có đánh giá', style: AppText.h2().copyWith(fontSize: 18)),
-            const SizedBox(height: 6),
-            Text(
-              'Sản phẩm này đang chờ cảm nhận đầu tiên từ bạn.',
-              textAlign: TextAlign.center,
-              style: AppText.sm(AppColors.textTertiary),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: AppEffects.durEnter);
   }
 
   Widget _buildStockRow(bool soldOut) {
@@ -290,7 +270,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(AppSpacing.gutter, 12, AppSpacing.gutter, 12),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.gutter,
+            12,
+            AppSpacing.gutter,
+            12,
+          ),
           child: Row(
             children: [
               TvIconButton(
@@ -302,7 +287,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => ChatScreen(
-                      seedQuestion: 'Tư vấn giúp mình về ${widget.product.name} '
+                      seedQuestion:
+                          'Tư vấn giúp mình về ${widget.product.name} '
                           '(${widget.product.brand}) — sản phẩm này phù hợp với ai?',
                     ),
                   ),
@@ -337,6 +323,117 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "Sản phẩm liên quan" — strip ngang gợi ý SP cùng danh mục (ưu tiên) hoặc
+/// cùng hãng, lấy từ catalog đã nạp (không gọi thêm API). Ẩn nếu không có.
+class _RelatedProducts extends StatelessWidget {
+  const _RelatedProducts({required this.product});
+
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    final all = context.watch<CatalogController>().products;
+    final related =
+        all
+            .where(
+              (p) =>
+                  p.id != product.id &&
+                  (p.categoryName == product.categoryName ||
+                      p.brand == product.brand),
+            )
+            .toList()
+          // Cùng danh mục lên trước, rồi cùng hãng.
+          ..sort((a, b) {
+            int score(Product p) =>
+                p.categoryName == product.categoryName ? 0 : 1;
+            return score(a).compareTo(score(b));
+          });
+    final list = related.take(8).toList();
+    if (list.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Divider(color: AppColors.borderSubtle, height: 1),
+        const SizedBox(height: 18),
+        Row(
+          children: [
+            TvIcon('layout-grid', size: 16, color: AppColors.textAccent),
+            const SizedBox(width: 8),
+            Text(
+              'SẢN PHẨM LIÊN QUAN',
+              style: AppText.label(
+                AppColors.textPrimary,
+              ).copyWith(fontSize: 13),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 208,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            itemCount: list.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, i) => _RelatedTile(product: list[i]),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RelatedTile extends StatelessWidget {
+  const _RelatedTile({required this.product});
+
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    return PressableScale(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProductDetailScreen(product: product),
+        ),
+      ),
+      scale: 0.97,
+      child: SizedBox(
+        width: 138,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 138,
+              height: 138,
+              decoration: BoxDecoration(
+                color: AppColors.ink900,
+                borderRadius: BorderRadius.circular(AppRadii.md),
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: ProductImage(
+                url: product.imageUrl,
+                dimmed: product.isSoldOut,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              product.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.body().copyWith(fontSize: 12.5, height: 1.25),
+            ),
+            const SizedBox(height: 4),
+            TvPrice(value: product.price, size: TvPriceSize.sm),
+          ],
         ),
       ),
     );

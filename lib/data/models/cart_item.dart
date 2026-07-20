@@ -27,44 +27,47 @@ class CartItem {
   double get totalPrice => unitPrice * quantity;
 
   CartItem copyWith({int? quantity}) => CartItem(
-        id: id,
-        productId: productId,
-        productName: productName,
-        brand: brand,
-        productImageUrl: productImageUrl,
-        unitPrice: unitPrice,
-        quantity: quantity ?? this.quantity,
-      );
+    id: id,
+    productId: productId,
+    productName: productName,
+    brand: brand,
+    productImageUrl: productImageUrl,
+    unitPrice: unitPrice,
+    quantity: quantity ?? this.quantity,
+  );
 
   /// Build a fresh line item from a [Product] (used on "add to cart").
-  factory CartItem.fromProduct(Product product, {int quantity = 1, String? id}) =>
-      CartItem(
-        id: id ?? 'c_${product.id}',
-        productId: product.id,
-        productName: product.name,
-        brand: product.brand,
-        productImageUrl: product.imageUrl,
-        unitPrice: product.price,
-        quantity: quantity,
-      );
+  factory CartItem.fromProduct(
+    Product product, {
+    int quantity = 1,
+    String? id,
+  }) => CartItem(
+    id: id ?? 'c_${product.id}',
+    productId: product.id,
+    productName: product.name,
+    brand: product.brand,
+    productImageUrl: product.imageUrl,
+    unitPrice: product.price,
+    quantity: quantity,
+  );
 
   factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
-        id: '${json['id'] ?? ''}',
-        productId: '${json['productId'] ?? ''}',
-        productName: json['productName'] as String? ?? '',
-        brand: json['brand'] as String? ?? '',
-        productImageUrl: json['productImageUrl'] as String? ?? '',
-        unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0,
-        quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-      );
+    id: '${json['id'] ?? ''}',
+    productId: '${json['productId'] ?? ''}',
+    productName: json['productName'] as String? ?? '',
+    brand: json['brand'] as String? ?? '',
+    productImageUrl: json['productImageUrl'] as String? ?? '',
+    unitPrice: (json['unitPrice'] as num?)?.toDouble() ?? 0,
+    quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'productId': productId,
-        'productName': productName,
-        'productImageUrl': productImageUrl,
-        'unitPrice': unitPrice,
-        'quantity': quantity,
-        'totalPrice': totalPrice,
-      };
+    'id': id,
+    'productId': productId,
+    'productName': productName,
+    'productImageUrl': productImageUrl,
+    'unitPrice': unitPrice,
+    'quantity': quantity,
+    'totalPrice': totalPrice,
+  };
 }

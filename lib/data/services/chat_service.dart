@@ -16,8 +16,8 @@ class ChatService {
     final json = await _client.post(ApiConfig.chat, body: {'message': message});
     final Map<String, dynamic> data =
         (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
-            ? (json['data'] as Map<String, dynamic>)
-            : (json is Map<String, dynamic> ? json : {});
+        ? (json['data'] as Map<String, dynamic>)
+        : (json is Map<String, dynamic> ? json : {});
     final reply = data['reply'];
     if (reply is String && reply.trim().isNotEmpty) return reply;
     return 'Xin lỗi, mình chưa có câu trả lời.';

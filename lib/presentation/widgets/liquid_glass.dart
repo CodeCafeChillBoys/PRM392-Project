@@ -58,8 +58,7 @@ class LiquidGlassPanel extends StatelessWidget {
     }
 
     // Fill: gradient dọc — đỉnh loãng hơn.
-    final topFill =
-        light ? const Color(0x99FFFFFF) : const Color(0x8C050505);
+    final topFill = light ? const Color(0x99FFFFFF) : const Color(0x8C050505);
     final bottomFill = AppEffects.glassFill;
 
     final surface = DecoratedBox(
@@ -82,11 +81,13 @@ class LiquidGlassPanel extends StatelessWidget {
             height: 1,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [
-                  Colors.white.withValues(alpha: 0),
-                  Colors.white.withValues(alpha: light ? 0.85 : 0.22),
-                  Colors.white.withValues(alpha: 0),
-                ]),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0),
+                    Colors.white.withValues(alpha: light ? 0.85 : 0.22),
+                    Colors.white.withValues(alpha: 0),
+                  ],
+                ),
               ),
             ),
           ),
@@ -124,7 +125,10 @@ class LiquidGlassPanel extends StatelessWidget {
 
     // Bóng đổ đặt NGOÀI ClipRRect — đặt trong sẽ bị clip cắt mất.
     return DecoratedBox(
-      decoration: BoxDecoration(borderRadius: br, boxShadow: AppEffects.shadowLg),
+      decoration: BoxDecoration(
+        borderRadius: br,
+        boxShadow: AppEffects.shadowLg,
+      ),
       child: ClipRRect(
         borderRadius: br,
         child: BackdropFilter(filter: filter, child: surface),

@@ -55,8 +55,9 @@ class TvTabs extends StatelessWidget {
         border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
       ),
       child: Row(
-        mainAxisAlignment:
-            distribute ? MainAxisAlignment.spaceAround : MainAxisAlignment.start,
+        mainAxisAlignment: distribute
+            ? MainAxisAlignment.spaceAround
+            : MainAxisAlignment.start,
         children: [
           for (var i = 0; i < tabWidgets.length; i++) ...[
             if (!distribute && i > 0) const SizedBox(width: 24),
@@ -95,13 +96,14 @@ class _TabButton extends StatelessWidget {
               child: AnimatedDefaultTextStyle(
                 duration: AppEffects.durBase,
                 curve: AppEffects.easeStandard,
-                style: AppText.body(
-                  selected ? AppColors.textAccent : AppColors.textSecondary,
-                ).copyWith(
-                  fontSize: 14,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  letterSpacing: isUpper ? 1.12 : 0,
-                ),
+                style:
+                    AppText.body(
+                      selected ? AppColors.textAccent : AppColors.textSecondary,
+                    ).copyWith(
+                      fontSize: 14,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      letterSpacing: isUpper ? 1.12 : 0,
+                    ),
                 child: Text(tab.label, textAlign: TextAlign.center),
               ),
             ),

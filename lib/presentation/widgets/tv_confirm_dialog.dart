@@ -28,7 +28,9 @@ Future<bool?> showTvConfirm(
             const SizedBox(height: 8),
             Text(
               message,
-              style: AppText.body(AppColors.textSecondary).copyWith(height: 1.5),
+              style: AppText.body(
+                AppColors.textSecondary,
+              ).copyWith(height: 1.5),
             ),
             const SizedBox(height: 20),
             Row(

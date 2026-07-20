@@ -9,7 +9,9 @@ void main() {
     });
     test('PendingPayment/Shipped/Delivered/Cancelled → không', () {
       expect(
-          OrderFlow.staffCanStartDelivery(OrderStatus.pendingPayment), isFalse);
+        OrderFlow.staffCanStartDelivery(OrderStatus.pendingPayment),
+        isFalse,
+      );
       expect(OrderFlow.staffCanStartDelivery(OrderStatus.shipped), isFalse);
       expect(OrderFlow.staffCanStartDelivery(OrderStatus.delivered), isFalse);
       expect(OrderFlow.staffCanStartDelivery(OrderStatus.cancelled), isFalse);

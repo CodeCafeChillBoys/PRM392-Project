@@ -10,7 +10,8 @@ class NotificationService {
 
   Future<NotificationFeeds> fetchNotifications() async {
     final json = await _client.get(ApiConfig.notifications);
-    final Map<String, dynamic> data = (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
+    final Map<String, dynamic> data =
+        (json is Map<String, dynamic> && json['data'] is Map<String, dynamic>)
         ? (json['data'] as Map<String, dynamic>)
         : (json is Map<String, dynamic> ? json : {});
     List<AppNotification> parse(String key) => (data[key] as List? ?? [])

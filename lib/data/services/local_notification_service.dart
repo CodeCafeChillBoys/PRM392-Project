@@ -13,24 +13,25 @@ class LocalNotificationService {
 
     const DarwinInitializationSettings initializationSettingsDarwin =
         DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsDarwin,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: initializationSettingsDarwin,
+        );
 
-    await _notificationsPlugin.initialize(
-      settings: initializationSettings,
-    );
+    await _notificationsPlugin.initialize(settings: initializationSettings);
 
     // In ra FCM Token để kiểm tra
     try {
       final token = await FirebaseMessaging.instance.getToken();
-      debugPrint('================ FCM TOKEN ================\n$token\n==========================================');
+      debugPrint(
+        '================ FCM TOKEN ================\n$token\n==========================================',
+      );
     } catch (e) {
       debugPrint('Lỗi lấy FCM Token khi khởi tạo LocalNotificationService: $e');
     }
@@ -40,28 +41,31 @@ class LocalNotificationService {
       debugPrint('--- NHẬN ĐƯỢC TIN NHẮN FCM FOREGROUND ---');
       debugPrint('Message data payload: ${message.data}');
       if (message.notification != null) {
-        debugPrint('Message notification title: ${message.notification?.title}');
+        debugPrint(
+          'Message notification title: ${message.notification?.title}',
+        );
         debugPrint('Message notification body: ${message.notification?.body}');
       }
 
       // Hỗ trợ cả trường hợp BE gửi bằng Notification payload hoặc Data-only payload
-      final title = message.notification?.title ?? 
-                    message.data['title'] ?? 
-                    message.data['notificationTitle'] ?? 
-                    'Thông báo';
-      final body = message.notification?.body ?? 
-                   message.data['body'] ?? 
-                   message.data['message'] ?? 
-                   message.data['notificationBody'] ?? 
-                   '';
+      final title =
+          message.notification?.title ??
+          message.data['title'] ??
+          message.data['notificationTitle'] ??
+          'Thông báo';
+      final body =
+          message.notification?.body ??
+          message.data['body'] ??
+          message.data['message'] ??
+          message.data['notificationBody'] ??
+          '';
 
       if (message.notification != null || body.isNotEmpty) {
-        showNotification(
-          title: title,
-          body: body,
-        );
+        showNotification(title: title, body: body);
       } else {
-        debugPrint('Không thể hiển thị thông báo vì cả notification và body đều rỗng.');
+        debugPrint(
+          'Không thể hiển thị thông báo vì cả notification và body đều rỗng.',
+        );
       }
     });
   }
@@ -85,14 +89,16 @@ class LocalNotificationService {
     try {
       final androidPlugin = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       if (androidPlugin != null) {
         await androidPlugin.requestNotificationsPermission();
       }
 
       final iosPlugin = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>();
+            IOSFlutterLocalNotificationsPlugin
+          >();
       if (iosPlugin != null) {
         await iosPlugin.requestPermissions(
           alert: true,
@@ -112,20 +118,21 @@ class LocalNotificationService {
   }) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'fcm_foreground_channel_id',
-      'Thông báo TechStore',
-      channelDescription: 'Kênh hiển thị thông báo FCM khi ứng dụng ở foreground',
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: true,
-    );
+          'fcm_foreground_channel_id',
+          'Thông báo TechStore',
+          channelDescription:
+              'Kênh hiển thị thông báo FCM khi ứng dụng ở foreground',
+          importance: Importance.max,
+          priority: Priority.high,
+          showWhen: true,
+        );
 
     const DarwinNotificationDetails darwinPlatformChannelSpecifics =
         DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        );
 
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,

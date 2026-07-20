@@ -12,7 +12,7 @@ class CategoryOption {
   final String name;
 
   factory CategoryOption.fromJson(Map<String, dynamic> json) => CategoryOption(
-        id: '${json['id'] ?? ''}',
-        name: json['name'] as String? ?? '',
-      );
+    id: '${json['id'] ?? ''}',
+    name: json['name'] as String? ?? '',
+  );
 }

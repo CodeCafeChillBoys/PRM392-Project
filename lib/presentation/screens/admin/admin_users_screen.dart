@@ -64,7 +64,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       final list = await _service.fetchUsers();
       if (mounted) setState(() => _users = list);
     } catch (_) {
-      if (mounted) TvToast.show(context, 'Không tải được danh sách người dùng.');
+      if (mounted) {
+        TvToast.show(context, 'Không tải được danh sách người dùng.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -74,7 +76,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     final q = _query.trim().toLowerCase();
     return _users.where((u) {
       final matchRole = _filter.accepts(u);
-      final matchQuery = q.isEmpty ||
+      final matchQuery =
+          q.isEmpty ||
           '${u.fullName} ${u.email} ${u.phoneNumber}'.toLowerCase().contains(q);
       return matchRole && matchQuery;
     }).toList();
@@ -116,10 +119,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   static String _roleLabel(String role) => switch (role) {
-        'Admin' => 'Quản trị',
-        'Staff' => 'Nhân viên',
-        _ => 'Khách hàng',
-      };
+    'Admin' => 'Quản trị',
+    'Staff' => 'Nhân viên',
+    _ => 'Khách hàng',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -136,8 +139,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             distribute: true,
             value: _filter.value,
             tabs: [for (final r in _RoleFilter.values) TvTab(r.value, r.label)],
-            onChanged: (v) => setState(() => _filter =
-                _RoleFilter.values.firstWhere((r) => r.value == v)),
+            onChanged: (v) => setState(
+              () =>
+                  _filter = _RoleFilter.values.firstWhere((r) => r.value == v),
+            ),
           ),
         ),
         Padding(
@@ -163,18 +168,24 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           highlightColor: AppColors.skeletonHighlight,
         ),
         child: ListView.separated(
-          padding:
-              EdgeInsets.fromLTRB(AppSpacing.gutter, 6, AppSpacing.gutter, 24),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.gutter,
+            6,
+            AppSpacing.gutter,
+            24,
+          ),
           physics: const NeverScrollableScrollPhysics(),
           itemCount: 8,
           separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemBuilder: (_, _) => _userCard(const UserSummary(
-            id: 'ghost',
-            fullName: 'Người dùng đang tải',
-            email: 'loading@techvoid.vn',
-            phoneNumber: '0900000000',
-            role: 'Customer',
-          )),
+          itemBuilder: (_, _) => _userCard(
+            const UserSummary(
+              id: 'ghost',
+              fullName: 'Người dùng đang tải',
+              email: 'loading@techvoid.vn',
+              phoneNumber: '0900000000',
+              role: 'Customer',
+            ),
+          ),
         ),
       );
     }
@@ -188,18 +199,24 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           : ListView.separated(
               key: ValueKey('${_filter.value}|$_query'),
               padding: EdgeInsets.fromLTRB(
-                  AppSpacing.gutter, 6, AppSpacing.gutter, 24),
+                AppSpacing.gutter,
+                6,
+                AppSpacing.gutter,
+                24,
+              ),
               itemCount: items.length,
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (_, i) => _userCard(items[i])
                   .animate(delay: AppEffects.staggerStep * i.clamp(0, 6))
                   .fadeIn(
-                      duration: AppEffects.durEnter,
-                      curve: AppEffects.easeStandard)
+                    duration: AppEffects.durEnter,
+                    curve: AppEffects.easeStandard,
+                  )
                   .moveY(
-                      begin: AppEffects.entranceRise,
-                      end: 0,
-                      curve: AppEffects.easeStandard),
+                    begin: AppEffects.entranceRise,
+                    end: 0,
+                    curve: AppEffects.easeStandard,
+                  ),
             ),
     );
   }
@@ -223,20 +240,24 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   Row(
                     children: [
                       Flexible(
-                        child: Text(name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppText.bodyStrong().copyWith(fontSize: 14)),
+                        child: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.bodyStrong().copyWith(fontSize: 14),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       _RoleBadge(u.role),
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text(u.email,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.xs(AppColors.textTertiary)),
+                  Text(
+                    u.email,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.xs(AppColors.textTertiary),
+                  ),
                   if (u.phoneNumber.isNotEmpty || joined.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
@@ -286,14 +307,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         Center(child: TvIcon('users', size: 44, color: AppColors.textTertiary)),
         const SizedBox(height: 12),
         Center(
-          child: Text('Không có người dùng khớp bộ lọc',
-              style: AppText.body(AppColors.textSecondary)),
+          child: Text(
+            'Không có người dùng khớp bộ lọc',
+            style: AppText.body(AppColors.textSecondary),
+          ),
         ),
         if (_adminCount > 0) ...[
           const SizedBox(height: 6),
           Center(
-            child: Text('$_adminCount quản trị viên trong hệ thống',
-                style: AppText.xs(AppColors.textTertiary)),
+            child: Text(
+              '$_adminCount quản trị viên trong hệ thống',
+              style: AppText.xs(AppColors.textTertiary),
+            ),
           ),
         ],
       ],
@@ -371,8 +396,10 @@ class _RoleSheetState extends State<_RoleSheet> {
               onChanged: (v) {
                 // Không cho admin tự hạ quyền chính mình xuống dưới Admin.
                 if (widget.isSelf && v != 'Admin') {
-                  TvToast.show(context,
-                      'Không thể tự hạ quyền tài khoản của chính bạn.');
+                  TvToast.show(
+                    context,
+                    'Không thể tự hạ quyền tài khoản của chính bạn.',
+                  );
                   return;
                 }
                 setState(() => _role = v);
@@ -382,12 +409,13 @@ class _RoleSheetState extends State<_RoleSheet> {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  TvIcon('shield-alert',
-                      size: 14, color: AppColors.warning500),
+                  TvIcon('shield-alert', size: 14, color: AppColors.warning500),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: Text('Đây là tài khoản của bạn — không thể tự hạ quyền.',
-                        style: AppText.xs(AppColors.warning500)),
+                    child: Text(
+                      'Đây là tài khoản của bạn — không thể tự hạ quyền.',
+                      style: AppText.xs(AppColors.warning500),
+                    ),
                   ),
                 ],
               ),
