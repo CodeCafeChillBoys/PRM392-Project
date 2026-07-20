@@ -6,9 +6,11 @@ import '../../state/theme_controller.dart';
 import '../../widgets/widgets.dart';
 import 'staff_orders_screen.dart';
 import 'staff_products_screen.dart';
+import 'staff_refunds_screen.dart';
 import 'staff_revenue_screen.dart';
 
-/// Khung khu vực Staff: bottom nav 3 tab (Giao hàng · Sản phẩm · Doanh thu) —
+/// Khung khu vực Staff: bottom nav 4 tab (Giao hàng · Sản phẩm · Hoàn tiền ·
+/// Doanh thu) —
 /// pattern RootShell của khách. Mỗi tab là tab-page tự có app bar; shell lo
 /// Scaffold + nav. IndexedStack giữ state để timer GPS màn giao hàng không
 /// bị reset khi chuyển tab.
@@ -23,6 +25,7 @@ class _StaffShellState extends State<StaffShell> {
   static const _navItems = [
     TvNavItem(label: 'Giao hàng', iconName: 'truck'),
     TvNavItem(label: 'Sản phẩm', iconName: 'package'),
+    TvNavItem(label: 'Hoàn tiền', iconName: 'refund'),
     TvNavItem(label: 'Doanh thu', iconName: 'bar-chart'),
   ];
 
@@ -42,6 +45,7 @@ class _StaffShellState extends State<StaffShell> {
         children: const [
           StaffOrdersScreen(),
           StaffProductsScreen(),
+          StaffRefundsScreen(),
           StaffRevenueScreen(),
         ],
       ),

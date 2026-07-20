@@ -28,9 +28,12 @@ import 'payment_result_screen.dart';
 /// khoảng cách (`POST /api/shipping/calculate`), xem bản đồ Shop→Nhà, chọn
 /// thanh toán rồi đặt hàng (`POST /api/order/checkout`).
 class CheckoutScreen extends StatefulWidget {
-  const CheckoutScreen({super.key, required this.total});
+  const CheckoutScreen({super.key, required this.total, this.cartItemIds});
 
   final double total;
+
+  /// Id các món khách chọn trong giỏ để thanh toán (null = cả giỏ / luồng cũ).
+  final List<String>? cartItemIds;
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -64,13 +67,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   double get _grand => widget.total + (_quote?.shippingFee ?? 0);
 
-  /// Ví không đủ để thanh toán đơn này. BE hiện CHỈ trừ tiền HÀNG
-  /// (`widget.total`) khi checkout bằng Ví — CHƯA trừ phí ship — nên so với
-  /// `widget.total` (không phải `_grand`) mới khớp số BE thực sự trừ.
+  /// Ví không đủ để thanh toán đơn này. BE trừ ví = tiền hàng + phí ship
+  /// (`_grand`) nên so số dư với `_grand` mới khớp số BE thực trừ.
   bool get _walletShort =>
       _payment == 'Wallet' &&
       _walletBalance != null &&
-      _walletBalance! < widget.total;
+      _walletBalance! < _grand;
 
   @override
   void initState() {
@@ -197,6 +199,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         destinationLat: _dest!.latitude,
         destinationLng: _dest!.longitude,
         shippingFee: _quote!.shippingFee,
+        cartItemIds: widget.cartItemIds,
       );
       if (!mounted) return;
 

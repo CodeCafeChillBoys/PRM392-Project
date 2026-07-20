@@ -15,6 +15,7 @@ import '../../../data/services/order_service.dart';
 import '../../state/app_nav.dart';
 import '../../widgets/widgets.dart';
 import 'order_tracking_screen.dart';
+import 'refund_request_screen.dart';
 
 /// "Đơn hàng của tôi" — khách xem đơn; đơn đang giao (`Shipped`) có nút
 /// "Theo dõi đơn" mở bản đồ theo dõi shipper realtime. Vào từ tab Hồ sơ.
@@ -58,6 +59,34 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => OrderTrackingScreen(order: o)),
     );
+  }
+
+  Future<void> _requestRefund(OrderModel o) async {
+    final sent = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => RefundRequestScreen(order: o)),
+    );
+    if (sent == true && mounted) {
+      TvToast.show(context, 'Đã gửi yêu cầu hoàn tiền.');
+      await _load();
+    }
+  }
+
+  Future<void> _cancelOrder(OrderModel o) async {
+    final reason = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _CancelReasonSheet(orderShortId: _shortId(o.id)),
+    );
+    if (reason == null || !mounted) return;
+    try {
+      await _service.cancelOrder(o.id, reason);
+      if (!mounted) return;
+      TvToast.show(context, 'Đã huỷ đơn hàng.');
+      await _load();
+    } catch (_) {
+      if (mounted) TvToast.show(context, 'Huỷ đơn thất bại. Thử lại sau.');
+    }
   }
 
   String _shortId(String id) => id.length >= 8 ? id.substring(0, 8) : id;
@@ -232,7 +261,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                  '${o.paymentMethod} · ${o.paymentStatus == 'Paid' ? 'Đã thanh toán' : 'Chưa TT'}',
+                  '${o.paymentMethod} · ${paymentStatusLabel(o.paymentStatus)}',
                   style: AppText.xs(AppColors.textTertiary)),
               Text(formatVnd(o.totalAmount),
                   style: AppText.price().copyWith(fontSize: 15)),
@@ -248,7 +277,253 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
               onPressed: () => _track(o),
             ),
           ],
+          if (OrderFlow.customerCanCancel(o.status)) ...[
+            const SizedBox(height: 12),
+            TvButton(
+              label: 'Huỷ đơn',
+              variant: TvButtonVariant.ghost,
+              size: TvButtonSize.md,
+              fullWidth: true,
+              leadingIcon:
+                  TvIcon('x-circle', size: 18, color: AppColors.danger500),
+              onPressed: () => _cancelOrder(o),
+            ),
+          ],
+          ..._refundSection(o),
+          if (o.status == OrderStatus.cancelled &&
+              o.cancelReason.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('Lý do huỷ: ${o.cancelReason}',
+                style: AppText.xs(AppColors.textTertiary)),
+          ],
         ],
+      ),
+    );
+  }
+
+  /// Khối hoàn tiền: nút yêu cầu (đơn đã giao + đã TT) hoặc chip trạng thái
+  /// (chờ duyệt / đã hoàn) cho các đơn đang trong luồng refund.
+  List<Widget> _refundSection(OrderModel o) {
+    // Đã hoàn toàn bộ.
+    if (o.paymentStatus == 'Refunded') {
+      return const [
+        SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TvBadge('Đã hoàn tiền', variant: TvBadgeVariant.success),
+        ),
+      ];
+    }
+    // Chờ staff duyệt.
+    if (o.paymentStatus == 'RefundRequested') {
+      return const [
+        SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TvBadge('Chờ duyệt hoàn', variant: TvBadgeVariant.warning),
+        ),
+      ];
+    }
+    // Đã hoàn 1 phần (đơn về Paid nhưng đã có tiền hoàn) → không cho hoàn tiếp.
+    if (o.refundedAmount > 0) {
+      return [
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TvBadge('Đã hoàn 1 phần: ${formatVnd(o.refundedAmount)}',
+              variant: TvBadgeVariant.success),
+        ),
+      ];
+    }
+    // Còn hạn → cho yêu cầu hoàn.
+    if (o.status == OrderStatus.delivered &&
+        o.paymentStatus == 'Paid' &&
+        o.refundWindowOpen) {
+      return [
+        const SizedBox(height: 12),
+        TvButton(
+          label: 'Yêu cầu hoàn tiền',
+          variant: TvButtonVariant.ghost,
+          size: TvButtonSize.md,
+          fullWidth: true,
+          leadingIcon: const TvIcon('refund', size: 18),
+          onPressed: () => _requestRefund(o),
+        ),
+      ];
+    }
+    return const [];
+  }
+}
+
+/// Bottom sheet chọn lý do huỷ đơn — preset + ghi chú tuỳ chọn. Trả về chuỗi
+/// lý do qua [Navigator.pop] (null nếu khách đóng mà không xác nhận).
+class _CancelReasonSheet extends StatefulWidget {
+  const _CancelReasonSheet({required this.orderShortId});
+
+  final String orderShortId;
+
+  @override
+  State<_CancelReasonSheet> createState() => _CancelReasonSheetState();
+}
+
+class _CancelReasonSheetState extends State<_CancelReasonSheet> {
+  static const _presets = [
+    'Đổi ý, không muốn mua nữa',
+    'Đặt nhầm sản phẩm / số lượng',
+    'Muốn thay đổi địa chỉ / thông tin',
+    'Tìm được nơi khác giá tốt hơn',
+    'Lý do khác',
+  ];
+
+  int _selected = 0;
+  final _noteCtrl = TextEditingController();
+
+  bool get _isOther => _selected == _presets.length - 1;
+
+  @override
+  void dispose() {
+    _noteCtrl.dispose();
+    super.dispose();
+  }
+
+  void _confirm() {
+    final note = _noteCtrl.text.trim();
+    if (_isOther && note.isEmpty) {
+      TvToast.show(context, 'Vui lòng nhập lý do huỷ.');
+      return;
+    }
+    final preset = _presets[_selected];
+    final reason =
+        _isOther ? note : (note.isEmpty ? preset : '$preset — $note');
+    Navigator.of(context).pop(reason);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.bgSurface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          border: Border.all(color: AppColors.borderSubtle),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderStrong,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Huỷ đơn #${widget.orderShortId}', style: AppText.h3()),
+              const SizedBox(height: 4),
+              Text(
+                'Chọn lý do huỷ — nếu đơn trả bằng Ví, tiền sẽ hoàn về ví của bạn.',
+                style: AppText.xs(AppColors.textTertiary),
+              ),
+              const SizedBox(height: 16),
+              for (var i = 0; i < _presets.length; i++) ...[
+                _reasonRow(i),
+                if (i < _presets.length - 1) const SizedBox(height: 8),
+              ],
+              if (_isOther) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _noteCtrl,
+                  minLines: 2,
+                  maxLines: 4,
+                  maxLength: 500,
+                  style: AppText.body(),
+                  decoration: InputDecoration(
+                    hintText: 'Nhập lý do huỷ...',
+                    hintStyle: AppText.sm(AppColors.textTertiary),
+                    filled: true,
+                    fillColor: AppColors.bgElevated,
+                    counterText: '',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.borderDefault),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.borderDefault),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.accent),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              TvButton(
+                label: 'Xác nhận huỷ đơn',
+                variant: TvButtonVariant.gradient,
+                size: TvButtonSize.lg,
+                fullWidth: true,
+                leadingIcon: const TvIcon('x-circle', size: 18),
+                onPressed: _confirm,
+              ),
+              const SizedBox(height: 6),
+              Center(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Không huỷ nữa',
+                      style: AppText.sm(AppColors.textSecondary)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _reasonRow(int i) {
+    final selected = i == _selected;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _selected = i),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accentSoft : AppColors.bgElevated,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? AppColors.accentSoftLine : AppColors.borderDefault,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
+              size: 18,
+              color: selected ? AppColors.textAccent : AppColors.textTertiary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                _presets[i],
+                style: AppText.sm(
+                  selected ? AppColors.textPrimary : AppColors.textSecondary,
+                ).copyWith(fontSize: 13.5),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

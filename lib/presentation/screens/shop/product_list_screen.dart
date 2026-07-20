@@ -207,11 +207,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.autofocusSearch ? 'Tìm kiếm' : _greeting(),
-                      style: AppText.h1(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        widget.autofocusSearch ? 'Tìm kiếm' : _greeting(),
+                        style: AppText.h2(),
+                        maxLines: 1,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(

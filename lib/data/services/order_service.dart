@@ -29,6 +29,7 @@ class OrderService {
     double? destinationLat,
     double? destinationLng,
     double? shippingFee,
+    List<String>? cartItemIds,
   }) async {
     if (AppConfig.useMockData) {
       await Future.delayed(const Duration(milliseconds: 900));
@@ -54,6 +55,7 @@ class OrderService {
       'destinationLat': ?destinationLat,
       'destinationLng': ?destinationLng,
       'shippingFee': ?shippingFee,
+      'cartItemIds': ?cartItemIds,
     }) as Map<String, dynamic>;
     // orderId: VNPay trả ở top-level, COD nằm trong data.id
     final data = json['data'];
@@ -130,6 +132,59 @@ class OrderService {
       fileField: 'Image',
       filePath: imagePath,
     );
+  }
+
+  /// Khách gửi yêu cầu hoàn tiền (đơn đã giao) — lý do bắt buộc, ảnh tùy chọn.
+  /// POST /api/orders/{id}/refund-request (multipart: `Reason` + optional `Image`).
+  Future<void> requestRefund({
+    required String orderId,
+    required String reason,
+    String? imagePath,
+    String? itemsJson,
+  }) async {
+    if (AppConfig.useMockData) {
+      await Future.delayed(AppConfig.mockLatency);
+      return;
+    }
+    await _client.sendMultipart(
+      'POST',
+      ApiConfig.orderRefundRequest(orderId),
+      fields: {
+        'Reason': reason,
+        'Items': ?itemsJson,
+      },
+      filePath: imagePath,
+    );
+  }
+
+  /// Staff duyệt hoàn → BE cộng ví khách + cộng kho, đơn sang `Refunded`.
+  /// PUT /api/orders/{id}/refund-approve.
+  Future<void> approveRefund(String orderId) async {
+    if (AppConfig.useMockData) {
+      await Future.delayed(AppConfig.mockLatency);
+      return;
+    }
+    await _client.put(ApiConfig.orderRefundApprove(orderId));
+  }
+
+  /// Staff từ chối hoàn → đơn trở lại `Paid`.
+  /// PUT /api/orders/{id}/refund-reject.
+  Future<void> rejectRefund(String orderId) async {
+    if (AppConfig.useMockData) {
+      await Future.delayed(AppConfig.mockLatency);
+      return;
+    }
+    await _client.put(ApiConfig.orderRefundReject(orderId));
+  }
+
+  /// Khách tự huỷ đơn CHƯA gán shipper + lý do → BE cộng lại kho + hoàn ví
+  /// (nếu đơn trả bằng Ví). POST /api/orders/{id}/cancel  body {reason}.
+  Future<void> cancelOrder(String orderId, String reason) async {
+    if (AppConfig.useMockData) {
+      await Future.delayed(AppConfig.mockLatency);
+      return;
+    }
+    await _client.post(ApiConfig.orderCancel(orderId), body: {'reason': reason});
   }
 
   /// Trạng thái đơn hiện tại (cho khách phát hiện khi đơn đã giao xong → ngừng theo dõi).

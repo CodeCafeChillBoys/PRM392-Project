@@ -16,32 +16,6 @@ import '../../../data/services/order_service.dart';
 import '../../widgets/widgets.dart';
 import '../auth/login_screen.dart';
 
-/// Khoảng thời gian lọc doanh thu — áp cho mọi số trên màn (theo `orderDate`).
-enum _RevenueRange {
-  today('Hôm nay'),
-  last7Days('7 ngày'),
-  thisMonth('Tháng này'),
-  all('Tất cả');
-
-  const _RevenueRange(this.label);
-  final String label;
-
-  bool accepts(DateTime? d, DateTime now) {
-    if (this == _RevenueRange.all) return true;
-    if (d == null) return false;
-    switch (this) {
-      case _RevenueRange.today:
-        return d.year == now.year && d.month == now.month && d.day == now.day;
-      case _RevenueRange.last7Days:
-        return d.isAfter(now.subtract(const Duration(days: 7)));
-      case _RevenueRange.thisMonth:
-        return d.year == now.year && d.month == now.month;
-      case _RevenueRange.all:
-        return true;
-    }
-  }
-}
-
 /// Trang Staff — Doanh thu (spec 2026-07-06): tổng doanh thu, VNPay/COD đã
 /// thu, COD chờ thu, phần shop nhận từ phí ship, và hoa hồng của nhân viên
 /// hiện tại. Tính client-side trên `fetchAllOrders()` — chưa có endpoint
@@ -59,7 +33,7 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
 
   List<OrderModel> _orders = [];
   bool _loading = true;
-  _RevenueRange _range = _RevenueRange.today;
+  late TvDateRange _range = TvDateRange.today();
 
   @override
   void initState() {
@@ -89,18 +63,19 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
   }
 
   List<OrderModel> get _visible {
-    final now = DateTime.now();
-    // BE trả orderDate dạng UTC (đuôi Z) → phải toLocal() trước khi so
-    // theo ngày/tháng, không thì đơn đặt 0h–7h sáng VN rớt khỏi "Hôm nay".
+    // BE trả orderDate dạng UTC (đuôi Z) → phải toLocal() trước khi so theo
+    // ngày, không thì đơn đặt 0h–7h sáng VN rớt khỏi "Hôm nay". [contains] so
+    // trên ranh giới ngày local, gộp trọn ngày cuối.
     return _orders
         .where((o) =>
-            _range.accepts(DateTime.tryParse(o.orderDate)?.toLocal(), now))
+            _range.contains(DateTime.tryParse(o.orderDate)?.toLocal()))
         .toList();
   }
 
   // ── Quy tắc tính doanh thu ("Mô hình tiền" trong spec) ───────────────────
   static bool _isCounted(OrderModel o) {
     if (o.status == OrderStatus.cancelled) return false;
+    if (o.paymentStatus == 'Refunded') return false; // đơn đã hoàn không tính là tiền shop
     if (o.paymentStatus == 'Failed') return false;
     if (o.paymentMethod == 'VNPay') return o.paymentStatus == 'Paid';
     return o.status == OrderStatus.delivered;
@@ -130,15 +105,10 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: TvTabs(
-            distribute: true,
-            value: _range.name,
-            tabs: [
-              for (final r in _RevenueRange.values) TvTab(r.name, r.label),
-            ],
-            onChanged: (v) => setState(() =>
-                _range = _RevenueRange.values.firstWhere((r) => r.name == v)),
+          padding: const EdgeInsets.fromLTRB(12, 2, 12, 8),
+          child: TvDateFilter(
+            value: _range,
+            onChanged: (r) => setState(() => _range = r),
           ),
         ),
         Expanded(child: _body()),
@@ -170,7 +140,7 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
             Row(children: [
               Expanded(child: _statCard('COD chờ thu', 1200000, warn: true)),
               const SizedBox(width: 10),
-              Expanded(child: _statCard('Shop nhận từ ship', 90000)),
+              Expanded(child: _statCard('Hoa hồng shipper', 90000)),
             ]),
             const SizedBox(height: 12),
             _myIncomeCard(60000, 4),
@@ -191,8 +161,10 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
     final delivered =
         orders.where((o) => o.status == OrderStatus.delivered).toList();
     final shipFeeSum = delivered.fold<double>(0, (s, o) => s + o.shippingFee);
-    final shopShipShare =
-        shipFeeSum * (1 - AppConfig.shipperCommissionRate);
+    // Hoa hồng shipper = 78% phí ship các đơn đã giao — phần TRỪ khỏi tiền shop.
+    final shipperCommission = shipFeeSum * AppConfig.shipperCommissionRate;
+    // Tiền thực về shop = tổng thu − hoa hồng shipper (= tiền hàng + 22% ship).
+    final shopNet = (vnpaySum + codSum) - shipperCommission;
 
     final myId = apiClient.userId;
     final myDelivered = myId == null
@@ -208,11 +180,11 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
       backgroundColor: AppColors.bgSurface,
       child: ListView(
         // Key theo bộ lọc thời gian → đổi tab là các thẻ vào lại theo nhịp.
-        key: ValueKey(_range),
+        key: ValueKey(_range.stateKey),
         padding: EdgeInsets.fromLTRB(
             AppSpacing.gutter, 14, AppSpacing.gutter, 24),
         children: [
-          _totalCard(vnpaySum + codSum, counted.length)
+          _totalCard(shopNet, counted.length)
               .animate()
               .fadeIn(duration: AppEffects.durEnter)
               .moveY(
@@ -239,7 +211,7 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
               Expanded(
                   child: _statCard('COD chờ thu', codPending, warn: true)),
               const SizedBox(width: 10),
-              Expanded(child: _statCard('Shop nhận từ ship', shopShipShare)),
+              Expanded(child: _statCard('Hoa hồng shipper', shipperCommission)),
             ],
           )
               .animate(delay: AppEffects.staggerStep * 2)
@@ -279,11 +251,12 @@ class _StaffRevenueScreenState extends State<StaffRevenueScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('TỔNG DOANH THU', style: AppText.label(AppColors.textSecondary)),
+          Text('TIỀN THỰC VỀ SHOP',
+              style: AppText.label(AppColors.textSecondary)),
           const SizedBox(height: 8),
           Text(formatVnd(total), style: AppText.price().copyWith(fontSize: 30)),
           const SizedBox(height: 6),
-          Text('$count đơn được tính',
+          Text('$count đơn · đã trừ hoa hồng shipper',
               style: AppText.xs(AppColors.textTertiary)),
         ],
       ),

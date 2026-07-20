@@ -10,9 +10,11 @@ class WalletTransaction {
     required this.type,
     required this.status,
     required this.amount,
+    this.balanceBefore,
     this.balanceAfter,
     this.description,
     this.orderId,
+    this.vnpayTransactionId,
     required this.createdAt,
   });
 
@@ -20,9 +22,11 @@ class WalletTransaction {
   final String type;
   final String status;
   final double amount;
+  final double? balanceBefore;
   final double? balanceAfter;
   final String? description;
   final String? orderId;
+  final String? vnpayTransactionId;
 
   /// Chuỗi ISO — format qua [formatRelativeFromIso] ở UI (giống OrderModel.orderDate).
   final String createdAt;
@@ -51,9 +55,11 @@ class WalletTransaction {
         type: json['type'] as String? ?? '',
         status: json['status'] as String? ?? '',
         amount: (json['amount'] as num?)?.toDouble() ?? 0,
+        balanceBefore: (json['balanceBefore'] as num?)?.toDouble(),
         balanceAfter: (json['balanceAfter'] as num?)?.toDouble(),
         description: json['description'] as String?,
         orderId: json['orderId'] as String?,
+        vnpayTransactionId: json['vnpayTransactionId'] as String?,
         createdAt: '${json['createdAt'] ?? ''}',
       );
 }

@@ -194,7 +194,10 @@ class _WalletScreenState extends State<WalletScreen> with WidgetsBindingObserver
     final time = formatRelativeFromIso(tx.createdAt);
     final desc = tx.description?.trim();
     final subtitle = (desc != null && desc.isNotEmpty) ? desc : tx.typeLabel;
-    return TvCard(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _showTxDetail(tx),
+      child: TvCard(
       padding: 14,
       child: Row(
         children: [
@@ -248,8 +251,102 @@ class _WalletScreenState extends State<WalletScreen> with WidgetsBindingObserver
           ),
         ],
       ),
+      ),
     );
   }
+
+  /// Bottom sheet chi tiết 1 giao dịch ví (mô tả đầy đủ, thời gian, số dư, mã).
+  void _showTxDetail(WalletTransaction tx) {
+    final credit = tx.isCredit;
+    final color = credit ? AppColors.success500 : AppColors.danger500;
+    final desc = tx.description?.trim();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.bgSurface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.borderSubtle),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                          credit ? AppColors.successSoft : AppColors.dangerSoft,
+                    ),
+                    child: TvIcon(_iconFor(tx.type), size: 20, color: color),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(tx.typeLabel, style: AppText.bodyStrong()),
+                        const SizedBox(height: 2),
+                        Text(tx.statusLabel,
+                            style: AppText.xs(AppColors.textTertiary)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '${credit ? '+' : '-'}${formatVnd(tx.amount.abs())}',
+                style: AppText.price(color).copyWith(fontSize: 26),
+              ),
+              const SizedBox(height: 16),
+              Divider(height: 1, color: AppColors.borderSubtle),
+              const SizedBox(height: 8),
+              if (desc != null && desc.isNotEmpty) _detailRow('Mô tả', desc),
+              _detailRow('Thời gian', formatDateTimeFromIso(tx.createdAt)),
+              if (tx.balanceAfter != null)
+                _detailRow('Số dư sau GD', formatVnd(tx.balanceAfter!)),
+              if (tx.orderId != null && tx.orderId!.isNotEmpty)
+                _detailRow('Mã đơn hàng', '#${_short(tx.orderId!)}'),
+              if (tx.vnpayTransactionId != null &&
+                  tx.vnpayTransactionId!.isNotEmpty)
+                _detailRow('Mã GD VNPay', tx.vnpayTransactionId!),
+              _detailRow('Mã giao dịch', _short(tx.id)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _short(String id) => id.length >= 8 ? id.substring(0, 8) : id;
+
+  Widget _detailRow(String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 116,
+              child: Text(label, style: AppText.sm(AppColors.textTertiary)),
+            ),
+            Expanded(
+              child: Text(value,
+                  textAlign: TextAlign.right, style: AppText.body()),
+            ),
+          ],
+        ),
+      );
 
   /// Icon theo loại giao dịch — tái dùng bộ Lucide đã có trong AppIcons
   /// (không thêm key mới: nạp='plus', hoàn tiền='package-check',
